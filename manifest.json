@@ -1,0 +1,15 @@
+{
+  "name": "Folk 'Em — La Locanda delle Maschere",
+  "short_name": "Folk 'Em",
+  "description": "Gioco di carte 1v1 con le Maschere della Commedia dell'Arte e il mazzo napoletano.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#160d06",
+  "theme_color": "#1e120c",
+  "icons": [
+    { "src": "assets/appicon.png", "sizes": "240x244", "type": "image/png", "purpose": "any" },
+    { "src": "assets/appicon.png", "sizes": "240x244", "type": "image/png", "purpose": "maskable" }
+  ]
+}

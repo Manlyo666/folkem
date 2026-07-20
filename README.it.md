@@ -1,102 +1,92 @@
-# Folk 'em — Osteria delle Maschere
+# Folk 'Em — La Locanda delle Maschere
 
-*Gioco di carte 1v1 attacco/difesa (RPG · HD-2D / pixel-art) basato sulle Maschere
-della Commedia dell'Arte e sul mazzo napoletano da 40 carte.*
+*Gioco di carte 1v1 attacco/difesa (RPG · HD-2D / pixel-art) con le Maschere della
+Commedia dell'Arte e il mazzo napoletano da 40 carte, ora in stile Texas Hold'em.*
 
 **🇬🇧 [Read in English →](README.md)**
 
-Unico file `index.html` autosufficiente. Aprilo in qualsiasi browser — niente installazione, offline.
+**▶ Gioca / Installa:** carica questa cartella su GitHub Pages, poi apri l'URL di Pages su
+Android e usa *"Aggiungi a schermata Home"* di Chrome — si installa come app a sé stante
+(senza barra dell'indirizzo) grazie a `manifest.json` e al service worker.
+*(Sostituisci il link qui sotto con il tuo URL Pages.)*
+
+> **Link app:** `https://<tuo-username>.github.io/folkem/`
 
 ---
 
 ## Come si gioca
 
-Sfidi l'Avversario (un'IA locale). Ognuno parte con **100 PV**, mostrati come una
-**damigiana** di vino che si riempie e si svuota (sfera di vita stile Diablo, in salsa da osteria).
+Sfidi l'Avversario. Ognuno parte con **100 PV**, mostrati come un'**otre** di vino che si
+riempie e si svuota.
 
-**Vinci se:** porti l'Avversario a **0 PV**, oppure porti i **tuoi** PV a **200**
-(raggiungere 200 vince subito, a prescindere dai PV dell'Avversario).
+**Vinci se:** porti l'Avversario a **0 PV**, oppure porti i tuoi PV a **200**.
 
-I PV **non hanno tetto a 100**. Per evitare che il solo rush-cura sia imbattibile, la cura
-è **piena sotto 150 PV e dimezzata tra 150 e 199**, mentre gli attacchi colpiscono sempre a valore pieno.
+La cura è piena sotto 150 PV e dimezzata tra 150 e 199; gli attacchi colpiscono sempre pieni.
 
-### Un round
-- 2 carte private + **4 carte comunitarie** a terra; componi la migliore combinazione di 5 fra le 6.
-- A inizio turno: **cambia 1 carta al costo di 10 PV** (una volta per round).
-- Premi **Evoca Maschera** — appare la tua Maschera. Quella dell'Avversario resta **coperta**.
-- Scegli **Attacco** o **Difesa**. *Solo allora* le carte e la Maschera avversaria si rivelano
-  e parte lo scontro.
-- Vince la combinazione di grado più alto. I pareggi si risolvono alla poker (coppia/tris più
-  alto, poi kicker, Asso alto). Attacco → infliggi l'Attacco; Difesa → recuperi la Cura; chi perde nulla.
-- Dopo lo scontro il gioco **avanza da solo** al round successivo finché qualcuno non vince.
+### Un round — Texas Hold'em (40 carte)
+- 2 carte private + **4 carte a terra**. Cambi 1 carta per 10 PV (una volta per round).
+- Premi **Evoca Maschera**: la tua migliore combinazione sulle **4 carte a terra** evoca una Maschera.
+- Scegli **Attacco** o **Difesa**. **Solo allora** cala la **5ª carta** e si formano le mani finali di 5 su 7 — la tua Maschera può ancora cambiare.
+- La Maschera avversaria resta **coperta** finché non scegli **Attacco** o **Difesa**.
+- Vince la combinazione più alta (pareggi alla poker: carte più alte, poi kicker, Asso alto).
+- **Attacco** infligge il tuo Attacco. **Difesa**: se vinci, curi il tuo valore Difesa; se
+  **perdi**, la tua Difesa **riduce il danno subito** (parata).
+- Le maschere appaiono sopra il tavolo, la vincitrice **lancia l'arma** e distrugge la
+  Maschera perdente, poi colpisce l'otre avversaria. In caso di cura, Maschera e otre brillano.
 
-### Setup: build delle Maschere
-Una sola volta, prima della partita, **inverti Attacco/Cura** di ogni Maschera per build
-full-attacco, full-cura o bilanciate. **Meneghino e Capitan Spaventa sono fissi.**
+### Setup — griglia 3×3
+Prima della partita, **inverti Attacco/Difesa** di ogni Maschera (Meneghino e Capitan Spaventa fissi).
 
-### Gerarchia Maschere (arma · Attacco / Cura base)
-| Combinazione | Maschera | Arma | Atk / Cura |
-|---|---|---|---|
-| Carta Alta | Meo Patacca | Stiletto | 2 / 1 |
-| Coppia | Pantalone | Borsa di monete pesante | 6 / 3 |
-| Doppia Coppia | Brighella | Bastone nodoso | 10 / 5 |
-| Tris | Pulcinella | Manganello in legno | 15 / 7 |
-| Scala | Dottor Balanzone | Tomo pesante in cuoio | 20 / 10 |
-| Colore | Arlecchino | Spatola di legno | 25 / 13 |
-| Full | Colombina | Ventaglio affilato | 30 / 15 |
-| Poker | Meneghino | Ombrello d'acciaio | 50 / 50 (fisso) |
-| Scala Reale | Capitan Spaventa | Spada Strisciata | 100 / 100 (fisso) |
+### Modalità
+- **Giocatore vs IA** con tre difficoltà (Facile / Media / Difficile).
+- **PvP offline** — un telefono al centro; carte e pulsanti del Giocatore 2 capovolti, così
+  entrambi leggono dritto.
+- **PvP online** — grigia per ora.
 
-> **Nota sul mazzo.** 40 carte napoletane (A–7, Fante, Cavallo, Re × 4 semi) — niente 8/9/10.
-> Le scale usano l'Asso basso (A-2-3-4-5) e alto (Fante-Cavallo-Re-A). Con sole 6 carte viste
-> per round, Poker e Scala Reale sono rarissimi, per scelta di design.
+### Gerarchia Maschere (arma · Attacco / Difesa) & probabilità reali (Hold'em)
+| Combinazione | Maschera | Arma | Atk / Dif | Prob. |
+|---|---|---|---|---|
+| Carta Alta | Meo Patacca | Stiletto | 2 / 1 | 6.1% |
+| Coppia | Pantalone | Borsa di monete | 6 / 3 | 34.7% |
+| Doppia Coppia | Brighella | Bastone nodoso | 10 / 5 | 33.7% |
+| Tris | Pulcinella | Manganello | 15 / 7 | 6.6% |
+| Full | Colombina | Ventaglio affilato | 25 / 13 | 5.6% |
+| Colore | Arlecchino | Spatola di legno | 30 / 15 | 2.5% |
+| Scala | Dottor Balanzone | Tomo pesante | 20 / 10 | 10.4% |
+| Poker | Meneghino | Ombrello d'acciaio | 50 / 50 (fisso) | 0.37% |
+| Scala Colore | Capitan Spaventa | Spada Strisciata | 100 / 100 (fisso) | 0.085% |
+
+> **Diverso dal poker:** con 40 carte il Colore (2.4%) è più raro del Full (5.6%), quindi qui **Colore batte Full**. La 5ª carta a terra cala **dopo** che scegli Attacco/Difesa, quindi la tua mano può ancora cambiare.
+>
+> Capitan Spaventa ora è **qualsiasi scala colore** (non solo A-alto), così la combinazione
+> più rara resta raggiungibile pur restando la più rara.
 
 ---
 
 ## Com'è programmato
 
-Un solo `index.html`; HTML + CSS + JS inline, diviso in tre livelli netti così che una futura
-conversione in **PvP online** tocchi solo il confine, non le regole:
+Tre livelli netti così che una futura conversione **PvP online** tocchi solo il confine:
+- **`GameLogic`** — puro, senza DOM: mazzo, valutazione a 7 carte con pareggi alla poker,
+  risoluzione con parata, cura a rendimenti decrescenti, IA con difficoltà.
+- **`GameState`** — stato serializzabile + azioni.
+- **`UI`** — l'unico livello DOM: modalità, setup 3×3, otri, overlay maschere centrale,
+  animazioni armi lanciate, capovolgimento PvP, scaling responsivo, modali.
 
-- **`GameLogic`** — puro, senza DOM: mazzo, valutazione mani con pareggi alla poker
-  (`evaluate` restituisce un vettore `tie[]`, `compare` ordina le mani), risoluzione dello
-  scontro, cura a rendimenti decrescenti, e un'IA consapevole della build (`aiChoose`).
-- **`GameState`** — stato serializzabile + azioni (`dealRound`, `swapCard`, `applyDelta`, `checkWin`).
-- **`UI`** — l'unico livello DOM: damigiane, carte, arena a due Maschere, animazioni, i18n.
+Maschere, otri, riferimento carte, sfondo e icona sono la grafica fornita. Le carte sono
+disegnate in SVG originale nello stile fornito. L'app è una PWA (`manifest.json` + `sw.js`)
+quindi si installa e gira offline.
 
-**`CardArt`** disegna le 40 carte napoletane come SVG originale (semi e figure tradizionali),
-e **`MaskArt`** disegna le 9 Maschere come SVG pixel-art — tutto vettoriale originale, nessuna
-scansione di mazzi reali, così l'intero gioco resta un unico file offline.
-
-**Comportamento IA.** L'IA gioca i suoi valori reali (dopo l'inversione): con build curativa
-si cura verso 200 quando non può chiudere, ma se i tuoi PV sono bassi — o ha un colpo letale —
-punta a ucciderti. Difende se la sua vita è in pericolo.
-
-**Confine PvP:** sostituisci le due chiamate locali (`aiChoose` e la distribuzione carte) con
-messaggi di rete; `GameLogic` e `GameState` restano invariati.
-
-**Validazione:** 21 test headless in Node coprono i pareggi (coppia di Re batte coppia di 5,
-kicker, Asso alto, ordinamento full/scala), la regola di vittoria a 200 PV, il costo cambio, e
-l'euristica IA. Uno stress test da 100k round conferma che `compare` non contraddice mai il grado.
+**Validazione:** 16 test headless in Node (pareggi, parata, vittoria a 200, IA difficoltà)
+più una sessione Playwright che gioca round completi con **zero errori JS**.
 
 ---
 
 ## Changelog
+Vedi la schermata **🔄 Aggiornamenti** in-app, o `CHANGELOG` nel sorgente. Versioni `1.0.x`.
 
-### v1.2.0
-- **Carte napoletane** ridisegnate come SVG originale (semi e figure tradizionali) al posto delle emoji.
-- La Maschera avversaria resta **nascosta finché non scegli Attacco/Difesa**; solo allora si rivelano carte + Maschera.
-- **Le carte non si spostano** più all'evocazione: un'arena a due slot fissi tiene le Maschere sopra il tavolo.
-- **Entrambe le Maschere** hanno un'animazione d'attacco basata sull'arma (affondo / fendente / taglio) più il bagliore di cura.
-- Dopo lo scontro il gioco **avanza automaticamente** al round successivo fino alla fine.
-- **Due animazioni di fine partita distinte**: vittoria (pioggia di monete) vs sconfitta (colatura rossa, titolo che trema).
-- **IA più intelligente**: gioca i valori dopo l'inversione — si cura verso 200 con build curativa, ma ti finisce se hai pochi PV o se ha un colpo letale.
-- Corretto un *presunto* "vincitore sbagliato": erano le carte comunitarie condivise a formare una mano più alta del previsto. Ora le mani sono etichettate chiaramente nello showdown; `compare` verificato su 100k round.
-
-### v1.1.0
-- Pareggi alla poker; vittoria a 0 PV (sconfitta) o 200 PV su te stesso (vittoria); schermata
-  duello a due Maschere; animazioni attacco/cura distinte; Maschere pixel-art; localizzazione IT/EN.
-
-### v1.0.0
-- Prima versione giocabile 1v1 vs IA: PV a damigiana, evocazione Maschera, attacco/difesa,
-  cambio carta a 10 PV, cura a rendimenti decrescenti, setup build.
+### v1.0.4
+Texas Hold'em (2+5), grafica fornita integrata, overlay maschere centrale che copre le carte,
+parata (la difesa del perdente riduce il danno), 3 difficoltà IA, PvP offline con carte
+capovolte, menu modalità, armi lanciate + distruzione maschera + colpo all'otre, setup 3×3,
+ruota-opzioni, regole al primo avvio, PWA installabile. Prima: 1.0.3 carte ridisegnate e
+maschera avversaria nascosta; 1.0.2 pareggi alla poker e vittoria 0/200; 1.0.1 prima versione.
