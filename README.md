@@ -44,19 +44,27 @@ Before the match, **swap Attack/Defense** on any Mask (Meneghino and Capitan Spa
 - **Online PvP** — greyed out for now.
 
 ### Mask hierarchy (weapon · Attack / Defense) & real probability (Hold'em)
-| Combination | Mask | Weapon | Atk / Def | Chance |
+| Combination | Mask | Weapon | Atk / Def | Prob. |
 |---|---|---|---|---|
-| High Card | Meo Patacca | Stiletto | 2 / 1 | 6.1% |
-| Pair | Pantalone | Coin purse | 6 / 3 | 34.7% |
-| Two Pair | Brighella | Gnarled cudgel | 10 / 5 | 33.7% |
-| Three of a Kind | Pulcinella | Club | 15 / 7 | 6.6% |
+| Straight Flush | Capitan Spaventa | Sword | 100 / 100 (fixed) | 0.08% |
+| Four of a Kind | Meneghino | Steel umbrella | 50 / 50 (fixed) | 0.39% |
+| Flush | Arlecchino | Wooden slapstick | 30 / 15 | 2.4% |
 | Full House | Colombina | Sharp fan | 25 / 13 | 5.6% |
-| Flush | Arlecchino | Wooden slapstick | 30 / 15 | 2.5% |
-| Straight | Dottor Balanzone | Heavy tome | 20 / 10 | 10.4% |
-| Four of a Kind | Meneghino | Steel umbrella | 50 / 50 (fixed) | 0.37% |
-| Straight Flush | Capitan Spaventa | Sword | 100 / 100 (fixed) | 0.085% |
+| Three of a Kind | Pulcinella | Club | 20 / 10 | 6.6% |
+| Straight | Dottor Balanzone | Heavy tome | 15 / 7 | 10.4% |
+| Two Pair | Brighella | Gnarled cudgel | 10 / 5 | 33.7% |
+| Pair | Pantalone | Coin purse | 6 / 3 | 34.7% |
+| High Card | Meo Patacca | Stiletto | 2 / 1 | — (no combo) |
+| Four of a Kind | Meneghino | Steel umbrella | 50 / 50 (fixed) | 0.39% |
+| Flush | Arlecchino | Wooden slapstick | 30 / 15 | 2.4% |
+| Full House | Colombina | Sharp fan | 25 / 13 | 5.6% |
+| Three of a Kind | Pulcinella | Club | 20 / 10 | 6.6% |
+| Straight | Dottor Balanzone | Heavy tome | 15 / 7 | 10.4% |
+| Two Pair | Brighella | Gnarled cudgel | 10 / 5 | 33.7% |
+| Pair | Pantalone | Coin purse | 6 / 3 | 34.7% |
+| High Card | Meo Patacca | Stiletto | 2 / 1 | — (no combo) |
 
-> **Different from poker:** with 40 cards a Flush (2.4%) is rarer than a Full House (5.6%), so **Flush beats Full House** here. The 5th table card is dealt **after** you pick Attack/Defend, so your hand can still change.
+> **Different from poker (40 cards):** **Flush beats Full House** (Flush 2.4% is rarer than Full 5.6%) and **Three of a Kind beats Straight** (Trips 6.6% is rarer than Straight 10.4%). You pick Attack/Defend **blind** on the 4 cards, then the 5th is dealt: it can flip everything.
 >
 > Capitan Spaventa is now **any straight flush** (not only Ace-high), so the rarest hand is
 > reachable while staying the rarest.

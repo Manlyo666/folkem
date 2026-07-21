@@ -57,19 +57,23 @@ body[data-portrait="1"] .mode-btn .mb-txt b{font-size:24px}
 body[data-portrait="1"] .mode-btn .mb-txt span{font-size:14px}
 body[data-portrait="1"] .diff-btn{padding:14px 22px;font-size:18px}
 body[data-portrait="1"] .sign h1{font-size:48px}
-/* SETUP: 9 maschere che riempiono lo schermo */
-body[data-portrait="1"] #screen-setup{justify-content:flex-start}
-body[data-portrait="1"] .build-grid3{grid-template-columns:repeat(3,1fr);gap:7px;max-width:100%;width:100%;flex:1;grid-template-rows:repeat(3,1fr)}
-body[data-portrait="1"] .build-card{flex-direction:column;padding:6px;gap:4px;text-align:center;justify-content:space-between}
+/* SETUP: griglia 9 maschere, header compatto, bottoni SEMPRE visibili */
+body[data-portrait="1"] #screen-setup{justify-content:flex-start;display:flex;flex-direction:column;height:100%}
+body[data-portrait="1"] #screen-setup .sign{flex-shrink:0}
+body[data-portrait="1"] #screen-setup .sign h1{font-size:30px}
+body[data-portrait="1"] .setup-intro{font-size:11px;margin:3px 0 6px;flex-shrink:0}
+body[data-portrait="1"] .build-grid3{grid-template-columns:repeat(3,1fr);gap:6px;max-width:100%;width:100%;
+  flex:1 1 auto;min-height:0;overflow-y:auto;grid-auto-rows:min-content;align-content:start}
+body[data-portrait="1"] .build-card{flex-direction:column;padding:5px;gap:3px;text-align:center;justify-content:space-between}
 body[data-portrait="1"] .bc-mask{width:100%;height:auto;aspect-ratio:3/4;max-height:none}
 body[data-portrait="1"] .bc-mask img{width:100%;height:100%;object-fit:cover}
 body[data-portrait="1"] .bc-info{width:100%}
-body[data-portrait="1"] .bc-info .rank-label{font-size:10px}
-body[data-portrait="1"] .bc-info .bc-name{font-size:13px}
-body[data-portrait="1"] .bc-stats{gap:4px}
-body[data-portrait="1"] .bc-stats .st b{font-size:14px}
+body[data-portrait="1"] .bc-info .rank-label{font-size:9px}
+body[data-portrait="1"] .bc-info .bc-name{font-size:12px}
+body[data-portrait="1"] .bc-stats{gap:3px}
+body[data-portrait="1"] .bc-stats .st b{font-size:13px}
 body[data-portrait="1"] .bc-swap{font-size:11px;padding:5px}
-body[data-portrait="1"] .setup-intro{font-size:12px;margin:6px 0 8px}
+body[data-portrait="1"] #screen-setup > div:last-child{flex-shrink:0;padding-top:8px}
 body[data-portrait="1"] #screen-table{padding:2px 4px}
 /* TAVOLO portrait: carte grandi, poco spazio tra file */
 body[data-portrait="1"] .table-top,body[data-portrait="1"] .table-bottom{gap:6px}
@@ -193,6 +197,10 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
 @keyframes dealIn{0%{transform:translateY(-40px) scale(.8);opacity:0;box-shadow:0 24px 30px rgba(0,0,0,.7)}
   60%{box-shadow:0 18px 26px rgba(0,0,0,.6)}100%{transform:translateY(0) scale(1);opacity:1;box-shadow:0 3px 6px rgba(0,0,0,.55)}}
 .foe-inverted{transform:rotate(180deg)}   /* pvp locale: carte avversario ruotate */
+/* in PvP capovolgo anche la damigiana e il nome dell'avversario (siede di fronte) */
+body[data-pvp="1"] .player-strip.foe .otre img{transform:rotate(180deg)}
+body[data-pvp="1"] .player-strip.foe .who{transform:rotate(180deg)}
+body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 
 /* 5a carta che scivola LENTAMENTE al centro sovrapponendosi alle altre */
 .card.deal-center{animation:dealCenter 1.3s cubic-bezier(.25,1,.4,1);z-index:5;
@@ -289,14 +297,15 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
 
 /* NUMERI danni/cure stile Balatro: grandi, con bordo bianco */
 .float{position:absolute;left:50%;top:0%;transform:translateX(-50%);font-family:var(--font-display),Georgia,serif;
-  font-weight:900;font-size:44px;pointer-events:none;animation:floatUp 1.4s cubic-bezier(.2,1,.4,1) forwards;z-index:33;
+  font-weight:900;font-size:48px;pointer-events:none;animation:floatUp 2.4s cubic-bezier(.15,.9,.3,1) forwards;z-index:33;
   -webkit-text-stroke:2.5px #fff;paint-order:stroke fill;letter-spacing:-1px}
 .float.dmg{color:#e01f2d;text-shadow:0 0 12px rgba(224,31,45,.8),0 3px 0 rgba(120,0,0,.6)}
 .float.heal{color:#33c04a;text-shadow:0 0 12px rgba(51,192,74,.8),0 3px 0 rgba(0,80,20,.6)}
 .float.block{color:var(--brass-hi);font-size:30px;-webkit-text-stroke:2px #fff}
 @keyframes floatUp{0%{opacity:0;transform:translate(-50%,20px) scale(.4) rotate(-8deg)}
-  25%{opacity:1;transform:translate(-50%,-6px) scale(1.35) rotate(3deg)}
-  40%{transform:translate(-50%,-10px) scale(1.1) rotate(-2deg)}
+  15%{opacity:1;transform:translate(-50%,-6px) scale(1.4) rotate(3deg)}
+  28%{transform:translate(-50%,-10px) scale(1.1) rotate(-2deg)}
+  75%{opacity:1;transform:translate(-50%,-24px) scale(1.05)}
   100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
 
 /* riquadro turni scrollabile in basso */
@@ -419,7 +428,6 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
       </div>
       <div class="action-bar" id="my-actions">
         <button class="btn ghost compact" id="btn-swap" data-i18n="swap">Cambia carta (−10 PV)</button>
-        <button class="btn primary" id="btn-reveal" data-i18n="reveal">Rivela il Destino</button>
         <button class="btn atk" id="btn-attack" disabled data-i18n="attack">⚔ Attacco</button>
         <button class="btn def" id="btn-defend" disabled data-i18n="defend">🛡 Difesa</button>
         <button class="btn primary" id="btn-summon" style="display:none" data-i18n="summon">Evoca Maschera</button>
@@ -1046,8 +1054,10 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.1.2";
+const APP_VERSION="1.1.3";
 const CHANGELOG=[
+  {v:"1.1.3", it:["Rimosso 'Rivela il Destino': ora Cambia/Attacca/Difendi sono subito visibili. Premi Attacca o Difendi (scelta cieca), poi cala la 5ª carta, poi Evoca Maschera.","In PvP: turno per turno (prima G1, poi G2), poi entrambi premono Evoca. Il gioco non prosegue finché entrambi non hanno scelto.","PvP: risolto il cambio carta del Giocatore 2 (ora funziona in ogni mano). Damigiana avversaria capovolta.","Android: il pulsante 'Al tavolo' e l'Inverti di Arlecchino non escono più dallo schermo; la griglia scorre e i pulsanti restano visibili.","Numeri danni/cure più grandi e visibili più a lungo.","README: gerarchia aggiornata (Tris batte Scala) e link app cliccabile."],
+    en:["Removed 'Reveal Fate': Swap/Attack/Defend are now shown immediately. Press Attack or Defend (blind), then the 5th card is dealt, then Summon Mask.","In PvP: turn by turn (P1 first, then P2), then both press Summon. The game waits until both have chosen.","PvP: fixed Player 2's card swap (now works every hand). Opponent demijohn flipped.","Android: the 'To the table' button and Arlecchino's Invert no longer go off-screen; the grid scrolls and buttons stay visible.","Damage/heal numbers bigger and visible longer.","README: updated hierarchy (Trips beats Straight) and clickable app link."]},
   {v:"1.1.2", it:["Appena cala la 5ª carta, le carte dell'avversario vengono scoperte. Resta ignota solo la sua scelta (attacco/difesa) e come ha impostato le maschere."],
     en:["As soon as the 5th card is dealt, the opponent's cards are revealed. Only their choice (attack/defend) and mask setup stay hidden."]},
   {v:"1.1.1", it:["PvP offline: risolto il blocco. Ora G1 rivela e sceglie, G2 sceglie, poi entrambi premono Evoca Maschera.","Armi lanciate stile Vampire Survivors: tante armi, grandi e luminose, sopra il velo, con esplosioni all'impatto.","Numeri danni/cure stile Balatro: grandi, danni in rosso e cure in verde, con bordo bianco.","Damigiane ai lati opposti: Giocatore 1 a sinistra, avversario a destra (in PvP il Giocatore 2 la vede a sinistra sua).","Link app cliccabile nei README."],
@@ -1213,8 +1223,9 @@ const UI = (() => {
   function renderMyHand(){
     const hand=$('my-hand'); hand.innerHTML='';
     const active = mode==='pvp_local' ? pvpTurn==='me' : true;
+    const choosing = state.phase==='choose'||state.phase==='draw';
     state.me.hand.forEach((c,i)=>{
-      const canSwap=state.phase==='choose'&&!state.me.swappedThisRound&&swapArmed&&active;
+      const canSwap=choosing&&!state.me.swappedThisRound&&swapArmed&&active;
       const el=cardEl(c,{cls:'mid'+(canSwap?' selectable':''),mine:true});
       if(canSwap) el.addEventListener('click',()=>doSwap('me',i));
       hand.appendChild(el);
@@ -1252,14 +1263,14 @@ const UI = (() => {
   function floatText(side,text,kind){
     const host=$(side==='me'?'otre-me':'otre-ai');
     const f=document.createElement('div');f.className='float '+kind;f.textContent=text;
-    host.appendChild(f);setTimeout(()=>f.remove(),1100);
+    host.appendChild(f);setTimeout(()=>f.remove(),2500);
   }
   // animazione scudo di parata sull'otre del difensore
   function shieldBlock(side, amount){
     const host=$(side==='me'?'otre-me':'otre-ai');
     const s=document.createElement('div'); s.className='shield-fx';
     s.innerHTML=`🛡<span class="blocked-n">−${amount}</span>`;
-    host.appendChild(s); setTimeout(()=>s.remove(),1100);
+    host.appendChild(s); setTimeout(()=>s.remove(),1600);
   }
 
   /* ================= FLUSSO PARTITA ================= */
@@ -1267,10 +1278,10 @@ const UI = (() => {
     maskTone['_reset']=1; for(const k in maskTone) delete maskTone[k];
     state=GameState.createInitial(playerInv,{mode:mode==='pvp_local'?'pvp_local':'ai',difficulty});
     // in pvp locale, applica la build scelta dal Giocatore 2
-    if(mode==='pvp_local'){ state.inv.ai={...pvpP2Inv}; $('foe-name').textContent=T().p2; }
-    else { $('foe-name').textContent=T().foe; }
+    if(mode==='pvp_local'){ state.inv.ai={...pvpP2Inv}; $('foe-name').textContent=T().p2; document.body.dataset.pvp='1'; }
+    else { $('foe-name').textContent=T().foe; document.body.dataset.pvp='0'; }
     showScreen('screen-table');
-    $('foe-actions').style.display = mode==='pvp_local' ? 'flex':'none';
+    $('foe-actions').style.display='none';   // i pulsanti di G2 appaiono solo al suo turno
     $('overlay').className='overlay';
     newRound();
     fitScale();
@@ -1280,12 +1291,16 @@ const UI = (() => {
     swapArmed=false; pvpTurn='me';
     GameState.dealRound(state);
     $('maskOverlay').classList.remove('show');
-    ['btn-attack','btn-defend','btn-summon'].forEach(id=>{$(id).disabled=true;$(id).style.display='none';});
+    $('btn-summon').style.display='none';$('btn-summon').classList.remove('confirm-pulse');
+    $('btn-reveal')&&($('btn-reveal').style.display='none');
+    // Cambia/Attacca/Difendi subito visibili
     $('btn-swap').style.display='';$('btn-swap').disabled=false;$('btn-swap').classList.remove('primary');
-    $('btn-reveal').style.display='';$('btn-reveal').disabled=false;
+    $('btn-attack').style.display='';$('btn-attack').disabled=false;
+    $('btn-defend').style.display='';$('btn-defend').disabled=false;
+    // in PvP: G2 aspetta il suo turno; nascondi i suoi pulsanti finché non tocca a lui
+    if(mode==='pvp_local'){ $('foe-actions').style.display='none'; }
     renderOtri();renderCommunity();renderFoeHand(false);renderMyHand();
     log(`— <b>Round ${state.round}</b> —`,'sys');
-    // narro le carte iniziali con simboli
     log(`<span class="sys">${T().tableLabel}: ${cardsSymbols(state.community.slice(0,4))}</span>`,'sys');
     log(`<span class="me">${T().yourCardsLabel}: ${cardsSymbols(state.me.hand)}</span>`,'me');
     if(mode==='pvp_local') log(`<span class="ai">${T().p2CardsLabel}: ${cardsSymbols(state.ai.hand)}</span>`,'ai');
@@ -1303,10 +1318,11 @@ const UI = (() => {
     if(mode==='pvp_local' && side==='ai') renderFoeHandSelectable();
   }
   function renderFoeHandSelectable(){
-    // pvp: P2 può toccare le proprie carte per cambiarle
+    // pvp: P2 può toccare le proprie carte per cambiarle (durante il suo turno)
     const foe=$('foe-hand'); foe.innerHTML='';
+    const choosing = state.phase==='choose'||state.phase==='draw';
     state.ai.hand.forEach((c,i)=>{
-      const canSwap=state.phase==='choose'&&!state.ai.swappedThisRound&&swapArmed&&pvpTurn==='ai';
+      const canSwap=choosing&&!state.ai.swappedThisRound&&swapArmed&&pvpTurn==='ai';
       const el=cardEl(c,{cls:'mid'+(canSwap?' selectable':''),inverted:true});
       if(canSwap) el.addEventListener('click',()=>doSwap('ai',i));
       foe.appendChild(el);
@@ -1324,10 +1340,34 @@ const UI = (() => {
     if(GameState.checkWin(state)){endGame();return;}
   }
 
-  // RIVELA IL DESTINO: la scelta atk/dif avviene ALLA CIECA sulle 4 carte a terra.
-  function reveal(byWho){
-    if(mode!=='pvp_local'){
-      // l'IA cambia carta PRIMA, dichiarandolo subito
+  // scelta atk/dif ALLA CIECA (sulle 4 carte). Cambia carta è opzionale, prima.
+  function choose(side,c){
+    if(mode==='pvp_local'){
+      // In PvP: turno alternato. G1 sceglie, poi G2, poi si procede.
+      state[side].choice=c;
+      log(`<span class="${side==='me'?'me':'ai'}">${(side==='me'?T().p1:T().p2)}: ${c==='attack'?T().attack:T().defend}</span>`,side==='me'?'me':'ai');
+      if(side==='me'){
+        // G1 ha scelto: blocca i suoi pulsanti, passa a G2
+        $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
+        $('btn-attack').style.display='none';$('btn-defend').style.display='none';$('btn-swap').style.display='none';
+        pvpTurn='ai';
+        $('foe-actions').style.display='flex';
+        $('p2-summon').style.display='none';
+        $('p2-swap').style.display='';$('p2-swap').disabled=false;$('p2-swap').classList.remove('primary');
+        $('p2-attack').style.display='';$('p2-defend').style.display='';
+        $('p2-attack').disabled=false;$('p2-defend').disabled=false;
+        renderFoeHandSelectable();
+        log(`<span class="sys">${T().p2Turn}</span>`,'sys');
+        return;
+      }else{
+        // G2 ha scelto: procedi
+        $('p2-swap').disabled=true;$('p2-attack').disabled=true;$('p2-defend').disabled=true;
+        $('p2-attack').style.display='none';$('p2-defend').style.display='none';$('p2-swap').style.display='none';
+        proceedToFifth();
+        return;
+      }
+    } else {
+      // PvE: l'IA cambia carta (se serve) e sceglie alla cieca ORA
       const plan=GameLogic.aiChoose(state,difficulty);
       if(plan.swapIndex>=0){
         const r=GameState.swapCard(state,'ai',plan.swapIndex);
@@ -1335,40 +1375,11 @@ const UI = (() => {
           $('otre-ai').classList.add('hit');setTimeout(()=>$('otre-ai').classList.remove('hit'),500);}
         if(GameState.checkWin(state)){renderOtri();endGame();return;}
       }
-      state.ai.choice=GameLogic.aiChooseBlind(state,difficulty);   // IA sceglie sulle 4 carte
-    }
-    $('btn-swap').style.display='none';$('btn-reveal').style.display='none';
-    $('btn-attack').style.display='';$('btn-defend').style.display='';
-    $('btn-attack').disabled=false;$('btn-defend').disabled=false;
-    state.phase='chooseBlind';
-    log(`<span class="sys">${mode==='pvp_local'?T().p1ChooseBlind:T().blindChoice}</span>`,'sys');
-  }
-
-  function choose(side,c){
-    if(mode==='pvp_local'){
-      state[side].choice=c;
-      log(`<span class="${side==='me'?'me':'ai'}">${(side==='me'?T().p1:T().p2)}: ${c==='attack'?T().attack:T().defend}</span>`,side==='me'?'me':'ai');
-      if(side==='me'){
-        // G1 ha scelto: nascondi i suoi pulsanti, mostra quelli di G2 (in alto, ruotati)
-        $('btn-attack').style.display='none';$('btn-defend').style.display='none';
-        pvpTurn='ai';
-        $('foe-actions').style.display='flex';
-        $('p2-swap').style.display='none';$('p2-summon').style.display='none';
-        $('p2-attack').style.display='';$('p2-defend').style.display='';
-        $('p2-attack').disabled=false;$('p2-defend').disabled=false;
-        log(`<span class="sys">${T().p2Turn}</span>`,'sys');
-        return;
-      }else{
-        // G2 ha scelto: nascondi i suoi pulsanti e procedi
-        $('p2-attack').style.display='none';$('p2-defend').style.display='none';
-        proceedToFifth();
-        return;
-      }
-    } else {
+      state.ai.choice=GameLogic.aiChooseBlind(state,difficulty);
       state.me.choice=c;
-      log(`<span class="me">${T().youChose(state.me.choice==='attack'?T().attack:T().defend)}</span>`,'me');
-      $('btn-attack').disabled=true;$('btn-defend').disabled=true;
-      $('btn-attack').style.display='none';$('btn-defend').style.display='none';
+      log(`<span class="me">${T().youChose(c==='attack'?T().attack:T().defend)}</span>`,'me');
+      $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
+      $('btn-swap').style.display='none';$('btn-attack').style.display='none';$('btn-defend').style.display='none';
       proceedToFifth();
     }
   }
@@ -1400,10 +1411,13 @@ const UI = (() => {
   // EVOCA: in PvP aspetta che entrambi premano; poi animazione + duello
   function evoke(who){
     who=who||'me';
+    if(state.phase!=='readyEvoke' && state.phase!=='dealing5') return;   // non pronto
+    if(!state.me.eval || !state.ai.eval) return;   // valutazioni non ancora calcolate
     evokeReady[who]=true;
     if(who==='me'){ $('btn-summon').style.display='none';$('btn-summon').classList.remove('confirm-pulse'); }
     else { $('p2-summon').style.display='none';$('p2-summon').classList.remove('confirm-pulse'); }
     if(!evokeReady.me || !evokeReady.ai) return;   // aspetta l'altro giocatore
+    state.phase='summoning';   // evita doppie evocazioni
     if(mode==='pvp_local') $('foe-actions').style.display='none';
     bumpTone(state.me.eval.maskId); bumpTone(state.ai.eval.maskId);
     playSummonAnimation(()=>{
@@ -1527,7 +1541,7 @@ const UI = (() => {
         setTimeout(()=>otre.classList.remove('heal'),900); renderOtri();
       },700);
     }
-    setTimeout(afterResolve, 3400);   // più lento e leggibile
+    setTimeout(afterResolve, 4200);   // tempo per leggere i numeri
   }
 
   // RAFFICA di armi (stile Vampire Survivors): tante armi grandi e luminose
@@ -1722,7 +1736,6 @@ const UI = (() => {
     });
     // tavolo P1
     $('btn-swap').addEventListener('click',()=>armSwap('me'));
-    $('btn-reveal').addEventListener('click',()=>reveal('me'));
     $('btn-summon').addEventListener('click',()=>evoke());
     $('btn-attack').addEventListener('click',()=>choose('me','attack'));
     $('btn-defend').addEventListener('click',()=>choose('me','defend'));

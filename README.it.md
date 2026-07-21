@@ -46,17 +46,17 @@ Prima della partita, **inverti Attacco/Difesa** di ogni Maschera (Meneghino e Ca
 ### Gerarchia Maschere (arma · Attacco / Difesa) & probabilità reali (Hold'em)
 | Combinazione | Maschera | Arma | Atk / Dif | Prob. |
 |---|---|---|---|---|
-| Carta Alta | Meo Patacca | Stiletto | 2 / 1 | 6.1% |
-| Coppia | Pantalone | Borsa di monete | 6 / 3 | 34.7% |
-| Doppia Coppia | Brighella | Bastone nodoso | 10 / 5 | 33.7% |
-| Tris | Pulcinella | Manganello | 15 / 7 | 6.6% |
+| Scala Colore | Capitan Spaventa | Spada Strisciata | 100 / 100 (fisso) | 0.08% |
+| Poker | Meneghino | Ombrello d'acciaio | 50 / 50 (fisso) | 0.39% |
+| Colore | Arlecchino | Spatola di legno | 30 / 15 | 2.4% |
 | Full | Colombina | Ventaglio affilato | 25 / 13 | 5.6% |
-| Colore | Arlecchino | Spatola di legno | 30 / 15 | 2.5% |
-| Scala | Dottor Balanzone | Tomo pesante | 20 / 10 | 10.4% |
-| Poker | Meneghino | Ombrello d'acciaio | 50 / 50 (fisso) | 0.37% |
-| Scala Colore | Capitan Spaventa | Spada Strisciata | 100 / 100 (fisso) | 0.085% |
+| Tris | Pulcinella | Manganello | 20 / 10 | 6.6% |
+| Scala | Dottor Balanzone | Tomo pesante | 15 / 7 | 10.4% |
+| Doppia Coppia | Brighella | Bastone nodoso | 10 / 5 | 33.7% |
+| Coppia | Pantalone | Borsa di monete | 6 / 3 | 34.7% |
+| Carta Alta | Meo Patacca | Stiletto | 2 / 1 | — (nessuna combo) |
 
-> **Diverso dal poker:** con 40 carte il Colore (2.4%) è più raro del Full (5.6%), quindi qui **Colore batte Full**. La 5ª carta a terra cala **dopo** che scegli Attacco/Difesa, quindi la tua mano può ancora cambiare.
+> **Diverso dal poker (40 carte):** il **Colore batte il Full** (il Colore 2.4% è più raro del Full 5.6%) e il **Tris batte la Scala** (il Tris 6.6% è più raro della Scala 10.4%). Scegli Attacco/Difesa **alla cieca** sulle 4 carte, poi cala la 5ª: può ribaltare tutto.
 >
 > Capitan Spaventa ora è **qualsiasi scala colore** (non solo A-alto), così la combinazione
 > più rara resta raggiungibile pur restando la più rara.
