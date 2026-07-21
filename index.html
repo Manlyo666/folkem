@@ -58,7 +58,7 @@ body[data-portrait="1"] .mode-btn .mb-txt span{font-size:3.4vw}
 body[data-portrait="1"] .diff-btn{padding:1.8vh 5vw;font-size:4.6vw}
 body[data-portrait="1"] .sign h1{font-size:12vw}
 /* SETUP: header attaccato in alto, bottoni attaccati in basso, 9 maschere in mezzo SENZA scorrere */
-body[data-portrait="1"] #screen-setup{justify-content:space-between;display:flex;flex-direction:column;height:100%;padding:1.5vh 2vw}
+body[data-portrait="1"] #screen-setup.active{justify-content:space-between;display:flex;flex-direction:column;height:100%;padding:1.5vh 2vw}
 body[data-portrait="1"] #screen-setup .sign{flex-shrink:0;margin:0}
 body[data-portrait="1"] #screen-setup .sign h1{font-size:6.5vw;margin:0}
 body[data-portrait="1"] .setup-intro{font-size:2.9vw;margin:0.4vh 0;flex-shrink:0;line-height:1.25}
@@ -78,7 +78,7 @@ body[data-portrait="1"] .bc-swap{font-size:2.6vw;padding:0.5vh 1vw;flex-shrink:0
 body[data-portrait="1"] #screen-setup > div:last-child{flex-shrink:0;padding-top:1vh;gap:2vw}
 body[data-portrait="1"] #screen-setup > div:last-child .btn{padding:1.6vh 6vw;font-size:4.4vw}
 /* TAVOLO: 3 zone verticali che riempiono lo schermo, carte grandi in vw/vh */
-body[data-portrait="1"] #screen-table{padding:1vh 1.5vw;display:flex;flex-direction:column;height:100%}
+body[data-portrait="1"] #screen-table.active{padding:1vh 1.5vw;display:flex;flex-direction:column;height:100%}
 body[data-portrait="1"] .table-top,body[data-portrait="1"] .table-bottom{gap:0.6vh;flex-shrink:0}
 body[data-portrait="1"] .table-mid{gap:0.6vh;flex:1 1 auto;min-height:0}
 body[data-portrait="1"] .player-strip{gap:2vw;padding:0 3vw}
@@ -1114,8 +1114,10 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.1.6";
+const APP_VERSION="1.1.7";
 const CHANGELOG=[
+  {v:"1.1.7", it:["RISOLTO il bug del tavolo vuoto su Android: la schermata di gioco restava sempre attiva sopra il menu e intercettava i tocchi, così il menu modalità sembrava sparito e le impostazioni non rispondevano. Ora ogni schermata si mostra solo quando è la sua."],
+    en:["FIXED the empty-table bug on Android: the game screen stayed permanently on top of the menu and intercepted taps, so the mode menu looked gone and settings did nothing. Now each screen shows only when it is its turn."]},
   {v:"1.1.6", it:["L'IA ora cambia carta all'INIZIO del round, così lo vedi (lampeggio sulla sua carta + PV che calano subito) e puoi ragionarci prima di scegliere.","Le carte non si spostano più quando i pulsanti compaiono/scompaiono: resta un piccolo spazio fisso per loro.","Icona del pulsante lingua ridisegnata (mezzo tricolore / mezzo Union Jack).","Android: aggiunto un controllo che rileva una nuova versione e ricarica da solo, per superare la cache vecchia che mostrava il tavolo vuoto."],
     en:["The AI now swaps a card at the START of the round, so you see it (flash on its card + HP dropping immediately) and can reason about it before choosing.","Cards no longer shift when buttons appear/disappear: a small fixed space is reserved for them.","Language button icon redesigned (half Italian tricolour / half Union Jack).","Android: added a check that detects a new version and reloads by itself, to get past the stale cache that showed the empty table."]},
   {v:"1.1.5", it:["Riepilogo in basso: ora mostra tutto anche di computer/Giocatore 2 (scelta attacco/difesa) e il danno con la matematica della parata (es. Danno: 20 − 3 = 17). Si resetta a ogni nuova partita ed è più grande.","Nuovo pulsante lingua (bandiera metà IT / metà EN) nel menu iniziale; la lingua si cambia anche dal menu impostazioni in partita. La scelta viene ricordata.","Corretto: quando l'IA cambia carta ora i suoi PV calano subito a schermo (prima restavano 100).","Android: risolta la cache che serviva una versione vecchia (ora l'HTML si aggiorna sempre). Se prima ti mandava a un tavolo vuoto, ora parte dal menu modalità.","Il nome dell'arma annunciato a centro schermo non va più a capo: resta centrato e si rimpicciolisce se troppo lungo."],
