@@ -46,47 +46,53 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
 
 /* ===== schermate ===== */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;padding:16px;overflow:hidden}
-/* --- adattamenti PORTRAIT (mobile verticale) --- */
-body[data-portrait="1"] .screen{padding:12px 10px;justify-content:flex-start}
-/* MENU: pulsanti grandi e ariosi */
-body[data-portrait="1"] #screen-menu{justify-content:center}
-body[data-portrait="1"] .mode-list{gap:20px;margin-top:24px;width:100%}
-body[data-portrait="1"] .mode-btn{width:100%;max-width:none;padding:22px 20px;gap:16px}
-body[data-portrait="1"] .mode-btn .mb-ico{font-size:38px}
-body[data-portrait="1"] .mode-btn .mb-txt b{font-size:24px}
-body[data-portrait="1"] .mode-btn .mb-txt span{font-size:14px}
-body[data-portrait="1"] .diff-btn{padding:14px 22px;font-size:18px}
-body[data-portrait="1"] .sign h1{font-size:48px}
-/* SETUP: griglia 9 maschere, header compatto, bottoni SEMPRE visibili */
-body[data-portrait="1"] #screen-setup{justify-content:flex-start;display:flex;flex-direction:column;height:100%}
-body[data-portrait="1"] #screen-setup .sign{flex-shrink:0}
-body[data-portrait="1"] #screen-setup .sign h1{font-size:30px}
-body[data-portrait="1"] .setup-intro{font-size:11px;margin:3px 0 6px;flex-shrink:0}
-body[data-portrait="1"] .build-grid3{grid-template-columns:repeat(3,1fr);gap:6px;max-width:100%;width:100%;
-  flex:1 1 auto;min-height:0;overflow-y:auto;grid-auto-rows:min-content;align-content:start}
-body[data-portrait="1"] .build-card{flex-direction:column;padding:5px;gap:3px;text-align:center;justify-content:space-between}
-body[data-portrait="1"] .bc-mask{width:100%;height:auto;aspect-ratio:3/4;max-height:none}
-body[data-portrait="1"] .bc-mask img{width:100%;height:100%;object-fit:cover}
-body[data-portrait="1"] .bc-info{width:100%}
-body[data-portrait="1"] .bc-info .rank-label{font-size:9px}
-body[data-portrait="1"] .bc-info .bc-name{font-size:12px}
-body[data-portrait="1"] .bc-stats{gap:3px}
-body[data-portrait="1"] .bc-stats .st b{font-size:13px}
-body[data-portrait="1"] .bc-swap{font-size:11px;padding:5px}
-body[data-portrait="1"] #screen-setup > div:last-child{flex-shrink:0;padding-top:8px}
-body[data-portrait="1"] #screen-table{padding:2px 4px}
-/* TAVOLO portrait: carte grandi, poco spazio tra file */
-body[data-portrait="1"] .table-top,body[data-portrait="1"] .table-bottom{gap:6px}
-body[data-portrait="1"] .table-mid{gap:2px}
-body[data-portrait="1"] .player-strip{gap:8px}
-body[data-portrait="1"] .card.big{width:88px;height:128px}
-body[data-portrait="1"] .card.mid{width:80px;height:116px}
-body[data-portrait="1"] .community-row{gap:5px}
-body[data-portrait="1"] .hand-cards{gap:6px}
-body[data-portrait="1"] .otre{width:78px;height:100px}
-body[data-portrait="1"] .hp-num{font-size:20px}
-body[data-portrait="1"] .action-bar .btn{font-size:15px;padding:10px 14px}
-body[data-portrait="1"] .log-box{height:70px;font-size:13px}
+/* ============ PORTRAIT (mobile verticale): layout fluido a tutto schermo ============ */
+body[data-portrait="1"] .screen{padding:0;justify-content:flex-start;width:100%;height:100%}
+/* MENU */
+body[data-portrait="1"] #screen-menu{justify-content:center;padding:4vh 5vw}
+body[data-portrait="1"] .mode-list{gap:2.4vh;margin-top:3vh;width:100%}
+body[data-portrait="1"] .mode-btn{width:100%;max-width:none;padding:2.6vh 5vw;gap:4vw}
+body[data-portrait="1"] .mode-btn .mb-ico{font-size:8vw}
+body[data-portrait="1"] .mode-btn .mb-txt b{font-size:6vw}
+body[data-portrait="1"] .mode-btn .mb-txt span{font-size:3.4vw}
+body[data-portrait="1"] .diff-btn{padding:1.8vh 5vw;font-size:4.6vw}
+body[data-portrait="1"] .sign h1{font-size:12vw}
+/* SETUP: header attaccato in alto, bottoni attaccati in basso, 9 maschere in mezzo SENZA scorrere */
+body[data-portrait="1"] #screen-setup{justify-content:space-between;display:flex;flex-direction:column;height:100%;padding:1.5vh 2vw}
+body[data-portrait="1"] #screen-setup .sign{flex-shrink:0;margin:0}
+body[data-portrait="1"] #screen-setup .sign h1{font-size:6.5vw;margin:0}
+body[data-portrait="1"] .setup-intro{font-size:2.9vw;margin:0.4vh 0;flex-shrink:0;line-height:1.25}
+body[data-portrait="1"] .build-grid3{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  gap:1.2vw;width:100%;flex:1 1 auto;min-height:0;max-width:100%}
+body[data-portrait="1"] .build-card{flex-direction:column;padding:0.8vw;gap:0.4vh;text-align:center;
+  justify-content:space-between;min-height:0;overflow:hidden}
+body[data-portrait="1"] .bc-mask{width:auto;height:auto;flex:1 1 auto;min-height:0;aspect-ratio:3/4;max-width:100%;margin:0 auto}
+body[data-portrait="1"] .bc-mask img{width:100%;height:100%;object-fit:contain}
+body[data-portrait="1"] .bc-info{width:100%;flex-shrink:0}
+body[data-portrait="1"] .bc-info .rank-label{font-size:2.3vw;line-height:1.1}
+body[data-portrait="1"] .bc-info .bc-name{font-size:2.6vw;line-height:1.1}
+body[data-portrait="1"] .bc-stats{gap:2vw;flex-shrink:0}
+body[data-portrait="1"] .bc-stats .st b{font-size:3.2vw}
+body[data-portrait="1"] .bc-stats .st span{font-size:2.2vw}
+body[data-portrait="1"] .bc-swap{font-size:2.6vw;padding:0.5vh 1vw;flex-shrink:0;margin-top:0.4vh}
+body[data-portrait="1"] #screen-setup > div:last-child{flex-shrink:0;padding-top:1vh;gap:2vw}
+body[data-portrait="1"] #screen-setup > div:last-child .btn{padding:1.6vh 6vw;font-size:4.4vw}
+/* TAVOLO: 3 zone verticali che riempiono lo schermo, carte grandi in vw/vh */
+body[data-portrait="1"] #screen-table{padding:1vh 1.5vw;display:flex;flex-direction:column;height:100%}
+body[data-portrait="1"] .table-top,body[data-portrait="1"] .table-bottom{gap:0.6vh;flex-shrink:0}
+body[data-portrait="1"] .table-mid{gap:0.6vh;flex:1 1 auto;min-height:0}
+body[data-portrait="1"] .player-strip{gap:2vw;padding:0 3vw}
+/* carte dimensionate sulla larghezza: 5 a terra devono stare in fila */
+body[data-portrait="1"] .card.big,body[data-portrait="1"] .card.mid{width:17vw;height:24.6vw;max-height:15vh}
+body[data-portrait="1"] .community-row{gap:1.2vw}
+body[data-portrait="1"] .hand-cards{gap:1.6vw}
+body[data-portrait="1"] .otre{width:15vw;height:19vw;max-height:12vh}
+body[data-portrait="1"] .hp-num{font-size:4.6vw}
+body[data-portrait="1"] .otre-wrap{width:16vw}
+body[data-portrait="1"] .otre-wrap .who{font-size:3vw}
+body[data-portrait="1"] .action-bar{gap:1.5vw}
+body[data-portrait="1"] .action-bar .btn{font-size:3.6vw;padding:1.3vh 2vw}
+body[data-portrait="1"] .log-box{height:9vh;font-size:3vw;flex-shrink:0}
 .screen.active{display:flex;animation:fadeIn .35s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
@@ -124,11 +130,15 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
 .diff-row{display:flex;gap:10px;justify-content:center;margin-top:6px}
 .diff-btn{padding:10px 18px}
 .diff-btn.on{background:linear-gradient(180deg,var(--brass),#9a7636);color:var(--ink);border-color:var(--brass-hi)}
-.menu-tools{position:absolute;top:12px;right:12px;display:flex;gap:8px}
-.icon-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--brass);cursor:pointer;
+.menu-tools{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:15}
+.icon-btn{width:48px;height:48px;border-radius:50%;border:2px solid var(--brass);cursor:pointer;
   background:radial-gradient(circle at 40% 35%,#5a3a20,#2a1810);display:flex;align-items:center;justify-content:center;
-  font-size:22px;color:var(--brass-hi);transition:.2s}
-.icon-btn:hover{transform:rotate(30deg);box-shadow:0 0 14px rgba(255,180,60,.5)}
+  font-size:24px;color:var(--brass-hi);transition:.2s;-webkit-tap-highlight-color:rgba(255,180,60,.4);
+  user-select:none;touch-action:manipulation}
+body[data-portrait="1"] .menu-tools{top:1.5vh;right:2.5vw}
+body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn:hover{box-shadow:0 0 14px rgba(255,180,60,.5)}
 .cartwheel{animation:none}
 
 /* ===== SETUP 3x3 ===== */
@@ -198,7 +208,7 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
   60%{box-shadow:0 18px 26px rgba(0,0,0,.6)}100%{transform:translateY(0) scale(1);opacity:1;box-shadow:0 3px 6px rgba(0,0,0,.55)}}
 .foe-inverted{transform:rotate(180deg)}   /* pvp locale: carte avversario ruotate */
 /* in PvP capovolgo anche la damigiana e il nome dell'avversario (siede di fronte) */
-body[data-pvp="1"] .player-strip.foe .otre img{transform:rotate(180deg)}
+body[data-pvp="1"] .player-strip.foe .otre{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .who{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 
@@ -230,6 +240,20 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   animation:summonTextIn 1.2s ease forwards;padding:0 20px}
 @keyframes summonTextIn{0%{transform:scale(.5);opacity:0}30%{transform:scale(1.1);opacity:1}70%{transform:scale(1);opacity:1}100%{opacity:.9}}
 @keyframes confirmPulse{0%,100%{box-shadow:0 3px 0 rgba(0,0,0,.4)}50%{box-shadow:0 0 18px 3px rgba(255,180,60,.7)}}
+
+/* ANNUNCIO ARMA a centro schermo (stile anime: la maschera dichiara il colpo) */
+.weapon-announce{position:absolute;left:0;right:0;top:38%;z-index:36;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  animation:waIn .35s cubic-bezier(.2,1.4,.4,1) forwards}
+.weapon-announce.out{animation:waOut .4s ease forwards}
+.weapon-announce .wa-mask{font-family:var(--font-fairy);font-size:26px;color:var(--brass-hi);
+  text-shadow:0 2px 6px #000,0 0 18px rgba(255,190,90,.8)}
+.weapon-announce .wa-weapon{font-family:var(--font-display),Georgia,serif;font-weight:900;font-size:38px;
+  color:#fff;-webkit-text-stroke:2.5px #7a0e18;paint-order:stroke fill;letter-spacing:-.5px;
+  text-shadow:0 3px 10px rgba(0,0,0,.8),0 0 24px rgba(224,66,79,.7);
+  padding:6px 26px;background:linear-gradient(90deg,transparent,rgba(122,14,24,.35),transparent)}
+@keyframes waIn{0%{transform:translateY(30px) scale(.6);opacity:0}60%{transform:translateY(0) scale(1.12);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes waOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.25) translateY(-20px)}}
 
 /* SCUDO di parata: appare sull'otre difesa e riduce il danno */
 .shield-fx{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:30;
@@ -388,7 +412,7 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 
   <!-- ============ TAVOLO ============ -->
   <section id="screen-table" class="screen">
-    <div class="menu-tools"><div class="icon-btn" id="table-opts" title="Opzioni">🛞</div></div>
+    <div class="menu-tools"><div class="icon-btn" id="table-opts" title="Opzioni">⚙</div></div>
 
     <!-- avversario in alto (in pvp: pulsanti ruotati) -->
     <div class="table-top">
@@ -577,8 +601,8 @@ const GameLogic = (() => {
       key='flush';
       tie=cards.filter(c=>c.suit===flushSuit).map(c=>hi(c.r)).sort((a,b)=>b-a).slice(0,5);
     }
-    else if(stHigh){ key='straight'; tie=[stHigh]; }
     else if(g[0].n===3){ key='trips'; tie=[g[0].hi, ...topKickers([g[0].hi],2)]; }
+    else if(stHigh){ key='straight'; tie=[stHigh]; }
     else if(g[0].n===2 && g[1] && g[1].n===2){
       key='twopair';
       const [a,b]=[g[0].hi,g[1].hi].sort((x,y)=>y-x);
@@ -1054,8 +1078,10 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.1.3";
+const APP_VERSION="1.1.4";
 const CHANGELOG=[
+  {v:"1.1.4", it:["Corretto un bug di gerarchia: con un Tris E una Scala nella stessa mano ora vince il Tris (più raro, più forte). Prima sceglieva la Scala.","Android: layout completamente rifatto — riempie lo schermo reale, niente più cornice a rombi, carte non più tagliate (nemmeno con la 5ª). Le 9 maschere del setup stanno tutte senza scorrere.","La damigiana avversaria in PvP ora si capovolge col vino incluso.","Il nome dell'arma non sta più sotto la maschera: appare a centro schermo con un'animazione quando parte l'attacco (la maschera annuncia il colpo).","Pulsante opzioni: ora è un ingranaggio, più grande e tutto cliccabile."],
+    en:["Fixed a hierarchy bug: with both Trips AND a Straight in the same hand, Trips now wins (rarer, stronger). It used to pick the Straight.","Android: layout fully reworked — fills the real screen, no more diamond frame, cards no longer cut (even with the 5th). All 9 setup masks fit without scrolling.","The opponent demijohn in PvP now flips with the wine included.","The weapon name no longer sits under the mask: it appears center-screen with an animation as the attack starts (the mask announces the blow).","Options button: now a gear, bigger and fully clickable."]},
   {v:"1.1.3", it:["Rimosso 'Rivela il Destino': ora Cambia/Attacca/Difendi sono subito visibili. Premi Attacca o Difendi (scelta cieca), poi cala la 5ª carta, poi Evoca Maschera.","In PvP: turno per turno (prima G1, poi G2), poi entrambi premono Evoca. Il gioco non prosegue finché entrambi non hanno scelto.","PvP: risolto il cambio carta del Giocatore 2 (ora funziona in ogni mano). Damigiana avversaria capovolta.","Android: il pulsante 'Al tavolo' e l'Inverti di Arlecchino non escono più dallo schermo; la griglia scorre e i pulsanti restano visibili.","Numeri danni/cure più grandi e visibili più a lungo.","README: gerarchia aggiornata (Tris batte Scala) e link app cliccabile."],
     en:["Removed 'Reveal Fate': Swap/Attack/Defend are now shown immediately. Press Attack or Defend (blind), then the 5th card is dealt, then Summon Mask.","In PvP: turn by turn (P1 first, then P2), then both press Summon. The game waits until both have chosen.","PvP: fixed Player 2's card swap (now works every hand). Opponent demijohn flipped.","Android: the 'To the table' button and Arlecchino's Invert no longer go off-screen; the grid scrolls and buttons stay visible.","Damage/heal numbers bigger and visible longer.","README: updated hierarchy (Trips beats Straight) and clickable app link."]},
   {v:"1.1.2", it:["Appena cala la 5ª carta, le carte dell'avversario vengono scoperte. Resta ignota solo la sua scelta (attacco/difesa) e come ha impostato le maschere."],
@@ -1106,16 +1132,19 @@ const UI = (() => {
     const s=$('scaler');
     const vw=window.innerWidth, vh=window.innerHeight;
     const portrait = vh>=vw;
-    // base adattiva: portrait su mobile (verticale), landscape su desktop
-    let bw,bh;
-    if(portrait){ bw=440; bh=760; }   // telefono in verticale
-    else { bw=820; bh=600; }          // desktop / orizzontale
-    s.style.width=bw+'px'; s.style.height=bh+'px';
-    // scala per riempire: usa il fattore che riempie di più senza sforare
-    const scale=Math.min(vw/bw, vh/bh);
-    s.style.transform=`scale(${scale})`;
-    s.dataset.portrait = portrait?'1':'0';
     document.body.dataset.portrait = portrait?'1':'0';
+    s.dataset.portrait = portrait?'1':'0';
+    if(portrait){
+      // MOBILE VERTICALE: lo scaler riempie ESATTAMENTE lo schermo, niente scale/cornice.
+      // Il layout interno è fluido (flex + unità viewport), quindi non si taglia nulla.
+      s.style.width=vw+'px'; s.style.height=vh+'px';
+      s.style.transform='none';
+    } else {
+      // DESKTOP/ORIZZONTALE: base fissa scalata per adattarsi
+      const bw=820, bh=600;
+      s.style.width=bw+'px'; s.style.height=bh+'px';
+      s.style.transform=`scale(${Math.min(vw/bw, vh/bh)})`;
+    }
   }
   window.addEventListener('resize',fitScale);
   window.addEventListener('orientationchange',()=>setTimeout(fitScale,100));
@@ -1245,17 +1274,24 @@ const UI = (() => {
   function renderMyMaskSlot(){
     const ev=state.me.eval,m=GameLogic.MASKS[ev.maskId],tone=toneFor(ev.maskId);
     $('myMaskSlot').innerHTML=`<div class="rank-tag">${rankLabel(ev.key)}</div>
-      ${maskCardHTML(ev.maskId,state.inv.me,tone,'','myMaskCard')}
-      <div class="weapon-tag">${m.weapon}</div>`;
+      ${maskCardHTML(ev.maskId,state.inv.me,tone,'','myMaskCard')}`;
   }
   function renderFoeMaskHidden(){
-    $('foeMaskSlot').innerHTML=`<div class="rank-tag">&nbsp;</div><div class="mask-card foe hidden-mask"></div><div class="weapon-tag">&nbsp;</div>`;
+    $('foeMaskSlot').innerHTML=`<div class="rank-tag">&nbsp;</div><div class="mask-card foe hidden-mask"></div>`;
   }
   function renderFoeMaskRevealed(){
     const ev=state.ai.eval,m=GameLogic.MASKS[ev.maskId],tone=toneFor(ev.maskId);
     $('foeMaskSlot').innerHTML=`<div class="rank-tag">${rankLabel(ev.key)}</div>
-      ${maskCardHTML(ev.maskId,state.inv.ai,tone,'foe','foeMaskCard')}
-      <div class="weapon-tag">${m.weapon}</div>`;
+      ${maskCardHTML(ev.maskId,state.inv.ai,tone,'foe','foeMaskCard')}`;
+  }
+  // annuncio dell'arma a centro schermo (stile anime: la maschera dichiara l'attacco)
+  function announceWeapon(maskId){
+    const m=GameLogic.MASKS[maskId];
+    const el=document.createElement('div'); el.className='weapon-announce';
+    el.innerHTML=`<span class="wa-mask">${m.name}</span><span class="wa-weapon">${m.weapon}</span>`;
+    $('scaler').appendChild(el);
+    setTimeout(()=>el.classList.add('out'),1100);
+    setTimeout(()=>el.remove(),1600);
   }
 
   /* ================= LOG / TOAST ================= */
@@ -1512,6 +1548,8 @@ const UI = (() => {
     log(`<span class="${cls}">${T().winClash(wName)}</span>`,cls);
 
     if(out.action==='attack'){
+      // 0) annuncio l'arma a centro schermo (stile anime)
+      announceWeapon(state[w].eval.maskId);
       // 1) lancio arma contro la maschera avversaria -> distruzione
       const armKind=WEAPON_ANIM[state[w].eval.maskId]||'stab';
       winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
@@ -1531,7 +1569,7 @@ const UI = (() => {
             });
           },700);
         });
-      },500);
+      },900);
     }else{
       // cura: glow su maschera vincente poi su otre
       winCard.classList.add('glow-heal');
