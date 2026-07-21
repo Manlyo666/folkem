@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="assets/appicon.png">
-<link rel="apple-touch-icon" href="assets/appicon.png">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>Folk 'Em</title>
 <style>
 :root{
@@ -46,6 +46,18 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
 
 /* ===== schermate ===== */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;padding:16px;overflow:hidden}
+/* --- adattamenti PORTRAIT (mobile verticale) --- */
+body[data-portrait="1"] .screen{padding:10px 8px}
+body[data-portrait="1"] .build-grid3{grid-template-columns:repeat(3,1fr);gap:5px;max-width:100%}
+body[data-portrait="1"] .build-card{flex-direction:column;padding:4px;gap:3px;text-align:center}
+body[data-portrait="1"] .bc-mask{width:44px;height:56px}
+body[data-portrait="1"] .bc-info .bc-name{font-size:11px}
+body[data-portrait="1"] .bc-stats{gap:3px}
+body[data-portrait="1"] .bc-swap{font-size:9px;padding:3px}
+body[data-portrait="1"] .sign h1{font-size:38px}
+body[data-portrait="1"] .setup-intro{font-size:11px;margin:4px 0 6px}
+body[data-portrait="1"] .mode-btn{width:100%;max-width:340px}
+body[data-portrait="1"] #screen-table{padding:4px 6px}
 .screen.active{display:flex;animation:fadeIn .35s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
@@ -123,12 +135,12 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
 .player-strip.foe{flex-direction:row-reverse}
 .otre-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;width:78px}
 .otre-wrap .who{font-family:var(--font-fairy);font-size:14px;color:var(--brass)}
-.otre{position:relative;width:64px;height:95px}
-.otre img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;position:relative;z-index:2;
+.otre{position:relative;width:66px;height:98px}
+.otre img{width:100%;height:100%;object-fit:contain;position:relative;z-index:2;
   filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
-.otre .fill{position:absolute;left:0;right:0;bottom:0;z-index:1;
-  background:linear-gradient(180deg,#b52236,#5a0a12);border-radius:0 0 40% 40%/0 0 30% 30%;
-  transition:height .5s ease}
+.otre .fill{position:absolute;left:16%;right:16%;bottom:6%;z-index:1;
+  background:linear-gradient(180deg,#c22238,#7a0e18);border-radius:0 0 45% 45%/0 0 40% 40%;
+  transition:height .6s ease;opacity:.92}
 .otre.hit{animation:otreHit .5s ease}
 @keyframes otreHit{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px) rotate(-3deg)}40%{transform:translateX(5px) rotate(2deg)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 .otre.heal{animation:otreHeal .7s ease}
@@ -153,6 +165,30 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
 @keyframes dealIn{0%{transform:translateY(-40px) scale(.8);opacity:0;box-shadow:0 24px 30px rgba(0,0,0,.7)}
   60%{box-shadow:0 18px 26px rgba(0,0,0,.6)}100%{transform:translateY(0) scale(1);opacity:1;box-shadow:0 3px 6px rgba(0,0,0,.55)}}
 .foe-inverted{transform:rotate(180deg)}   /* pvp locale: carte avversario ruotate */
+
+/* 5a carta che scivola LENTAMENTE al centro sovrapponendosi alle altre */
+.card.deal-center{animation:dealCenter 1.3s cubic-bezier(.25,1,.4,1);z-index:5;
+  box-shadow:0 18px 30px rgba(0,0,0,.65)}
+@keyframes dealCenter{
+  0%{transform:scale(.7) translateY(-60px) rotate(-8deg);opacity:0;box-shadow:0 30px 40px rgba(0,0,0,.8)}
+  40%{opacity:1}
+  100%{transform:translateY(0) scale(1.12) rotate(0);opacity:1;box-shadow:0 10px 20px rgba(0,0,0,.6)}}
+
+/* pulsazione del bottone Giocatore vs IA per invitare a confermare la difficoltà */
+.confirm-pulse{animation:confirmPulse 1s ease-in-out infinite}
+@keyframes confirmPulse{0%,100%{box-shadow:0 3px 0 rgba(0,0,0,.4)}50%{box-shadow:0 0 18px 3px rgba(255,180,60,.7)}}
+
+/* SCUDO di parata: appare sull'otre difesa e riduce il danno */
+.shield-fx{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:30;
+  font-size:40px;pointer-events:none;animation:shieldBlock 1.1s ease-out forwards;
+  filter:drop-shadow(0 0 8px rgba(120,180,255,.9))}
+@keyframes shieldBlock{
+  0%{transform:translate(-50%,-50%) scale(.3) rotate(-20deg);opacity:0}
+  30%{transform:translate(-50%,-50%) scale(1.25) rotate(0);opacity:1}
+  55%{transform:translate(-50%,-50%) scale(1) rotate(0);opacity:1}
+  100%{transform:translate(-50%,-90%) scale(.9);opacity:0}}
+.shield-fx .blocked-n{position:absolute;left:50%;top:52%;transform:translateX(-50%);
+  font-size:13px;font-family:var(--px);font-weight:bold;color:#dceaff;text-shadow:0 1px 2px #000}
 
 .board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center}
 .community-row{display:flex;gap:7px;justify-content:center}
@@ -260,7 +296,7 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
     <div class="sign"><h1 class="fairy">Folk 'Em</h1><div class="sub" data-i18n="subtitle">La Locanda delle Maschere</div></div>
     <hr class="hr-brass">
     <div class="mode-list">
-      <button class="btn mode-btn" id="mode-ai"><span class="mb-ico">🤖</span><span class="mb-txt"><b data-i18n="modeAI">Giocatore vs IA</b><span data-i18n="modeAId">Sfida l'oste computerizzato</span></span></button>
+      <button class="btn mode-btn" id="mode-ai"><span class="mb-ico">🍺</span><span class="mb-txt"><b data-i18n="modeAI">Giocatore vs IA</b><span data-i18n="modeAId">Sfida l'oste computerizzato</span></span></button>
       <div class="diff-row" id="diff-row" style="display:none">
         <button class="btn diff-btn" data-diff="easy" data-i18n="diffEasy">Facile</button>
         <button class="btn diff-btn on" data-diff="medium" data-i18n="diffMedium">Media</button>
@@ -296,7 +332,7 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
       </div>
       <div class="player-strip foe">
         <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div>
-          <div class="otre" id="otre-ai"><div class="fill"></div><img src="assets/otri/otre.png" alt=""></div>
+          <div class="otre" id="otre-ai"><div class="fill"></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-ai">100</div></div>
         <div class="hand-cards" id="foe-hand"></div>
       </div>
@@ -318,7 +354,7 @@ h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
     <div class="table-bottom">
       <div class="player-strip">
         <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div>
-          <div class="otre" id="otre-me"><div class="fill"></div><img src="assets/otri/otre.png" alt=""></div>
+          <div class="otre" id="otre-me"><div class="fill"></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-me">100</div></div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
           <div class="hand-cards" id="my-hand"></div>
@@ -390,8 +426,8 @@ const GameLogic = (() => {
     {key:'high',    maskId:'meo'},
     {key:'pair',    maskId:'pantalone'},
     {key:'twopair', maskId:'brighella'},
-    {key:'trips',   maskId:'pulcinella'},
     {key:'straight',maskId:'balanzone'},
+    {key:'trips',   maskId:'pulcinella'},
     {key:'full',    maskId:'colombina'},
     {key:'flush',   maskId:'arlecchino'},
     {key:'quads',   maskId:'meneghino'},
@@ -401,8 +437,8 @@ const GameLogic = (() => {
     meo:       {name:'Meo Patacca',      weapon:'Stiletto',               atk:2,  cur:1,  fixed:false},
     pantalone: {name:'Pantalone',        weapon:'Borsa di monete',atk:6,  cur:3,  fixed:false},
     brighella: {name:'Brighella',        weapon:'Bastone nodoso',         atk:10, cur:5,  fixed:false},
-    pulcinella:{name:'Pulcinella',       weapon:'Manganello',    atk:15, cur:7,  fixed:false},
-    balanzone: {name:'Dottor Balanzone', weapon:'Tomo pesante',  atk:20, cur:10, fixed:false},
+    pulcinella:{name:'Pulcinella',       weapon:'Manganello',    atk:20, cur:10, fixed:false},
+    balanzone: {name:'Dottor Balanzone', weapon:'Tomo pesante',  atk:15, cur:7,  fixed:false},
     arlecchino:{name:'Arlecchino',       weapon:'Spatola di legno',       atk:30, cur:15, fixed:false},
     colombina: {name:'Colombina',        weapon:'Ventaglio affilato',     atk:25, cur:13, fixed:false},
     meneghino: {name:'Meneghino',        weapon:"Ombrello d'acciaio",     atk:50, cur:50, fixed:true},
@@ -869,8 +905,8 @@ const I18N = {
     tapSwap:"Tocca la carta da scartare (−10 PV).",
     chooseAction:"La tua Maschera è pronta. Attacco o Difesa?",
     already:"Hai già cambiato in questo round.", lowhp:"PV insufficienti.",
-    youSwap:"Cambi una carta (−10 PV).", foeSwap:"L'avversario cambia una carta (−10 PV).",
-    fifthCard:"Cala la 5ª carta a terra.",
+    youSwap:"Cambi una carta (−10 PV).", foeSwap:"L'avversario cambia una carta (−10 PV).", foeSwapNow:"⚠️ L'avversario CAMBIA una carta ora (−10 PV).",
+    fifthCard:"Cala la 5ª carta a terra.", tableLabel:"Tavolo", yourCardsLabel:"Tu", p2CardsLabel:"Giocatore 2",
     fifthCardIs:(c)=>`Cala la 5ª carta: ${c}.`,
     youChose:(c)=>`Scegli ${c}.`,
     p2Turn:"Giocatore 2: tocca a te scegliere.",
@@ -910,8 +946,8 @@ const I18N = {
     tapSwap:"Tap the card to discard (−10 HP).",
     chooseAction:"Your Mask is ready. Attack or Defend?",
     already:"You already swapped this round.", lowhp:"Not enough HP.",
-    youSwap:"You swap a card (−10 HP).", foeSwap:"The opponent swaps a card (−10 HP).",
-    fifthCard:"The 5th table card is dealt.",
+    youSwap:"You swap a card (−10 HP).", foeSwap:"The opponent swaps a card (−10 HP).", foeSwapNow:"⚠️ The opponent SWAPS a card now (−10 HP).",
+    fifthCard:"The 5th table card is dealt.", tableLabel:"Table", yourCardsLabel:"You", p2CardsLabel:"Player 2",
     fifthCardIs:(c)=>`5th card dealt: ${c}.`,
     youChose:(c)=>`You chose ${c}.`,
     p2Turn:"Player 2: your turn to choose.",
@@ -934,8 +970,12 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.0.7";
+const APP_VERSION="1.0.9";
 const CHANGELOG=[
+  {v:"1.0.9", it:["Simboli dei semi napoletani nel log: 🪙 denari, 🏆 coppe, 🗡️ spade, 🪵 bastoni (prima erano quelli francesi, fuorvianti).","Verificato: tutti e 4 i semi sono contati correttamente per colore e punteggi."],
+    en:["Neapolitan suit symbols in the log: 🪙 coins, 🏆 cups, 🗡️ swords, 🪵 clubs (were French suits before, misleading).","Verified: all 4 suits are counted correctly for flush and scoring."]},
+  {v:"1.0.8", it:["Corretto il calcolo: la maschera ora si valuta su TUTTE e 5 le carte a terra (prima usava solo 4, causava colore/scala non contati).","Gerarchia corretta: il Tris batte la Scala (Tris più raro). Stats aggiornate.","Carte spade/bastoni: nomi scambiati (erano invertiti).","Flusso: premi Evoca, cala lenta la 5ª carta al centro sovrapposta alle altre, POI appare la maschera con spiegazione.","Cronaca completa in basso con simboli dei semi: carte di entrambi e come si è formata ogni combinazione.","Parata: animazione con scudo invece del numero svolazzante. Cambio carta IA dichiarato subito.","Menu: boccale di birra per l'oste; la difficoltà si conferma ripremendo Giocatore vs IA.","Nuova otre più cicciona con fondo in vimini. In PvP le carte del Giocatore 2 sono sempre scoperte.","Android: layout verticale che riempie lo schermo (griglia 3×3 e tavolo leggibili). PWA con icone corrette."],
+    en:["Fixed scoring: the mask is now evaluated on ALL 5 table cards (was using only 4, causing flush/straight to be missed).","Corrected hierarchy: Three of a Kind beats Straight (Trips is rarer). Stats updated.","Swords/clubs cards: names swapped (they were inverted).","Flow: press Summon, the 5th card slides slowly to the center over the others, THEN the mask appears with an explanation.","Full play-by-play with suit symbols: both players' cards and how each hand formed.","Parry: shield animation instead of a floating number. AI card swap announced immediately.","Menu: beer mug for the host; difficulty is confirmed by re-pressing Player vs AI.","New fatter otre with a wicker bottom. In PvP, Player 2's cards are always face up.","Android: portrait layout that fills the screen (3×3 grid and table legible). PWA with correct icons."]},
   {v:"1.0.7", it:["Nuovo dorso del mazzo (immagine fornita). L'emblema delle maschere resta come icona dell'app."],
     en:["New card back (provided image). The masks emblem stays as the app icon."]},
   {v:"1.0.6", it:["Carte napoletane vere: ritagliate dal foglio (diviso con linee nere) con effetto pixelato.","Sfondo tavolo in legno (texture fornita), ombra sotto le carte che cresce quando si muovono o vengono calate.","Nuovo ordine: premi Attacco/Difesa, PRIMA cala la 5ª carta, POI si evoca la maschera. Animazioni rallentate.","Cronaca dettagliata in basso: carte calate e come si è formata ogni combinazione (2× Re, 5 denari, ecc.)."],
@@ -971,12 +1011,22 @@ const UI = (() => {
 
   /* ---------- SCALING responsivo (tutto in una schermata) ---------- */
   function fitScale(){
-    const s=$('scaler'); const bw=820, bh=600;
+    const s=$('scaler');
     const vw=window.innerWidth, vh=window.innerHeight;
+    const portrait = vh>=vw;
+    // base adattiva: portrait su mobile (verticale), landscape su desktop
+    let bw,bh;
+    if(portrait){ bw=440; bh=760; }   // telefono in verticale
+    else { bw=820; bh=600; }          // desktop / orizzontale
+    s.style.width=bw+'px'; s.style.height=bh+'px';
+    // scala per riempire: usa il fattore che riempie di più senza sforare
     const scale=Math.min(vw/bw, vh/bh);
     s.style.transform=`scale(${scale})`;
+    s.dataset.portrait = portrait?'1':'0';
+    document.body.dataset.portrait = portrait?'1':'0';
   }
   window.addEventListener('resize',fitScale);
+  window.addEventListener('orientationchange',()=>setTimeout(fitScale,100));
 
   function applyStatic(){
     document.documentElement.lang=lang;
@@ -1069,13 +1119,13 @@ const UI = (() => {
   function renderFoeHand(revealed){
     const foe=$('foe-hand'); foe.innerHTML='';
     const inv = mode==='pvp_local';   // in pvp le carte avversario sono ruotate
-    if(revealed){
-      state.ai.hand.forEach(x=>foe.appendChild(cardEl(x,{cls:'mid flip',inverted:inv})));
-    }else if(mode==='pvp_local' && pvpTurn==='ai'){
-      // è il turno di P2: mostra le sue carte (ruotate) coperte a P1? no: P2 le vede.
-      state.ai.hand.forEach(x=>foe.appendChild(cardEl(x,{cls:'mid',inverted:true})));
+    if(mode==='pvp_local'){
+      // PvP offline: le carte del Giocatore 2 sono SEMPRE scoperte (le deve vedere)
+      state.ai.hand.forEach(x=>foe.appendChild(cardEl(x,{cls:'mid'+(revealed?' flip':''),inverted:true})));
+    }else if(revealed){
+      state.ai.hand.forEach(x=>foe.appendChild(cardEl(x,{cls:'mid flip'})));
     }else{
-      state.ai.hand.forEach(()=>foe.appendChild(cardEl(null,{cls:'mid',back:true,inverted:inv})));
+      state.ai.hand.forEach(()=>foe.appendChild(cardEl(null,{cls:'mid',back:true})));
     }
   }
   function renderMyHand(){
@@ -1122,6 +1172,13 @@ const UI = (() => {
     const f=document.createElement('div');f.className='float '+kind;f.textContent=text;
     host.appendChild(f);setTimeout(()=>f.remove(),1100);
   }
+  // animazione scudo di parata sull'otre del difensore
+  function shieldBlock(side, amount){
+    const host=$(side==='me'?'otre-me':'otre-ai');
+    const s=document.createElement('div'); s.className='shield-fx';
+    s.innerHTML=`🛡<span class="blocked-n">−${amount}</span>`;
+    host.appendChild(s); setTimeout(()=>s.remove(),1100);
+  }
 
   /* ================= FLUSSO PARTITA ================= */
   function startGame(){
@@ -1146,13 +1203,10 @@ const UI = (() => {
     $('btn-summon').style.display='';$('btn-summon').disabled=false;
     renderOtri();renderCommunity();renderFoeHand(false);renderMyHand();
     log(`— <b>Round ${state.round}</b> —`,'sys');
-    // narro le carte iniziali
-    const table4=state.community.slice(0,4).map(cardName).join(', ');
-    log(`<span class="sys">${T().tableCardsAre(table4)}</span>`,'sys');
-    if(mode!=='pvp_local'){
-      const mine=state.me.hand.map(cardName).join(', ');
-      log(`<span class="me">${T().yourCardsAre(mine)}</span>`,'me');
-    }
+    // narro le carte iniziali con simboli
+    log(`<span class="sys">${T().tableLabel}: ${cardsSymbols(state.community.slice(0,4))}</span>`,'sys');
+    log(`<span class="me">${T().yourCardsLabel}: ${cardsSymbols(state.me.hand)}</span>`,'me');
+    if(mode==='pvp_local') log(`<span class="ai">${T().p2CardsLabel}: ${cardsSymbols(state.ai.hand)}</span>`,'ai');
   }
 
   function armSwap(side){
@@ -1188,30 +1242,50 @@ const UI = (() => {
     if(GameState.checkWin(state)){endGame();return;}
   }
 
-  // EVOCA: cala la 5a carta, mostra overlay con la tua maschera (avversaria nascosta)
+  // EVOCA: cala PRIMA la 5a carta (animata, al centro), valuta su 5 carte,
+  // POI mostra la maschera spiegando perché. La scelta atk/dif viene dopo.
   function summon(byWho){
-    // in pvp locale entrambi evocano; qui gestiamo P1 (me). P2 evoca dai suoi bottoni.
     if(mode!=='pvp_local'){
+      // l'IA cambia carta PRIMA, e lo dichiara subito
       const plan=GameLogic.aiChoose(state,difficulty);
       if(plan.swapIndex>=0){
         const r=GameState.swapCard(state,'ai',plan.swapIndex);
-        if(r.ok){log(`<span class="ai">${T().foeSwap}</span>`,'ai');floatText('ai','−10','dmg');
+        if(r.ok){log(`<span class="ai">${T().foeSwapNow}</span>`,'ai');floatText('ai','−10','dmg');
           $('otre-ai').classList.add('hit');setTimeout(()=>$('otre-ai').classList.remove('hit'),500);}
         if(GameState.checkWin(state)){renderOtri();endGame();return;}
       }
-      state.ai.choice=GameLogic.aiChoose(state,difficulty).choice;
     }
-    // valuta sulle 4 carte visibili (la 5a è ancora coperta)
-    state.me.eval=GameLogic.evaluate(state.me.hand.concat(state.community.slice(0,4)));
-    state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community.slice(0,4)));
-    state.phase='chooseAction';
-    // overlay: copre le carte
-    renderMyMaskSlot(); renderFoeMaskHidden();
-    $('maskOverlay').classList.add('show');
     $('btn-swap').style.display='none';$('btn-summon').style.display='none';
-    $('btn-attack').style.display='';$('btn-defend').style.display='';
-    $('btn-attack').disabled=false;$('btn-defend').disabled=false;
-    log(`<span class="me">${T().youHave(GameLogic.MASKS[state.me.eval.maskId].name, rankLabel(state.me.eval.key))}</span>`,'me');
+    state.phase='dealing5';
+    // FASE 1: cala SOLO la 5a carta, che scivola verso il centro sovrapposta alle 4
+    GameState.revealFifth(state);
+    dealFifthToCenter(()=>{
+      // FASE 2: valuta su TUTTE E 5 le carte comunitarie
+      state.me.eval=GameLogic.evaluate(state.me.hand.concat(state.community));
+      state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community));
+      if(mode!=='pvp_local') state.ai.choice=GameLogic.aiChoose(state,difficulty).choice;
+      bumpTone(state.me.eval.maskId); bumpTone(state.ai.eval.maskId);
+      // spiego perché è stata evocata la maschera (quali carte)
+      log(`<span class="sys">${T().fifthCardIs(cardSymbol(state.community[4]))}</span>`,'sys');
+      logHandBreakdown('me');
+      // FASE 3: mostra la TUA maschera (avversaria nascosta), chiedi atk/dif
+      state.phase='chooseAction';
+      renderMyMaskSlot(); renderFoeMaskHidden();
+      $('maskOverlay').classList.add('show');
+      $('btn-attack').style.display='';$('btn-defend').style.display='';
+      $('btn-attack').disabled=false;$('btn-defend').disabled=false;
+    });
+  }
+
+  // anima la 5a carta che scivola al centro sovrapponendosi alle altre 4
+  function dealFifthToCenter(done){
+    renderCommunity();  // ora mostra 5 carte
+    const cards=$('community').querySelectorAll('.card');
+    const fifth=cards[cards.length-1];
+    if(fifth){
+      fifth.classList.add('deal-center');   // animazione lenta dedicata
+    }
+    setTimeout(done, 1400);   // pausa lunga per far capire cosa sta per accadere
   }
 
   function choose(side,c){
@@ -1220,8 +1294,7 @@ const UI = (() => {
       if(side==='me'){
         $('btn-attack').disabled=true;$('btn-defend').disabled=true;
         pvpTurn='ai';
-        state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community.slice(0,4)));
-        renderFoeMaskRevealed();
+        renderFoeMaskRevealed();   // già valutata su 5 carte al summon
         $('p2-attack').disabled=false;$('p2-defend').disabled=false;
         log(T().p2Turn,'sys');
         return;
@@ -1232,33 +1305,13 @@ const UI = (() => {
       state.me.choice=c;
       $('btn-attack').disabled=true;$('btn-defend').disabled=true;
     }
-    // registra la scelta a log
-    const myChoiceTxt = state.me.choice==='attack'?T().attack:T().defend;
-    log(`<span class="me">${T().youChose(myChoiceTxt)}</span>`,'me');
-
-    // FASE 1: nascondi l'overlay maschere e cala la 5a carta a terra (animata)
-    $('maskOverlay').classList.remove('show');
-    state.phase='fifth';
-    setTimeout(()=>{
-      GameState.revealFifth(state);
-      renderCommunity();  // la 5a entra con animazione .deal
-      const fifth=state.community[4];
-      log(`<span class="sys">${T().fifthCardIs(cardName(fifth))}</span>`,'sys');
-      // FASE 2: dopo una pausa, valuta le mani finali e RI-EVOCA le maschere
-      setTimeout(()=>{
-        state.me.eval=GameLogic.evaluate(state.me.hand.concat(state.community));
-        state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community));
-        bumpTone(state.me.eval.maskId); bumpTone(state.ai.eval.maskId);
-        // narro come si sono formate le mani
-        logHandBreakdown('me'); logHandBreakdown('ai');
-        renderFoeHand(true);
-        renderMyMaskSlot(); renderFoeMaskRevealed();
-        $('maskOverlay').classList.add('show');
-        state.phase='reveal';
-        // FASE 3: risolvi dopo pausa per leggere
-        setTimeout(resolve, 1600);
-      }, 1400);
-    }, 700);
+    // dichiaro la scelta
+    log(`<span class="me">${T().youChose(state.me.choice==='attack'?T().attack:T().defend)}</span>`,'me');
+    // rivela l'avversario e la sua combinazione, poi risolvi
+    state.phase='reveal';
+    logHandBreakdown('ai');
+    renderFoeHand(true); renderFoeMaskRevealed();
+    setTimeout(resolve, 1400);
   }
 
   // nome leggibile di una carta (es. "Re di denari")
@@ -1270,29 +1323,41 @@ const UI = (() => {
     const r=(lang==='it'?rn:rnEn)[c.r];
     return `${r} ${lang==='it'?'di':'of'} ${sn[c.suit]}`;
   }
-  // spiega quali carte formano la combinazione
+  // simbolo carta: rango + simbolo del seme (es. "R♦", "7♣")
+  const SUIT_SYM={denari:'🪙',coppe:'🏆',spade:'🗡️',bastoni:'🪵'};
+  const SUIT_COL={denari:'#c99a2e',coppe:'#b02028',spade:'#2f4f8f',bastoni:'#3f7a35'};
+  const RANK_SYM={1:'A',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'F',9:'C',10:'R'};
+  function cardSymbol(c){
+    return `<span style="color:${SUIT_COL[c.suit]};font-weight:bold">${RANK_SYM[c.r]}${SUIT_SYM[c.suit]}</span>`;
+  }
+  function cardsSymbols(cards){ return cards.map(cardSymbol).join(' '); }
+
+  // spiega quali carte formano la combinazione (sempre per entrambi, con simboli)
   function logHandBreakdown(side){
     const ev=state[side].eval;
     const all=state[side].hand.concat(state.community);
     const who = side==='me' ? T().you : (mode==='pvp_local'?T().p2:T().foe);
     const cls = side==='me'?'me':'ai';
     const combo = rankLabel(ev.key);
-    // trova le carte che compongono la combinazione (per coppie/tris/etc usa i rank del tie[])
+    // carte che compongono la combo
     const byR={}; all.forEach(c=>{(byR[c.r]=byR[c.r]||[]).push(c);});
-    let key='';
+    let comboCards=[];
     const groups=Object.entries(byR).sort((a,b)=>b[1].length-a[1].length||b[0]-a[0]);
     if(['pair','twopair','trips','full','quads'].includes(ev.key)){
-      const parts=groups.filter(g=>g[1].length>=2).slice(0, ev.key==='twopair'||ev.key==='full'?2:1);
-      key = parts.map(g=>`${g[1].length}× ${cardName(g[1][0]).split(' ')[0]}`).join(' + ');
+      const need = ev.key==='twopair'||ev.key==='full'?2:1;
+      groups.filter(g=>g[1].length>=2).slice(0,need).forEach(g=>comboCards.push(...g[1]));
+      if(ev.key==='full'){ /* già presi tris+coppia */ }
     } else if(ev.key==='flush'){
-      const suit=all.filter(c=>c.suit===all[0].suit);
       const bySuit={}; all.forEach(c=>{(bySuit[c.suit]=bySuit[c.suit]||[]).push(c);});
       const fs=Object.entries(bySuit).find(e=>e[1].length>=5);
-      key = lang==='it'?`5 ${fs?fs[0]:''}`:`5 ${fs?fs[0]:''}`;
+      if(fs) comboCards=fs[1].slice(0,5);
     } else if(ev.key==='straight'||ev.key==='royal'){
-      key = lang==='it'?'sequenza':'sequence';
+      comboCards=[]; // sequenza: mostro tutte
     }
-    log(`<span class="${cls}">${who}: <b>${combo}</b>${key?' ('+key+')':''} — ${GameLogic.MASKS[ev.maskId].name}</span>`,cls);
+    const comboStr = comboCards.length? ' → '+cardsSymbols(comboCards) : '';
+    // mostro SEMPRE mano + comunitarie con simboli
+    log(`<span class="${cls}"><b>${who}</b>: ${cardsSymbols(state[side].hand)} | ${cardsSymbols(state.community)}</span>`,cls);
+    log(`<span class="${cls}">→ <b>${combo}</b>${comboStr} — ${GameLogic.MASKS[ev.maskId].name}</span>`,cls);
   }
 
   function resolve(){
@@ -1320,7 +1385,7 @@ const UI = (() => {
         throwWeapon(w, state[w].eval.maskId, ()=>{
           // maschera perdente distrutta
           loseCard.classList.add('destroyed');
-          if(out.blocked>0){ log(`<span class="sys">${T().blocked(out.blocked)}</span>`,'sys'); floatText(l,'−'+out.blocked+' 🛡','block'); }
+          if(out.blocked>0){ log(`<span class="sys">${T().blocked(out.blocked)}</span>`,'sys'); shieldBlock(l, out.blocked); }
           // 2) seconda animazione: arma verso l'otre avversaria
           setTimeout(()=>{
             throwWeaponAtOtre(w, l, state[w].eval.maskId, ()=>{
@@ -1422,8 +1487,8 @@ const UI = (() => {
       <li><b>Solo dopo la scelta</b> cala la <b>5ª carta</b> a terra e si formano le mani definitive di 5 su 7: la tua Maschera può cambiare!</li>
       <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata).</li></ul>
       <h3>⚠️ Gerarchia diversa dal poker</h3>
-      <p>Con sole <b>40 carte</b> (niente 8-9-10), le probabilità cambiano: il <b>Colore è più raro del Full</b>, quindi qui <b>Colore batte Full</b>. Dal più forte al più debole:<br>
-      Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ Scala ▸ Tris ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
+      <p>Con sole <b>40 carte</b> (niente 8-9-10), le probabilità cambiano: il <b>Colore è più raro del Full</b> (quindi Colore batte Full) e il <b>Tris è più raro della Scala</b> (quindi Tris batte Scala). Dal più forte al più debole:<br>
+      Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
       <h3>Build</h3><p>Prima della partita puoi invertire Attacco/Difesa di ogni Maschera (tranne Meneghino e Capitan Spaventa).</p>
       <h3>Cura</h3><p>Piena sotto 150 PV, dimezzata tra 150 e 199.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
@@ -1437,8 +1502,8 @@ const UI = (() => {
       <li><b>Only after the choice</b> the <b>5th card</b> is dealt and the final 5-of-7 hands form: your Mask may change!</li>
       <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry).</li></ul>
       <h3>⚠️ Hierarchy differs from poker</h3>
-      <p>With only <b>40 cards</b> (no 8-9-10), the odds change: a <b>Flush is rarer than a Full House</b>, so here <b>Flush beats Full House</b>. Strongest to weakest:<br>
-      Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ Straight ▸ Three of a Kind ▸ Two Pair ▸ Pair ▸ High Card.</p>
+      <p>With only <b>40 cards</b> (no 8-9-10), the odds change: a <b>Flush is rarer than a Full House</b> (so Flush beats Full House) and <b>Three of a Kind is rarer than a Straight</b> (so Trips beats Straight). Strongest to weakest:<br>
+      Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.</p>
       <h3>Builds</h3><p>Before the match you can swap each Mask's Attack/Defense (except Meneghino and Capitan Spaventa).</p>
       <h3>Healing</h3><p>Full below 150 HP, halved from 150 to 199.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
@@ -1481,14 +1546,23 @@ const UI = (() => {
   /* ================= BIND ================= */
   function bind(){
     // menu
-    $('mode-ai').addEventListener('click',()=>{ mode='ai'; $('diff-row').style.display='flex'; });
+    $('mode-ai').addEventListener('click',()=>{
+      if($('diff-row').style.display==='none' || !$('diff-row').style.display){
+        // primo click: mostra le difficoltà
+        mode='ai'; $('diff-row').style.display='flex';
+      } else {
+        // secondo click (conferma): avvia con la difficoltà selezionata
+        mode='ai'; playerInv={}; setupTarget='me'; renderSetup(); showScreen('screen-setup');
+      }
+    });
     $('mode-pvp').addEventListener('click',()=>{ mode='pvp_local'; playerInv={}; pvpP2Inv={}; setupTarget='me'; renderSetup(); showScreen('screen-setup'); });
     $('mode-online').addEventListener('click',()=>{});
     document.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>{
       difficulty=b.dataset.diff;
       document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('on'));
       b.classList.add('on');
-      mode='ai'; playerInv={}; setupTarget='me'; renderSetup(); showScreen('screen-setup');
+      // NON avvia: evidenzia il bottone Giocatore vs IA per invitare a confermare
+      $('mode-ai').classList.add('confirm-pulse');
     }));
     $('menu-rules').addEventListener('click',()=>openModal(rulesHTML()));
     $('menu-update').addEventListener('click',()=>openModal(changelogHTML()));
@@ -1525,6 +1599,7 @@ const UI = (() => {
     if(!localStorageSafe('folkem_seen')){ openModal(rulesHTML()); localStorageSafe('folkem_seen','1'); }
     // service worker
     if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+    window.__dbg={getState:()=>state, setState:(s)=>{state=s;}, ev:(cs)=>GameLogic.evaluate(cs)};
   }
   // localStorage sicuro (non rompe se disabilitato)
   function localStorageSafe(k,v){ try{ if(v!==undefined){localStorage.setItem(k,v);return v;} return localStorage.getItem(k);}catch(e){return null;} }

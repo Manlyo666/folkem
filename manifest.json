@@ -5,11 +5,12 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#160d06",
   "theme_color": "#1e120c",
   "icons": [
-    { "src": "assets/appicon.png", "sizes": "240x244", "type": "image/png", "purpose": "any" },
-    { "src": "assets/appicon.png", "sizes": "240x244", "type": "image/png", "purpose": "maskable" }
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
