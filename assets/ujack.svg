@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36">
+  <clipPath id="clip"><rect width="60" height="36"/></clipPath>
+  <g clip-path="url(#clip)">
+    <rect width="60" height="36" fill="#012169"/>
+    <!-- diagonali bianche piene -->
+    <path d="M0,0 L60,36 M60,0 L0,36" stroke="#fff" stroke-width="7.2"/>
+    <!-- diagonali rosse controcambiate -->
+    <path d="M0,0 L60,36" clip-path="url(#clip)" stroke="#C8102E" stroke-width="2.4"/>
+    <path d="M60,0 L0,36" stroke="#C8102E" stroke-width="2.4"/>
+    <!-- croce bianca -->
+    <rect x="25" width="10" height="36" fill="#fff"/>
+    <rect y="13" width="60" height="10" fill="#fff"/>
+    <!-- croce rossa -->
+    <rect x="27" width="6" height="36" fill="#C8102E"/>
+    <rect y="15" width="60" height="6" fill="#C8102E"/>
+  </g>
+</svg>

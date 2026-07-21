@@ -1,7 +1,7 @@
-const CACHE='folkem-v1.1.7';
+const CACHE='folkem-v1.2.4';
 const ASSETS=['./','./index.html','./manifest.json',
   './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.svg',
-  './assets/icon-192.png','./assets/icon-512.png'];
+  './assets/icon-192.png','./assets/icon-512.png','./assets/ujack.svg','./assets/itflag.svg','./assets/victorian.woff2','./assets/isenheim.woff2'];
 const MASKS=['meo','pantalone','brighella','pulcinella','balanzone','arlecchino','colombina','meneghino','capitan'];
 for(const m of MASKS) for(let i=0;i<3;i++) ASSETS.push(`./assets/masks/${m}_${i}.png`);
 for(const su of ['denari','coppe','spade','bastoni']) for(let r=1;r<=10;r++) ASSETS.push(`./assets/cards/${su}_${r}.png`);

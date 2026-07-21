@@ -17,12 +17,15 @@
   --brass:#c79a54;--brass-hi:#f0d089;--candle:#ffb648;
   --wine:#7a1220;--wine-hi:#b52236;--wine-glow:#e0424f;
   --parch:#e8d9b8;--parch-dim:#b8a684;--ink:#1a0f08;--ok:#6fae5a;
-  /* font fiabesco */
-  --font-fairy:"Pristina","Segoe Script","Brush Script MT","Comic Sans MS",cursive;
-  --font-display:"Cinzel","Trajan Pro",Georgia,serif;
-  --font-body:"Iowan Old Style",Palatino,Georgia,serif;
+  /* font: Isenheim per testi/descrizioni, Victorian Decade per titoli e messaggi */
+  --font-fairy:"Isenheim",Georgia,serif;
+  --font-display:"VictorianDecade",Georgia,serif;
+  --font-body:"Isenheim","Iowan Old Style",Palatino,Georgia,serif;
+  --font-title:"VictorianDecade",Georgia,serif;
   --px:"Courier New",monospace;
 }
+@font-face{font-family:"Isenheim";src:url("assets/isenheim.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"VictorianDecade";src:url("assets/victorian.woff2") format("woff2");font-display:swap}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
@@ -41,8 +44,11 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 #stage{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
 #scaler{width:820px;height:600px;position:relative;transform-origin:center center}
 
-.fairy{font-family:var(--font-fairy)}
-h1,h2,h3{font-family:var(--font-fairy);letter-spacing:.02em;font-weight:normal}
+.fairy{font-family:var(--font-title)}
+h1,h2,h3{font-family:var(--font-title);letter-spacing:.03em;font-weight:normal;
+  text-shadow:0 2px 3px rgba(0,0,0,.85),0 0 18px rgba(255,180,60,.35)}
+/* classe per il testo Victorian con ombra forte */
+.vict{font-family:var(--font-title);text-shadow:0 2px 4px rgba(0,0,0,.9),0 0 20px rgba(255,180,60,.45),0 0 40px rgba(255,150,40,.25)}
 
 /* ===== schermate ===== */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;padding:16px;overflow:hidden}
@@ -60,8 +66,8 @@ body[data-portrait="1"] .sign h1{font-size:12vw}
 /* SETUP: header attaccato in alto, bottoni attaccati in basso, 9 maschere in mezzo SENZA scorrere */
 body[data-portrait="1"] #screen-setup.active{justify-content:space-between;display:flex;flex-direction:column;height:100%;padding:1.5vh 2vw}
 body[data-portrait="1"] #screen-setup .sign{flex-shrink:0;margin:0}
-body[data-portrait="1"] #screen-setup .sign h1{font-size:6.5vw;margin:0}
-body[data-portrait="1"] .setup-intro{font-size:2.9vw;margin:0.4vh 0;flex-shrink:0;line-height:1.25}
+body[data-portrait="1"] #screen-setup .sign h1{font-size:11vw;margin:0;line-height:1}
+body[data-portrait="1"] .setup-intro{font-size:1.9vw;margin:0.2vh 0;flex-shrink:0;line-height:1.15}
 body[data-portrait="1"] .build-grid3{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
   gap:1.2vw;width:100%;flex:1 1 auto;min-height:0;max-width:100%}
 body[data-portrait="1"] .build-card{flex-direction:column;padding:0.8vw;gap:0.4vh;text-align:center;
@@ -97,8 +103,9 @@ body[data-portrait="1"] .log-box{height:13vh;font-size:3vw;flex-shrink:0}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
 .sign{text-align:center;margin:6px 0 4px}
-.sign h1{font-size:52px;color:var(--brass-hi);text-shadow:0 3px 0 #000,0 0 26px rgba(255,150,60,.5);line-height:1}
-.sign .sub{color:var(--parch);font-size:15px;letter-spacing:.12em;margin-top:2px;font-family:var(--font-fairy)}
+.sign h1{font-family:var(--font-title);font-size:60px;color:var(--brass-hi);
+  text-shadow:0 3px 4px rgba(0,0,0,.9),0 2px 0 #000,0 0 28px rgba(255,150,60,.6),0 0 55px rgba(255,120,40,.35);line-height:1;letter-spacing:.02em}
+.sign .sub{color:var(--parch);font-size:16px;letter-spacing:.1em;margin-top:2px;font-family:var(--font-title);text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .hr-brass{height:2px;border:0;margin:8px auto;max-width:340px;background:linear-gradient(90deg,transparent,var(--brass),transparent)}
 
 .panel{background:linear-gradient(180deg,rgba(40,24,16,.94),rgba(24,14,9,.96));
@@ -124,7 +131,7 @@ body[data-portrait="1"] .log-box{height:13vh;font-size:3vw;flex-shrink:0}
 .mode-btn{width:320px;text-align:left;display:flex;align-items:center;gap:12px;padding:12px 16px}
 .mode-btn .mb-ico{font-size:26px}
 .mode-btn .mb-txt{flex:1}
-.mode-btn .mb-txt b{font-family:var(--font-fairy);font-size:19px;color:var(--brass-hi);display:block}
+.mode-btn .mb-txt b{font-family:var(--font-title);font-size:21px;color:var(--brass-hi);display:block;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .mode-btn .mb-txt span{font-size:12px;color:var(--parch-dim)}
 .mode-btn.locked{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
 .diff-row{display:flex;gap:10px;justify-content:center;margin-top:6px}
@@ -139,26 +146,15 @@ body[data-portrait="1"] .menu-tools{top:1.5vh;right:2.5vw}
 body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .icon-btn:active{transform:scale(.92)}
 .icon-btn:hover{box-shadow:0 0 14px rgba(255,180,60,.5)}
-/* pulsante lingua: cerchio diviso a metà — sinistra tricolore, destra Union Jack */
-.lang-btn{overflow:hidden;padding:0;position:relative;border-color:var(--brass)}
-.lang-btn .flag-half{position:absolute;top:0;bottom:0;width:50%}
-.lang-btn .flag-it{left:0;background:linear-gradient(90deg,#009246 0 33.3%,#f1f2f1 33.3% 66.6%,#ce2b37 66.6%)}
-.lang-btn .flag-en{right:0;background-color:#012169;background-image:
-  linear-gradient(45deg,transparent 43%,#fff 43% 57%,transparent 57%),
-  linear-gradient(-45deg,transparent 43%,#fff 43% 57%,transparent 57%),
-  linear-gradient(45deg,transparent 46%,#c8102e 46% 54%,transparent 54%),
-  linear-gradient(-45deg,transparent 46%,#c8102e 46% 54%,transparent 54%),
-  linear-gradient(0deg,transparent 38%,#fff 38% 62%,transparent 62%),
-  linear-gradient(90deg,transparent 38%,#fff 38% 62%,transparent 62%),
-  linear-gradient(0deg,transparent 42%,#c8102e 42% 58%,transparent 58%),
-  linear-gradient(90deg,transparent 42%,#c8102e 42% 58%,transparent 58%);
-  background-size:cover}
-.lang-btn::after{content:'';position:absolute;left:50%;top:8%;bottom:8%;width:2px;transform:translateX(-50%);
-  background:var(--brass-hi);opacity:.6;z-index:2}
+/* pulsante lingua: mostra la bandiera dell'ALTRA lingua (quella a cui si passa) */
+.lang-btn{overflow:hidden;padding:0;position:relative}
+.lang-btn .ujack{position:absolute;inset:0;background:center/cover no-repeat}
+.lang-btn[data-shows="en"] .ujack{background-image:url("assets/ujack.svg")}
+.lang-btn[data-shows="it"] .ujack{background-image:url("assets/itflag.svg")}
 .cartwheel{animation:none}
 
 /* ===== SETUP 3x3 ===== */
-.setup-intro{color:var(--parch-dim);font-size:13px;line-height:1.5;margin:6px 0 10px;text-align:center;max-width:640px}
+.setup-intro{color:var(--parch-dim);font-size:11px;line-height:1.4;margin:5px 0 8px;text-align:center;max-width:640px;font-family:var(--font-body)}
 .build-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:660px}
 .build-card{background:rgba(20,12,7,.72);border:1px solid var(--wood-lit);border-radius:10px;
   padding:7px;display:flex;align-items:center;gap:8px}
@@ -168,7 +164,8 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .bc-mask img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .bc-info{flex:1;min-width:0}
 .bc-info .rank-label{font-size:9px;color:var(--brass);letter-spacing:.08em;text-transform:uppercase}
-.bc-info .bc-name{font-family:var(--font-fairy);font-size:15px;color:var(--parch);line-height:1.1}
+.bc-info .bc-name{font-family:var(--font-title);font-size:16px;color:var(--parch);line-height:1.05;
+  text-shadow:0 1px 2px rgba(0,0,0,.8)}
 .bc-stats{display:flex;gap:5px;margin-top:3px}
 .bc-stats .st{flex:1;text-align:center;font-size:10px;border-radius:4px;padding:2px;background:rgba(0,0,0,.35)}
 .bc-stats .st b{display:block;font-family:var(--px);font-size:13px}
@@ -259,8 +256,8 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .summon-ring.r2{border-color:var(--wine-glow);animation-delay:.15s;
   box-shadow:0 0 40px rgba(224,66,79,.7),inset 0 0 30px rgba(224,66,79,.4)}
 @keyframes summonRing{0%{width:40px;height:40px;opacity:1}100%{width:700px;height:700px;opacity:0}}
-.summon-text{font-family:var(--font-fairy);font-size:34px;color:var(--brass-hi);text-align:center;
-  text-shadow:0 2px 8px #000,0 0 30px rgba(255,190,90,.9);z-index:2;
+.summon-text{font-family:var(--font-title);font-size:42px;color:var(--brass-hi);text-align:center;
+  text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 34px rgba(255,190,90,.95),0 0 60px rgba(255,150,40,.4);z-index:2;
   animation:summonTextIn 1.2s ease forwards;padding:0 20px}
 @keyframes summonTextIn{0%{transform:scale(.5);opacity:0}30%{transform:scale(1.1);opacity:1}70%{transform:scale(1);opacity:1}100%{opacity:.9}}
 @keyframes confirmPulse{0%,100%{box-shadow:0 3px 0 rgba(0,0,0,.4)}50%{box-shadow:0 0 18px 3px rgba(255,180,60,.7)}}
@@ -270,8 +267,8 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   display:flex;flex-direction:column;align-items:center;gap:4px;
   animation:waIn .35s cubic-bezier(.2,1.4,.4,1) forwards}
 .weapon-announce.out{animation:waOut .4s ease forwards}
-.weapon-announce .wa-mask{font-family:var(--font-fairy);font-size:26px;color:var(--brass-hi);
-  text-shadow:0 2px 6px #000,0 0 18px rgba(255,190,90,.8)}
+.weapon-announce .wa-mask{font-family:var(--font-title);font-size:30px;color:var(--brass-hi);
+  text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 24px rgba(255,190,90,.85)}
 .weapon-announce .wa-weapon{font-family:var(--font-display),Georgia,serif;font-weight:900;
   font-size:clamp(18px,7vw,38px);white-space:nowrap;text-align:center;
   color:#fff;-webkit-text-stroke:2.5px #7a0e18;paint-order:stroke fill;letter-spacing:-.5px;
@@ -308,7 +305,7 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   background:radial-gradient(circle at 50% 50%,rgba(20,10,6,.82),rgba(10,6,3,.94))}
 .mask-overlay.show{display:flex;animation:fadeIn .3s}
 .mask-slot{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
-.mask-slot .rank-tag{font-family:var(--font-fairy);font-size:15px;color:var(--brass-hi);min-height:18px}
+.mask-slot .rank-tag{font-family:var(--font-title);font-size:16px;color:var(--brass-hi);min-height:18px;text-shadow:0 1px 3px rgba(0,0,0,.85)}
 .mask-slot .weapon-tag{font-size:11px;color:var(--parch-dim);font-style:italic;min-height:14px}
 .mask-card{width:150px;height:210px;border-radius:12px;overflow:hidden;position:relative;
   border:3px solid var(--brass);background:#160d07;box-shadow:0 8px 30px rgba(0,0,0,.7)}
@@ -325,7 +322,7 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .mask-card.lose{filter:grayscale(.7) brightness(.55)}
 .mask-card.destroyed{animation:maskDestroy .6s ease forwards}
 @keyframes maskDestroy{0%{transform:scale(1) rotate(0);opacity:1}100%{transform:scale(.6) rotate(12deg);opacity:0;filter:brightness(3) blur(3px)}}
-.mask-vs{font-family:var(--font-fairy);font-size:22px;color:var(--brass);align-self:center}
+.mask-vs{font-family:var(--font-title);font-size:24px;color:var(--brass);align-self:center;text-shadow:0 2px 4px rgba(0,0,0,.85)}
 
 /* animazioni maschera (attacco/parata) */
 .mask-card.lunge-up{animation:lungeUp .5s ease}
@@ -370,12 +367,20 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .overlay.show{display:flex;animation:fadeIn .4s}
 .overlay.lose-bg{background:radial-gradient(circle at 50% 40%,rgba(90,10,15,.78),rgba(0,0,0,.95))}
 .endcard{text-align:center;max-width:440px;padding:8px;position:relative}
-.endcard h2{font-size:56px;margin-bottom:4px;font-family:var(--font-fairy)}
-.endcard.win h2{color:var(--brass-hi);text-shadow:0 0 30px rgba(255,180,60,.6);animation:winRise .8s ease}
+.endcard h2{font-size:60px;margin-bottom:8px;font-family:var(--font-title);letter-spacing:.03em}
+.endcard.win h2{color:var(--brass-hi);
+  text-shadow:0 2px 4px rgba(0,0,0,.9),0 0 28px rgba(255,180,60,.85),0 0 50px rgba(255,150,40,.5);
+  animation:winRise .8s ease}
 @keyframes winRise{0%{transform:scale(.4) translateY(30px);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
-.endcard.lose h2{color:var(--wine-glow);text-shadow:0 0 30px rgba(224,66,79,.5);animation:loseShake .7s ease}
+.endcard.lose h2{color:var(--wine-glow);
+  text-shadow:0 2px 4px rgba(0,0,0,.9),0 0 28px rgba(224,66,79,.8),0 0 50px rgba(180,20,40,.5);
+  animation:loseShake .7s ease}
 @keyframes loseShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-10px) rotate(-2deg)}30%{transform:translateX(9px) rotate(2deg)}45%{transform:translateX(-6px)}60%{transform:translateX(4px)}}
-.endcard p{color:var(--parch-dim);margin:6px 0 18px;font-size:14px}
+.endcard p{margin:6px 0 18px}
+.endcard .end-reason{display:block;font-family:var(--font-body);font-size:16px;color:var(--parch);margin-bottom:10px;line-height:1.3}
+.endcard .end-score{display:block;font-family:"Courier New",monospace;font-weight:bold;font-size:40px;color:var(--parch);letter-spacing:.06em;
+  text-shadow:0 2px 6px rgba(0,0,0,.8)}
+.endcard .score-num{font-variant-numeric:tabular-nums}
 .endcard .btn{margin:4px}
 .fx{position:absolute;inset:-40px 0 auto 0;height:0;pointer-events:none}
 .coin{position:absolute;top:-20px;font-size:22px;animation:coinFall linear forwards}
@@ -391,7 +396,7 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   border:2px solid var(--brass);border-radius:14px;max-width:560px;width:100%;max-height:86vh;
   overflow-y:auto;padding:20px;box-shadow:0 12px 50px rgba(0,0,0,.8)}
 .modal-card h2{color:var(--brass-hi);font-size:28px;margin-bottom:10px;text-align:center}
-.modal-card h3{color:var(--brass);font-size:18px;margin:12px 0 4px;font-family:var(--font-fairy)}
+.modal-card h3{color:var(--brass);font-size:19px;margin:12px 0 4px;font-family:var(--font-title);text-shadow:0 1px 2px rgba(0,0,0,.7)}
 .modal-card p,.modal-card li{color:var(--parch);font-size:13px;line-height:1.55}
 .modal-card ul{margin:4px 0 4px 18px}
 .modal-card .modal-btns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
@@ -409,9 +414,9 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   <!-- ============ MENU MODALITÀ ============ -->
   <section id="screen-menu" class="screen active">
     <div class="menu-tools">
-      <div class="icon-btn lang-btn" id="menu-lang" title="Lingua / Language"><span class="flag-half flag-it"></span><span class="flag-half flag-en"></span></div>
       <div class="icon-btn" id="menu-rules" title="Regole">📜</div>
       <div class="icon-btn" id="menu-update" title="Aggiornamenti">🔄</div>
+      <div class="icon-btn lang-btn" id="menu-lang" data-shows="en" title="Lingua / Language"><span class="ujack"></span></div>
     </div>
     <div class="sign"><h1 class="fairy">Folk 'Em</h1><div class="sub" data-i18n="subtitle">La Locanda delle Maschere</div></div>
     <hr class="hr-brass">
@@ -464,9 +469,9 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
       <div class="community-row" id="community"></div>
       <!-- overlay maschere -->
       <div class="mask-overlay" id="maskOverlay">
-        <div class="mask-slot" id="foeMaskSlot"></div>
-        <div class="mask-vs">⚔</div>
         <div class="mask-slot" id="myMaskSlot"></div>
+        <div class="mask-vs">⚔</div>
+        <div class="mask-slot" id="foeMaskSlot"></div>
       </div>
     </div>
 
@@ -1058,7 +1063,10 @@ const I18N = {
     healedBy:(who,n)=>`${who} si cura di <b>+${n}</b> PV.`,
     healed:(n)=>`Cura: +${n} PV.`, tie:"Pareggio: nessun colpo.",
     win:"HAI VINTO!", lose:"HAI PERSO", p1win:"VINCE GIOCATORE 1", p2win:"VINCE GIOCATORE 2",
-    reason200:"Otre colma: 200 PV.", reasonKO:"Otre a secco: 0 PV.",
+    youEmptiedFoe:"Hai svuotato la damigiana avversaria.", youFilledYours:"Hai riempito la damigiana.",
+    foeEmptiedYou:"L'avversario ti ha svuotato la damigiana.", foeFilledTheirs:"L'avversario ha riempito la damigiana.",
+    dmgEmpty:"Damigiana a secco.", dmgFull:"Damigiana piena.",
+    reason200:"Damigiana colma: 200 PV.", reasonKO:"Damigiana a secco: 0 PV.",
     rulesTitle:"Regole", optsTitle:"Opzioni",
     optRestart:"Riavvia partita", optMenu:"Torna alle modalità", optRules:"Regole", optClose:"Chiudi",
     sureRestart:"Riavviare la partita? I progressi andranno persi.",
@@ -1103,7 +1111,10 @@ const I18N = {
     healedBy:(who,n)=>`${who} heals <b>+${n}</b> HP.`,
     healed:(n)=>`Heal: +${n} HP.`, tie:"Tie: no blow lands.",
     win:"YOU WIN!", lose:"YOU LOSE", p1win:"PLAYER 1 WINS", p2win:"PLAYER 2 WINS",
-    reason200:"Otre full: 200 HP.", reasonKO:"Otre dry: 0 HP.",
+    youEmptiedFoe:"You drained the opponent's demijohn.", youFilledYours:"You filled your demijohn.",
+    foeEmptiedYou:"The opponent drained your demijohn.", foeFilledTheirs:"The opponent filled their demijohn.",
+    dmgEmpty:"Demijohn dry.", dmgFull:"Demijohn full.",
+    reason200:"Demijohn full: 200 HP.", reasonKO:"Demijohn dry: 0 HP.",
     rulesTitle:"Rules", optsTitle:"Options",
     optRestart:"Restart match", optMenu:"Back to modes", optRules:"Rules", optClose:"Close",
     sureRestart:"Restart the match? Progress will be lost.",
@@ -1114,8 +1125,22 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.1.7";
+const APP_VERSION="1.2.4";
 const CHANGELOG=[
+  {v:"1.2.4", it:["Nel duello: la tua maschera ora è a sinistra, quella dell'avversario (IA o Giocatore 2) a destra."],
+    en:["In the duel: your mask is now on the left, the opponent's (AI or Player 2) on the right."]},
+  {v:"1.2.3", it:["Setup: titolo \'Forgia la tua build\' ancora più grande, descrizione ancora più piccola per un contrasto netto."],
+    en:["Setup: \'Forge your build\' title even bigger, description even smaller for a clear contrast."]},
+  {v:"1.2.2", it:["Setup: titolo \'Forgia la tua build\' ingrandito, descrizione sotto rimpicciolita per dare più respiro."],
+    en:["Setup: \'Forge your build\' title enlarged, the description below made smaller for more breathing room."]},
+  {v:"1.2.1", it:["Victorian Decade ora su tutti i titoli, i nomi delle maschere, il titolo Folk \'Em e i messaggi evocativi (Le Maschere si destano…), più grande e con ombra marcata.","Isenheim riservato a pulsanti, comandi e definizioni (più leggibile)."],
+    en:["Victorian Decade now on all titles, mask names, the Folk \'Em title and evocative messages (The Masks awaken…), larger and with a stronger shadow.","Isenheim reserved for buttons, commands and definitions (more legible)."]},
+  {v:"1.2.0", it:["Nuovi font: Isenheim per testi e descrizioni, Victorian Decade per titoli e messaggi (Vittoria, Hai Perso…) con effetto in risalto.","Fine partita: messaggi personalizzati per i 4 esiti (hai svuotato/riempito la damigiana, l'avversario te l'ha svuotata/riempita). In PvP: Damigiana a secco / piena.","Fine partita: mostrato solo il punteggio (es. 115 − 0), niente più PV; lo zero non si confonde più con la O.","La bandiera del pulsante lingua ora mostra quella a cui passi: in italiano vedi la Union Jack, in inglese il tricolore.","Ovunque 'otre' è diventato 'damigiana'."],
+    en:["New fonts: Isenheim for text and descriptions, Victorian Decade for titles and messages (Win, You Lose…) with a highlighted effect.","End of match: personalized messages for the 4 outcomes (you drained/filled the demijohn, the opponent drained/filled it). In PvP: Demijohn dry / full.","End of match: only the score is shown (e.g. 115 − 0), no more HP; the zero is no longer confused with the letter O.","The language button flag now shows the one you switch to: in Italian you see the Union Jack, in English the tricolour.","Everywhere 'otre' became 'demijohn'."]},
+  {v:"1.1.9", it:["Icona lingua: ora una Union Jack disegnata come si deve, riconoscibile anche piccola."],
+    en:["Language icon: now a properly drawn Union Jack, recognizable even when small."]},
+  {v:"1.1.8", it:["Icona lingua: ora è la sola Union Jack, spostata come terza icona."],
+    en:["Language icon: now just the Union Jack, moved to be the third icon."]},
   {v:"1.1.7", it:["RISOLTO il bug del tavolo vuoto su Android: la schermata di gioco restava sempre attiva sopra il menu e intercettava i tocchi, così il menu modalità sembrava sparito e le impostazioni non rispondevano. Ora ogni schermata si mostra solo quando è la sua."],
     en:["FIXED the empty-table bug on Android: the game screen stayed permanently on top of the menu and intercepted taps, so the mode menu looked gone and settings did nothing. Now each screen shows only when it is its turn."]},
   {v:"1.1.6", it:["L'IA ora cambia carta all'INIZIO del round, così lo vedi (lampeggio sulla sua carta + PV che calano subito) e puoi ragionarci prima di scegliere.","Le carte non si spostano più quando i pulsanti compaiono/scompaiono: resta un piccolo spazio fisso per loro.","Icona del pulsante lingua ridisegnata (mezzo tricolore / mezzo Union Jack).","Android: aggiunto un controllo che rileva una nuova versione e ricarica da solo, per superare la cache vecchia che mostrava il tavolo vuoto."],
@@ -1200,7 +1225,8 @@ const UI = (() => {
   // cambia lingua e riaggiorna tutto (menu, tavolo se in gioco)
   function setLang(l){
     lang=l; applyStatic();
-    // aggiorno i nomi al tavolo se una partita è in corso
+    // la bandiera mostra la lingua a cui si passerà: IT->mostra UK, EN->mostra IT
+    const lb=$('menu-lang'); if(lb) lb.dataset.shows = lang==='it'?'en':'it';
     if(state){
       if(mode==='pvp_local'){ $('foe-name').textContent=T().p2; }
       else { $('foe-name').textContent=T().foe; }
@@ -1721,19 +1747,35 @@ const UI = (() => {
   }
 
   /* ================= FINE PARTITA ================= */
+  // punteggio con lo zero reso come "0" in stile tabellare (niente ambiguità con la O)
+  function fmtScore(n){ return `<span class="score-num">${n}</span>`; }
   function endGame(){
+    // formatto il punteggio con lo zero barrato (Ø) per non confonderlo con la O
+    // (usato sotto tramite fmtScore)
     const meWin=state.winner==='me';
     const ov=$('overlay'),card=$('endcard');
     ov.className='overlay show'+(meWin?'':' lose-bg');
     card.className='endcard '+(meWin?'win':'lose');
+    // determino l'esito preciso (4 casi)
+    const by200 = state.me.hp>=GameState.WIN_HP || state.ai.hp>=GameState.WIN_HP;
+    let reason;
     if(mode==='pvp_local'){
       $('end-title').textContent = state.winner==='me'?T().p1win:T().p2win;
-      card.className='endcard win';   // in pvp nessuno "perde" dal punto di vista del device
+      card.className='endcard win';
+      // in PvP a carte scoperte: generico
+      reason = (state.winner==='me'? (state.ai.hp<=0?T().dmgEmpty:T().dmgFull)
+                                   : (state.me.hp<=0?T().dmgEmpty:T().dmgFull));
     }else{
       $('end-title').textContent = meWin?T().win:T().lose;
+      // 4 casi personalizzati
+      if(meWin && !by200)      reason=T().youEmptiedFoe;   // avversario a 0
+      else if(meWin && by200)  reason=T().youFilledYours;  // tu a 200
+      else if(!meWin && state.me.hp<=0) reason=T().foeEmptiedYou;  // tu a 0
+      else                     reason=T().foeFilledTheirs; // avversario a 200
     }
-    const reason=(state.me.hp>=GameState.WIN_HP||state.ai.hp>=GameState.WIN_HP)?T().reason200:T().reasonKO;
-    $('end-sub').innerHTML=`${reason}<br>${Math.max(0,state.me.hp)} · ${Math.max(0,state.ai.hp)}`;
+    // solo il punteggio, con lo zero "barrato" per non confonderlo con la O
+    const meScore=fmtScore(Math.max(0,state.me.hp)), aiScore=fmtScore(Math.max(0,state.ai.hp));
+    $('end-sub').innerHTML=`<span class="end-reason">${reason}</span><span class="end-score">${meScore} − ${aiScore}</span>`;
     const old=card.querySelector('.fx'); if(old)old.remove();
     const fx=document.createElement('div');fx.className='fx';card.appendChild(fx);
     if(meWin||mode==='pvp_local'){
@@ -1875,6 +1917,7 @@ const UI = (() => {
   function init(){
     const savedLang=localStorageSafe('folkem_lang'); if(savedLang==='it'||savedLang==='en') lang=savedLang;
     applyStatic(); renderSetup(); bind(); fitScale();
+    const lb=$('menu-lang'); if(lb) lb.dataset.shows = lang==='it'?'en':'it';
     // regole al primo avvio
     if(!localStorageSafe('folkem_seen')){ openModal(rulesHTML()); localStorageSafe('folkem_seen','1'); }
     // service worker: registra, e se trovo una nuova versione forzo il refresh
@@ -1898,7 +1941,7 @@ const UI = (() => {
         reg.update();   // controlla subito se c'è un aggiornamento
       }).catch(()=>{});
     }
-    window.__dbg={getState:()=>state, setState:(s)=>{state=s;}, ev:(cs)=>GameLogic.evaluate(cs)};
+    window.__dbg={getState:()=>state, setState:(s)=>{state=s;}, ev:(cs)=>GameLogic.evaluate(cs), endGame:()=>endGame()};
   }
   // localStorage sicuro (non rompe se disabilitato)
   function localStorageSafe(k,v){ try{ if(v!==undefined){localStorage.setItem(k,v);return v;} return localStorage.getItem(k);}catch(e){return null;} }
