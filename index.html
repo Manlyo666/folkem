@@ -90,7 +90,7 @@ body[data-portrait="1"] .otre{width:15vw;height:19vw;max-height:12vh}
 body[data-portrait="1"] .hp-num{font-size:4.6vw}
 body[data-portrait="1"] .otre-wrap{width:16vw}
 body[data-portrait="1"] .otre-wrap .who{font-size:3vw}
-body[data-portrait="1"] .action-bar{gap:1.5vw}
+body[data-portrait="1"] .action-bar{gap:1.5vw;min-height:7vh}
 body[data-portrait="1"] .action-bar .btn{font-size:3.6vw;padding:1.3vh 2vw}
 body[data-portrait="1"] .log-box{height:13vh;font-size:3vw;flex-shrink:0}
 .screen.active{display:flex;animation:fadeIn .35s ease}
@@ -139,16 +139,22 @@ body[data-portrait="1"] .menu-tools{top:1.5vh;right:2.5vw}
 body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .icon-btn:active{transform:scale(.92)}
 .icon-btn:hover{box-shadow:0 0 14px rgba(255,180,60,.5)}
-/* pulsante lingua: cerchio diviso, mezza bandiera IT / mezza EN */
-.lang-btn{overflow:hidden;padding:0;position:relative}
-.lang-btn .flag-half{position:absolute;top:0;bottom:0;width:50%;background-size:cover;background-position:center}
-.lang-btn .flag-it{left:0;background:linear-gradient(90deg,#009246 0 40%,#fff 40% 70%,#ce2b37 70%)}
-.lang-btn .flag-en{right:0;background:
-  linear-gradient(45deg,transparent 40%,#cf142b 40% 60%,transparent 60%),
-  linear-gradient(-45deg,transparent 40%,#cf142b 40% 60%,transparent 60%),
-  linear-gradient(0deg,transparent 42%,#cf142b 42% 58%,transparent 58%),
-  linear-gradient(90deg,transparent 42%,#cf142b 42% 58%,transparent 58%),
-  #00247d}
+/* pulsante lingua: cerchio diviso a metà — sinistra tricolore, destra Union Jack */
+.lang-btn{overflow:hidden;padding:0;position:relative;border-color:var(--brass)}
+.lang-btn .flag-half{position:absolute;top:0;bottom:0;width:50%}
+.lang-btn .flag-it{left:0;background:linear-gradient(90deg,#009246 0 33.3%,#f1f2f1 33.3% 66.6%,#ce2b37 66.6%)}
+.lang-btn .flag-en{right:0;background-color:#012169;background-image:
+  linear-gradient(45deg,transparent 43%,#fff 43% 57%,transparent 57%),
+  linear-gradient(-45deg,transparent 43%,#fff 43% 57%,transparent 57%),
+  linear-gradient(45deg,transparent 46%,#c8102e 46% 54%,transparent 54%),
+  linear-gradient(-45deg,transparent 46%,#c8102e 46% 54%,transparent 54%),
+  linear-gradient(0deg,transparent 38%,#fff 38% 62%,transparent 62%),
+  linear-gradient(90deg,transparent 38%,#fff 38% 62%,transparent 62%),
+  linear-gradient(0deg,transparent 42%,#c8102e 42% 58%,transparent 58%),
+  linear-gradient(90deg,transparent 42%,#c8102e 42% 58%,transparent 58%);
+  background-size:cover}
+.lang-btn::after{content:'';position:absolute;left:50%;top:8%;bottom:8%;width:2px;transform:translateX(-50%);
+  background:var(--brass-hi);opacity:.6;z-index:2}
 .cartwheel{animation:none}
 
 /* ===== SETUP 3x3 ===== */
@@ -230,6 +236,14 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   40%{opacity:1}
   100%{transform:translateY(0) scale(1.12) rotate(0);opacity:1;box-shadow:0 10px 20px rgba(0,0,0,.6)}}
 
+/* carta appena cambiata dall'avversario: lampeggio dorato + capovolgimento */
+.card.card-swapped{animation:cardSwapped 1s ease}
+@keyframes cardSwapped{
+  0%{transform:rotateY(0);box-shadow:0 3px 6px rgba(0,0,0,.55)}
+  30%{transform:rotateY(90deg) scale(1.05);box-shadow:0 0 24px 6px rgba(255,200,80,.9)}
+  60%{transform:rotateY(0) scale(1.05);box-shadow:0 0 24px 6px rgba(255,200,80,.9)}
+  100%{transform:rotateY(0) scale(1);box-shadow:0 3px 6px rgba(0,0,0,.55)}}
+
 /* pulsazione del bottone Giocatore vs IA per invitare a confermare la difficoltà */
 .confirm-pulse{animation:confirmPulse 1s ease-in-out infinite}
 /* ANIMAZIONE FIABESCA a tutto schermo all'evocazione */
@@ -283,7 +297,8 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .community-row{display:flex;gap:7px;justify-content:center}
 
 /* pulsanti azione (bottom + top per pvp) */
-.action-bar{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap;margin-top:4px;width:100%}
+.action-bar{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap;margin-top:4px;width:100%;
+  min-height:52px;align-items:center}
 .btn.compact{padding:9px 12px;font-size:14px;white-space:nowrap}
 .action-bar.top{transform:rotate(180deg)}   /* per il player 2 in pvp locale */
 .action-bar .btn{font-size:14px;padding:8px 14px}
@@ -1099,8 +1114,10 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.1.5";
+const APP_VERSION="1.1.6";
 const CHANGELOG=[
+  {v:"1.1.6", it:["L'IA ora cambia carta all'INIZIO del round, così lo vedi (lampeggio sulla sua carta + PV che calano subito) e puoi ragionarci prima di scegliere.","Le carte non si spostano più quando i pulsanti compaiono/scompaiono: resta un piccolo spazio fisso per loro.","Icona del pulsante lingua ridisegnata (mezzo tricolore / mezzo Union Jack).","Android: aggiunto un controllo che rileva una nuova versione e ricarica da solo, per superare la cache vecchia che mostrava il tavolo vuoto."],
+    en:["The AI now swaps a card at the START of the round, so you see it (flash on its card + HP dropping immediately) and can reason about it before choosing.","Cards no longer shift when buttons appear/disappear: a small fixed space is reserved for them.","Language button icon redesigned (half Italian tricolour / half Union Jack).","Android: added a check that detects a new version and reloads by itself, to get past the stale cache that showed the empty table."]},
   {v:"1.1.5", it:["Riepilogo in basso: ora mostra tutto anche di computer/Giocatore 2 (scelta attacco/difesa) e il danno con la matematica della parata (es. Danno: 20 − 3 = 17). Si resetta a ogni nuova partita ed è più grande.","Nuovo pulsante lingua (bandiera metà IT / metà EN) nel menu iniziale; la lingua si cambia anche dal menu impostazioni in partita. La scelta viene ricordata.","Corretto: quando l'IA cambia carta ora i suoi PV calano subito a schermo (prima restavano 100).","Android: risolta la cache che serviva una versione vecchia (ora l'HTML si aggiorna sempre). Se prima ti mandava a un tavolo vuoto, ora parte dal menu modalità.","Il nome dell'arma annunciato a centro schermo non va più a capo: resta centrato e si rimpicciolisce se troppo lungo."],
     en:["Bottom log: now shows everything the computer/Player 2 does too (attack/defend choice) and damage with the parry math (e.g. Damage: 20 − 3 = 17). It resets each new match and is bigger.","New language button (half IT / half EN flag) in the main menu; language can also be changed from the in-game options menu. The choice is remembered.","Fixed: when the AI swaps a card its HP now drops on screen immediately (used to stay 100).","Android: fixed the cache serving an old version (HTML now always updates). If it used to drop you into an empty table, it now starts from the mode menu.","The center-screen weapon name no longer wraps: it stays centered and shrinks if too long."]},
   {v:"1.1.4", it:["Corretto un bug di gerarchia: con un Tris E una Scala nella stessa mano ora vince il Tris (più raro, più forte). Prima sceglieva la Scala.","Android: layout completamente rifatto — riempie lo schermo reale, niente più cornice a rombi, carte non più tagliate (nemmeno con la 5ª). Le 9 maschere del setup stanno tutte senza scorrere.","La damigiana avversaria in PvP ora si capovolge col vino incluso.","Il nome dell'arma non sta più sotto la maschera: appare a centro schermo con un'animazione quando parte l'attacco (la maschera annuncia il colpo).","Pulsante opzioni: ora è un ingranaggio, più grande e tutto cliccabile."],
@@ -1375,6 +1392,28 @@ const UI = (() => {
     log(`<span class="sys">${T().tableLabel}: ${cardsSymbols(state.community.slice(0,4))}</span>`,'sys');
     log(`<span class="me">${T().yourCardsLabel}: ${cardsSymbols(state.me.hand)}</span>`,'me');
     if(mode==='pvp_local') log(`<span class="ai">${T().p2CardsLabel}: ${cardsSymbols(state.ai.hand)}</span>`,'ai');
+    // in PvE l'IA decide SUBITO se cambiare carta, così lo vedi e puoi ragionarci
+    if(mode!=='pvp_local'){
+      const plan=GameLogic.aiChoose(state,difficulty);
+      if(plan.swapIndex>=0){
+        setTimeout(()=>{
+          const r=GameState.swapCard(state,'ai',plan.swapIndex);
+          if(r.ok){
+            log(`<span class="ai">${T().foeSwapNow}</span>`,'ai');
+            floatText('ai','−10','dmg');
+            // animazione: la carta coperta dell'avversario "lampeggia" per segnalare il cambio
+            const foeCards=$('foe-hand').querySelectorAll('.card');
+            const swapped=foeCards[plan.swapIndex]; if(swapped) swapped.classList.add('card-swapped');
+            $('otre-ai').classList.add('hit');setTimeout(()=>$('otre-ai').classList.remove('hit'),500);
+            renderOtri();
+            if(GameState.checkWin(state)){renderOtri();endGame();return;}
+          }
+          state.ai.swapPlanned=true;   // già fatto, non rifarlo in choose
+        }, 700);   // piccola pausa dopo la distribuzione, così si nota
+      } else {
+        state.ai.swapPlanned=true;
+      }
+    }
   }
 
   function armSwap(side){
@@ -1438,15 +1477,7 @@ const UI = (() => {
         return;
       }
     } else {
-      // PvE: l'IA cambia carta (se serve) e sceglie alla cieca ORA
-      const plan=GameLogic.aiChoose(state,difficulty);
-      if(plan.swapIndex>=0){
-        const r=GameState.swapCard(state,'ai',plan.swapIndex);
-        if(r.ok){log(`<span class="ai">${T().foeSwapNow}</span>`,'ai');floatText('ai','−10','dmg');
-          $('otre-ai').classList.add('hit');setTimeout(()=>$('otre-ai').classList.remove('hit'),500);
-          renderOtri();}   // aggiorno subito i PV visualizzati
-        if(GameState.checkWin(state)){renderOtri();endGame();return;}
-      }
+      // PvE: l'IA ha già cambiato carta a inizio round; qui sceglie solo atk/dif
       state.ai.choice=GameLogic.aiChooseBlind(state,difficulty);
       state.me.choice=c;
       log(`<span class="me">${T().youChose(c==='attack'?T().attack:T().defend)}</span>`,'me');
@@ -1844,8 +1875,27 @@ const UI = (() => {
     applyStatic(); renderSetup(); bind(); fitScale();
     // regole al primo avvio
     if(!localStorageSafe('folkem_seen')){ openModal(rulesHTML()); localStorageSafe('folkem_seen','1'); }
-    // service worker
-    if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+    // service worker: registra, e se trovo una nuova versione forzo il refresh
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').then(reg=>{
+        // se c'è un SW in attesa, digli di attivarsi subito
+        if(reg.waiting) reg.waiting.postMessage('skipWaiting');
+        reg.addEventListener('updatefound',()=>{
+          const nw=reg.installing;
+          if(nw) nw.addEventListener('statechange',()=>{
+            if(nw.state==='installed' && navigator.serviceWorker.controller){
+              // nuova versione pronta: ricarico una volta per applicarla
+              if(!sessionStorage.getItem('folkem_reloaded')){
+                sessionStorage.setItem('folkem_reloaded','1');
+                nw.postMessage('skipWaiting');
+                setTimeout(()=>location.reload(), 300);
+              }
+            }
+          });
+        });
+        reg.update();   // controlla subito se c'è un aggiornamento
+      }).catch(()=>{});
+    }
     window.__dbg={getState:()=>state, setState:(s)=>{state=s;}, ev:(cs)=>GameLogic.evaluate(cs)};
   }
   // localStorage sicuro (non rompe se disabilitato)

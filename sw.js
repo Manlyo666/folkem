@@ -1,4 +1,4 @@
-const CACHE='folkem-v1.1.5';
+const CACHE='folkem-v1.1.6';
 const ASSETS=['./','./index.html','./manifest.json',
   './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.svg',
   './assets/icon-192.png','./assets/icon-512.png'];
@@ -31,3 +31,4 @@ self.addEventListener('fetch',e=>{
     e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
   }
 });
+self.addEventListener('message',e=>{ if(e.data==='skipWaiting') self.skipWaiting(); });
