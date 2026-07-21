@@ -10,7 +10,7 @@ Android and use Chrome's *"Add to Home screen"* — it installs as a standalone 
 (no address bar) thanks to the included `manifest.json` and service worker.
 *(Update the link below with your own Pages URL.)*
 
-> **App link:** `https://manlyo666.github.io/folkem/`
+> **App link:** [https://manlyo666.github.io/folkem/](https://manlyo666.github.io/folkem/)
 
 ---
 

@@ -10,7 +10,7 @@ Android e usa *"Aggiungi a schermata Home"* di Chrome — si installa come app a
 (senza barra dell'indirizzo) grazie a `manifest.json` e al service worker.
 *(Sostituisci il link qui sotto con il tuo URL Pages.)*
 
-> **Link app:** `https://manlyo666.github.io/folkem/`
+> **Link app:** [https://manlyo666.github.io/folkem/](https://manlyo666.github.io/folkem/)
 
 ---
 

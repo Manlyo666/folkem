@@ -156,8 +156,8 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
 .table-mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;position:relative;min-height:0}
 
 /* fila giocatore: otre a SX, carte a DX (avversario: otre a DX) */
-.player-strip{display:flex;align-items:center;gap:12px;justify-content:center;width:100%}
-.player-strip.foe{flex-direction:row}   /* stesso ordine: simmetria verticale con le carte allineate */
+.player-strip{display:flex;align-items:center;gap:12px;justify-content:flex-start;width:100%;padding:0 6%}
+.player-strip.foe{flex-direction:row-reverse}   /* avversario: damigiana a destra */
 .otre-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;width:78px}
 .otre-wrap .who{font-family:var(--font-fairy);font-size:13px;color:var(--brass);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
 .otre{position:relative;width:72px;height:92px;display:flex;align-items:flex-end;justify-content:center}
@@ -277,14 +277,27 @@ body[data-portrait="1"] .log-box{height:70px;font-size:13px}
 @keyframes glowHeal{0%,100%{filter:none}50%{filter:drop-shadow(0 0 22px rgba(120,220,120,.9)) brightness(1.2)}}
 
 /* arma lanciata */
-.thrown{position:absolute;width:40px;height:40px;z-index:25;pointer-events:none;left:50%;top:50%}
+.thrown{position:absolute;width:52px;height:52px;z-index:30;pointer-events:none;left:50%;top:50%;
+  filter:drop-shadow(0 0 6px rgba(255,220,120,.9)) drop-shadow(0 2px 3px rgba(0,0,0,.6))}
 .thrown svg{width:100%;height:100%}
+.thrown.volley{z-index:31}
+/* esplosione all'impatto */
+.impact{position:absolute;width:36px;height:36px;transform:translate(-50%,-50%);z-index:32;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,230,150,.95),rgba(255,140,50,.6) 40%,transparent 70%);
+  border-radius:50%;animation:impactPop .4s ease-out forwards}
+@keyframes impactPop{0%{transform:translate(-50%,-50%) scale(.2);opacity:1}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
 
-/* toast danno/cura */
-.float{position:absolute;left:50%;top:6%;transform:translateX(-50%);font-family:var(--px);font-weight:bold;
-  font-size:22px;pointer-events:none;animation:floatUp 1.1s ease-out forwards;text-shadow:0 2px 4px #000;z-index:6}
-.float.dmg{color:var(--wine-glow)}.float.heal{color:var(--ok)}.float.block{color:var(--brass-hi);font-size:16px}
-@keyframes floatUp{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}20%{opacity:1;transform:translate(-50%,-4px) scale(1.1)}100%{opacity:0;transform:translate(-50%,-38px)}}
+/* NUMERI danni/cure stile Balatro: grandi, con bordo bianco */
+.float{position:absolute;left:50%;top:0%;transform:translateX(-50%);font-family:var(--font-display),Georgia,serif;
+  font-weight:900;font-size:44px;pointer-events:none;animation:floatUp 1.4s cubic-bezier(.2,1,.4,1) forwards;z-index:33;
+  -webkit-text-stroke:2.5px #fff;paint-order:stroke fill;letter-spacing:-1px}
+.float.dmg{color:#e01f2d;text-shadow:0 0 12px rgba(224,31,45,.8),0 3px 0 rgba(120,0,0,.6)}
+.float.heal{color:#33c04a;text-shadow:0 0 12px rgba(51,192,74,.8),0 3px 0 rgba(0,80,20,.6)}
+.float.block{color:var(--brass-hi);font-size:30px;-webkit-text-stroke:2px #fff}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,20px) scale(.4) rotate(-8deg)}
+  25%{opacity:1;transform:translate(-50%,-6px) scale(1.35) rotate(3deg)}
+  40%{transform:translate(-50%,-10px) scale(1.1) rotate(-2deg)}
+  100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
 
 /* riquadro turni scrollabile in basso */
 .log-box{width:100%;max-width:700px;height:64px;overflow-y:auto;font-size:12px;color:var(--parch-dim);
@@ -960,7 +973,7 @@ const I18N = {
     back:"Indietro", startBtn:"Al tavolo",
     you:"Tu", foe:"Avversario", p1:"Giocatore 1", p2:"Giocatore 2",
     onTable:"Carte a terra",
-    swap:"Cambia (−10)", reveal:"Rivela il Destino", summon:"Evoca Maschera", summonFlash:"Le Maschere si destano…", blindChoice:"Scegli alla cieca: Attacco o Difesa?",
+    swap:"Cambia (−10)", reveal:"Rivela il Destino", summon:"Evoca Maschera", summonFlash:"Le Maschere si destano…", blindChoice:"Scegli alla cieca: Attacco o Difesa?", p1ChooseBlind:"Giocatore 1: scegli alla cieca (Attacco o Difesa).",
     attack:"⚔ Attacco", defend:"🛡 Difesa", again:"Nuova partita", toMenu:"Modalità",
     invert:"⇄ Inverti", inverted:"↺ Invertito", fixed:"🔒 Fisso", atkS:"Atk", defS:"Dif",
     roundMove:r=>`Round ${r} — la tua mossa.`,
@@ -969,7 +982,7 @@ const I18N = {
     chooseAction:"La tua Maschera è pronta. Attacco o Difesa?",
     already:"Hai già cambiato in questo round.", lowhp:"PV insufficienti.",
     youSwap:"Cambi una carta (−10 PV).", foeSwap:"L'avversario cambia una carta (−10 PV).", foeSwapNow:"⚠️ L'avversario CAMBIA una carta ora (−10 PV).",
-    fifthCard:"Cala la 5ª carta a terra.", tableLabel:"Tavolo", yourCardsLabel:"Tu", p2CardsLabel:"Giocatore 2",
+    fifthCard:"Cala la 5ª carta a terra.", tableLabel:"Tavolo", yourCardsLabel:"Tu", p2CardsLabel:"Giocatore 2", foeCardsLabel:"Avversario",
     fifthCardIs:(c)=>`Cala la 5ª carta: ${c}.`,
     youChose:(c)=>`Scegli ${c}.`,
     p2Turn:"Giocatore 2: tocca a te scegliere.",
@@ -1001,7 +1014,7 @@ const I18N = {
     back:"Back", startBtn:"To the table",
     you:"You", foe:"Opponent", p1:"Player 1", p2:"Player 2",
     onTable:"Table cards",
-    swap:"Swap (−10)", reveal:"Reveal Fate", summon:"Summon Mask", summonFlash:"The Masks awaken…", blindChoice:"Choose blind: Attack or Defend?",
+    swap:"Swap (−10)", reveal:"Reveal Fate", summon:"Summon Mask", summonFlash:"The Masks awaken…", blindChoice:"Choose blind: Attack or Defend?", p1ChooseBlind:"Player 1: choose blind (Attack or Defend).",
     attack:"⚔ Attack", defend:"🛡 Defend", again:"New game", toMenu:"Modes",
     invert:"⇄ Swap", inverted:"↺ Swapped", fixed:"🔒 Fixed", atkS:"Atk", defS:"Def",
     roundMove:r=>`Round ${r} — your move.`,
@@ -1010,7 +1023,7 @@ const I18N = {
     chooseAction:"Your Mask is ready. Attack or Defend?",
     already:"You already swapped this round.", lowhp:"Not enough HP.",
     youSwap:"You swap a card (−10 HP).", foeSwap:"The opponent swaps a card (−10 HP).", foeSwapNow:"⚠️ The opponent SWAPS a card now (−10 HP).",
-    fifthCard:"The 5th table card is dealt.", tableLabel:"Table", yourCardsLabel:"You", p2CardsLabel:"Player 2",
+    fifthCard:"The 5th table card is dealt.", tableLabel:"Table", yourCardsLabel:"You", p2CardsLabel:"Player 2", foeCardsLabel:"Opponent",
     fifthCardIs:(c)=>`5th card dealt: ${c}.`,
     youChose:(c)=>`You chose ${c}.`,
     p2Turn:"Player 2: your turn to choose.",
@@ -1033,8 +1046,12 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.1.0";
+const APP_VERSION="1.1.2";
 const CHANGELOG=[
+  {v:"1.1.2", it:["Appena cala la 5ª carta, le carte dell'avversario vengono scoperte. Resta ignota solo la sua scelta (attacco/difesa) e come ha impostato le maschere."],
+    en:["As soon as the 5th card is dealt, the opponent's cards are revealed. Only their choice (attack/defend) and mask setup stay hidden."]},
+  {v:"1.1.1", it:["PvP offline: risolto il blocco. Ora G1 rivela e sceglie, G2 sceglie, poi entrambi premono Evoca Maschera.","Armi lanciate stile Vampire Survivors: tante armi, grandi e luminose, sopra il velo, con esplosioni all'impatto.","Numeri danni/cure stile Balatro: grandi, danni in rosso e cure in verde, con bordo bianco.","Damigiane ai lati opposti: Giocatore 1 a sinistra, avversario a destra (in PvP il Giocatore 2 la vede a sinistra sua).","Link app cliccabile nei README."],
+    en:["Offline PvP: fixed the freeze. Now P1 reveals and chooses, P2 chooses, then both press Summon Mask.","Vampire-Survivors-style thrown weapons: many, big and glowing, above the veil, with impact bursts.","Balatro-style damage/heal numbers: large, damage in red and heals in green, with white outline.","Demijohns on opposite sides: Player 1 left, opponent right (in PvP, Player 2 sees theirs on their left).","Clickable app link in the READMEs."]},
   {v:"1.1.0", it:["Nuovo flusso: premi Rivela il Destino, scegli Attacco/Difesa ALLA CIECA sulle 4 carte, poi cala la 5ª (il rischio!), poi premi Evoca Maschera.","Animazione fiabesca a tutto schermo all'evocazione, prima del duello.","Damigiana ridisegnata (panciuta, come una vera damigiana), il vino resta dentro il corpo, simmetrica tra i due giocatori.","Android: layout verticale che riempie lo schermo — pulsanti menu grandi, 9 maschere che riempiono il setup, carte del tavolo più grandi, meno spazio tra le file.","Pulsanti Cambia/Rivela affiancati (non più impilati). Le mie carte hanno la stessa dimensione dell'avversario."],
     en:["New flow: press Reveal Fate, choose Attack/Defend BLIND on the 4 cards, then the 5th is dealt (the risk!), then press Summon Mask.","Fullscreen fairy animation on summon, before the duel.","Redrawn demijohn (bulbous, like a real one), wine stays inside the body, symmetric between players.","Android: portrait layout that fills the screen — big menu buttons, 9 masks filling setup, bigger table cards, less space between rows.","Swap/Reveal buttons side by side (no longer stacked). My cards are the same size as the opponent's."]},
   {v:"1.0.9", it:["Simboli dei semi napoletani nel log: 🪙 denari, 🏆 coppe, 🗡️ spade, 🪵 bastoni (prima erano quelli francesi, fuorvianti).","Verificato: tutti e 4 i semi sono contati correttamente per colore e punteggi."],
@@ -1324,46 +1341,70 @@ const UI = (() => {
     $('btn-attack').style.display='';$('btn-defend').style.display='';
     $('btn-attack').disabled=false;$('btn-defend').disabled=false;
     state.phase='chooseBlind';
-    log(`<span class="sys">${T().blindChoice}</span>`,'sys');
+    log(`<span class="sys">${mode==='pvp_local'?T().p1ChooseBlind:T().blindChoice}</span>`,'sys');
   }
 
   function choose(side,c){
     if(mode==='pvp_local'){
       state[side].choice=c;
+      log(`<span class="${side==='me'?'me':'ai'}">${(side==='me'?T().p1:T().p2)}: ${c==='attack'?T().attack:T().defend}</span>`,side==='me'?'me':'ai');
       if(side==='me'){
-        $('btn-attack').disabled=true;$('btn-defend').disabled=true;
+        // G1 ha scelto: nascondi i suoi pulsanti, mostra quelli di G2 (in alto, ruotati)
+        $('btn-attack').style.display='none';$('btn-defend').style.display='none';
         pvpTurn='ai';
+        $('foe-actions').style.display='flex';
+        $('p2-swap').style.display='none';$('p2-summon').style.display='none';
+        $('p2-attack').style.display='';$('p2-defend').style.display='';
         $('p2-attack').disabled=false;$('p2-defend').disabled=false;
-        log(T().p2Turn,'sys');
+        log(`<span class="sys">${T().p2Turn}</span>`,'sys');
         return;
       }else{
-        $('p2-attack').disabled=true;$('p2-defend').disabled=true;
+        // G2 ha scelto: nascondi i suoi pulsanti e procedi
+        $('p2-attack').style.display='none';$('p2-defend').style.display='none';
+        proceedToFifth();
+        return;
       }
     } else {
       state.me.choice=c;
+      log(`<span class="me">${T().youChose(state.me.choice==='attack'?T().attack:T().defend)}</span>`,'me');
       $('btn-attack').disabled=true;$('btn-defend').disabled=true;
+      $('btn-attack').style.display='none';$('btn-defend').style.display='none';
+      proceedToFifth();
     }
-    log(`<span class="me">${T().youChose(state.me.choice==='attack'?T().attack:T().defend)}</span>`,'me');
-    $('btn-attack').style.display='none';$('btn-defend').style.display='none';
-    $('p2-attack')&&($('p2-attack').style.display='none');$('p2-defend')&&($('p2-defend').style.display='none');
-    // ORA cala la 5a carta e lasciala osservare
+  }
+
+  // cala la 5a carta e prepara l'evocazione (comune a PvE e PvP)
+  function proceedToFifth(){
     state.phase='dealing5';
     GameState.revealFifth(state);
     dealFifthToCenter(()=>{
-      // valuta su 5 carte (definitivo)
       state.me.eval=GameLogic.evaluate(state.me.hand.concat(state.community));
       state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community));
       log(`<span class="sys">${T().fifthCardIs(cardSymbol(state.community[4]))}</span>`,'sys');
-      // appare il pulsante Evoca Maschera (l'utente osserva quanto vuole)
-      $('btn-summon').style.display='';$('btn-summon').disabled=false;
-      $('btn-summon').classList.add('confirm-pulse');
+      // scopro le carte dell'avversario: ora sono visibili (resta ignota solo la sua scelta e la build)
+      if(mode!=='pvp_local') renderFoeHand(true);
+      log(`<span class="ai">${T().foeCardsLabel}: ${cardsSymbols(state.ai.hand)}</span>`,'ai');
+      // mostra Evoca Maschera. In PvP servono DUE evocazioni (una per giocatore).
+      evokeReady={me:false, ai:(mode!=='pvp_local')};  // in PvE l'IA "evoca" da sola
+      $('btn-summon').style.display='';$('btn-summon').disabled=false;$('btn-summon').classList.add('confirm-pulse');
+      if(mode==='pvp_local'){
+        $('foe-actions').style.display='flex';
+        $('p2-attack').style.display='none';$('p2-defend').style.display='none';$('p2-swap').style.display='none';
+        $('p2-summon').style.display='';$('p2-summon').disabled=false;$('p2-summon').classList.add('confirm-pulse');
+      }
       state.phase='readyEvoke';
     });
   }
 
-  // EVOCA: animazione fiabesca a tutto schermo, poi il duello delle maschere
-  function evoke(){
-    $('btn-summon').style.display='none';$('btn-summon').classList.remove('confirm-pulse');
+  let evokeReady={me:false, ai:false};
+  // EVOCA: in PvP aspetta che entrambi premano; poi animazione + duello
+  function evoke(who){
+    who=who||'me';
+    evokeReady[who]=true;
+    if(who==='me'){ $('btn-summon').style.display='none';$('btn-summon').classList.remove('confirm-pulse'); }
+    else { $('p2-summon').style.display='none';$('p2-summon').classList.remove('confirm-pulse'); }
+    if(!evokeReady.me || !evokeReady.ai) return;   // aspetta l'altro giocatore
+    if(mode==='pvp_local') $('foe-actions').style.display='none';
     bumpTone(state.me.eval.maskId); bumpTone(state.ai.eval.maskId);
     playSummonAnimation(()=>{
       logHandBreakdown('me'); logHandBreakdown('ai');
@@ -1489,32 +1530,56 @@ const UI = (() => {
     setTimeout(afterResolve, 3400);   // più lento e leggibile
   }
 
-  // lancia l'arma dalla maschera vincente verso la maschera avversaria (centro)
+  // RAFFICA di armi (stile Vampire Survivors): tante armi grandi e luminose
+  // lanciate dalla maschera vincente contro quella perdente. Sopra il velo.
   function throwWeapon(winSide, maskId, done){
     const overlay=$('maskOverlay');
-    const w=document.createElement('div'); w.className='thrown'; w.innerHTML=WeaponArt.svg(maskId);
-    overlay.appendChild(w);
-    const fromY = winSide==='me' ? 120 : -120;
-    const toY = winSide==='me' ? -80 : 80;
-    w.style.transform=`translate(-50%,-50%) translateY(${fromY}px)`;
-    w.animate([
-      {transform:`translate(-50%,-50%) translateY(${fromY}px) rotate(0deg)`,opacity:0},
-      {transform:`translate(-50%,-50%) translateY(${(fromY+toY)/2}px) rotate(360deg)`,opacity:1,offset:.5},
-      {transform:`translate(-50%,-50%) translateY(${toY}px) rotate(720deg)`,opacity:1}
-    ],{duration:1000,easing:'ease-in-out'}).onfinish=()=>{ w.remove(); if(done)done(); };
+    const fromY = winSide==='me' ? 160 : -160;
+    const toY = winSide==='me' ? -110 : 110;
+    const N=9;   // numero di armi nella raffica
+    let landed=0;
+    for(let i=0;i<N;i++){
+      const w=document.createElement('div'); w.className='thrown volley'; w.innerHTML=WeaponArt.svg(maskId);
+      overlay.appendChild(w);
+      const dx=(Math.random()*2-1)*140;   // dispersione orizzontale
+      const dxEnd=(Math.random()*2-1)*60;
+      const spin=(Math.random()<.5?1:-1)*(540+Math.random()*360);
+      const delay=i*70+Math.random()*40;
+      const dur=650+Math.random()*250;
+      w.style.transform=`translate(-50%,-50%) translate(${dx}px,${fromY}px)`;
+      w.animate([
+        {transform:`translate(-50%,-50%) translate(${dx}px,${fromY}px) rotate(0deg) scale(.6)`,opacity:0},
+        {transform:`translate(-50%,-50%) translate(${(dx+dxEnd)/2}px,${(fromY+toY)/2}px) rotate(${spin/2}deg) scale(1.15)`,opacity:1,offset:.5},
+        {transform:`translate(-50%,-50%) translate(${dxEnd}px,${toY}px) rotate(${spin}deg) scale(1)`,opacity:1}
+      ],{duration:dur,delay,easing:'ease-in'}).onfinish=()=>{
+        spawnImpact(overlay, dxEnd, toY);
+        w.remove(); landed++;
+        if(landed===N && done) done();
+      };
+    }
   }
-  // seconda arma verso l'otre bersaglio
+  // piccola esplosione all'impatto
+  function spawnImpact(host, x, y){
+    const im=document.createElement('div'); im.className='impact';
+    im.style.left=`calc(50% + ${x}px)`; im.style.top=`calc(50% + ${y}px)`;
+    host.appendChild(im); setTimeout(()=>im.remove(),400);
+  }
+  // seconda raffica verso l'otre bersaglio
   function throwWeaponAtOtre(winSide, targetSide, maskId, done){
-    const scaler=$('scaler');
-    const w=document.createElement('div'); w.className='thrown'; w.innerHTML=WeaponArt.svg(maskId);
-    w.style.position='fixed'; w.style.zIndex=60;
     const otre=$(targetSide==='me'?'otre-me':'otre-ai').getBoundingClientRect();
     const mid=$('maskOverlay').getBoundingClientRect();
-    document.body.appendChild(w);
-    w.animate([
-      {left:(mid.left+mid.width/2)+'px', top:(mid.top+mid.height/2)+'px', opacity:1, transform:'translate(-50%,-50%) rotate(0deg)'},
-      {left:(otre.left+otre.width/2)+'px', top:(otre.top+otre.height/2)+'px', opacity:1, transform:'translate(-50%,-50%) rotate(540deg)'}
-    ],{duration:850,easing:'ease-in'}).onfinish=()=>{ w.remove(); if(done)done(); };
+    const N=6; let landed=0;
+    for(let i=0;i<N;i++){
+      const w=document.createElement('div'); w.className='thrown volley'; w.style.position='fixed'; w.style.zIndex=60;
+      w.innerHTML=WeaponArt.svg(maskId);
+      document.body.appendChild(w);
+      const jx=(Math.random()*2-1)*40, jy=(Math.random()*2-1)*30;
+      const spin=(Math.random()<.5?1:-1)*(360+Math.random()*360);
+      w.animate([
+        {left:(mid.left+mid.width/2+jx)+'px', top:(mid.top+mid.height/2+jy)+'px', opacity:1, transform:`translate(-50%,-50%) rotate(0deg) scale(1.1)`},
+        {left:(otre.left+otre.width/2+jx)+'px', top:(otre.top+otre.height/2+jy)+'px', opacity:1, transform:`translate(-50%,-50%) rotate(${spin}deg) scale(.9)`}
+      ],{duration:600+Math.random()*200,delay:i*80,easing:'ease-in'}).onfinish=()=>{ w.remove(); landed++; if(landed===N&&done)done(); };
+    }
   }
 
   function afterResolve(){
@@ -1663,7 +1728,7 @@ const UI = (() => {
     $('btn-defend').addEventListener('click',()=>choose('me','defend'));
     // tavolo P2 (pvp)
     $('p2-swap').addEventListener('click',()=>armSwap('ai'));
-    $('p2-summon').addEventListener('click',()=>{ /* in pvp la 5a cala all'evoca di P1 */ });
+    $('p2-summon').addEventListener('click',()=>evoke('ai'));
     $('p2-attack').addEventListener('click',()=>choose('ai','attack'));
     $('p2-defend').addEventListener('click',()=>choose('ai','defend'));
     // opzioni
