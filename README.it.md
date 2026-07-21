@@ -16,12 +16,10 @@ Android e usa *"Aggiungi a schermata Home"* di Chrome — si installa come app a
 
 ## Come si gioca
 
-Sfidi l'Avversario. Ognuno parte con **100 PV**, mostrati come un'**otre** di vino che si
-riempie e si svuota.
+Sfidi l'Avversario. Ognuno parte con **100 PV**, mostrati come una **damigiana** di vino che si riempie e si svuota.
 
 **Vinci se:** porti l'Avversario a **0 PV**, oppure porti i tuoi PV a **200**.
 
-La cura è piena sotto 150 PV e dimezzata tra 150 e 199; gli attacchi colpiscono sempre pieni.
 
 ### Un round — Texas Hold'em (40 carte)
 - 2 carte private + **4 carte a terra**. Cambi 1 carta per 10 PV (una volta per round).
@@ -32,7 +30,7 @@ La cura è piena sotto 150 PV e dimezzata tra 150 e 199; gli attacchi colpiscono
 - **Attacco** infligge il tuo Attacco. **Difesa**: se vinci, curi il tuo valore Difesa; se
   **perdi**, la tua Difesa **riduce il danno subito** (parata).
 - Le maschere appaiono sopra il tavolo, la vincitrice **lancia l'arma** e distrugge la
-  Maschera perdente, poi colpisce l'otre avversaria. In caso di cura, Maschera e otre brillano.
+  Maschera perdente, poi colpisce la damigiana avversaria. In caso di cura, Maschera e damigiana brillano.
 
 ### Setup — griglia 3×3
 Prima della partita, **inverti Attacco/Difesa** di ogni Maschera (Meneghino e Capitan Spaventa fissi).
@@ -67,7 +65,7 @@ Prima della partita, **inverti Attacco/Difesa** di ogni Maschera (Meneghino e Ca
 
 Tre livelli netti così che una futura conversione **PvP online** tocchi solo il confine:
 - **`GameLogic`** — puro, senza DOM: mazzo, valutazione a 7 carte con pareggi alla poker,
-  risoluzione con parata, cura a rendimenti decrescenti, IA con difficoltà.
+  risoluzione con parata, IA con difficoltà.
 - **`GameState`** — stato serializzabile + azioni.
 - **`UI`** — l'unico livello DOM: modalità, setup 3×3, otri, overlay maschere centrale,
   animazioni armi lanciate, capovolgimento PvP, scaling responsivo, modali.
@@ -87,6 +85,6 @@ Vedi la schermata **🔄 Aggiornamenti** in-app, o `CHANGELOG` nel sorgente. Ver
 ### v1.0.4
 Texas Hold'em (2+5), grafica fornita integrata, overlay maschere centrale che copre le carte,
 parata (la difesa del perdente riduce il danno), 3 difficoltà IA, PvP offline con carte
-capovolte, menu modalità, armi lanciate + distruzione maschera + colpo all'otre, setup 3×3,
+capovolte, menu modalità, armi lanciate + distruzione maschera + colpo alla damigiana, setup 3×3,
 ruota-opzioni, regole al primo avvio, PWA installabile. Prima: 1.0.3 carte ridisegnate e
 maschera avversaria nascosta; 1.0.2 pareggi alla poker e vittoria 0/200; 1.0.1 prima versione.

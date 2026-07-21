@@ -702,19 +702,9 @@ const GameLogic = (() => {
             atkVal:stW.atk, defVal:stW.cur, loserDef:stL.cur};
   }
 
-  // cura piena sotto 150, 50% da 150 a 199 (anti rush-cura)
+  // cura sempre piena (fino al cap di 200 PV = vittoria)
   function effectiveHeal(currentHP, rawHeal){
-    let hp=currentHP, gained=0, remaining=rawHeal;
-    while(remaining>0){
-      if(hp<150){
-        const step=Math.min(remaining, 150-hp);
-        gained+=step; hp+=step; remaining-=step;
-      }else{
-        const add=Math.floor(remaining*0.5);
-        gained+=add; remaining=0;
-      }
-    }
-    return gained;
+    return Math.max(0, rawHeal);
   }
 
   // ---- IA: sceglie scambio + azione, consapevole della propria build ----
@@ -1125,8 +1115,12 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.2.4";
+const APP_VERSION="1.2.6";
 const CHANGELOG=[
+  {v:"1.2.6", it:["Tolta la voce 'Cura' dalle regole e dal README: senza restrizioni è ovvio che sia piena. Ripuliti anche i README (niente più 'otre', ora 'damigiana')."],
+    en:["Removed the 'Healing' entry from the rules and README: with no restrictions, full healing is obvious. Also cleaned up the READMEs ('otre' is now 'demijohn')."]},
+  {v:"1.2.5", it:["Rimossa la penalità sulla cura: ora è sempre piena fino a 200 PV (prima era dimezzata sopra 150). Regole aggiornate."],
+    en:["Removed the healing penalty: it is now always full up to 200 HP (it used to be halved above 150). Rules updated."]},
   {v:"1.2.4", it:["Nel duello: la tua maschera ora è a sinistra, quella dell'avversario (IA o Giocatore 2) a destra."],
     en:["In the duel: your mask is now on the left, the opponent's (AI or Player 2) on the right."]},
   {v:"1.2.3", it:["Setup: titolo \'Forgia la tua build\' ancora più grande, descrizione ancora più piccola per un contrasto netto."],
@@ -1808,7 +1802,6 @@ const UI = (() => {
       <p>Con sole <b>40 carte</b> (niente 8-9-10), le probabilità cambiano: il <b>Colore è più raro del Full</b> (quindi Colore batte Full) e il <b>Tris è più raro della Scala</b> (quindi Tris batte Scala). Dal più forte al più debole:<br>
       Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
       <h3>Build</h3><p>Prima della partita puoi invertire Attacco/Difesa di ogni Maschera (tranne Meneghino e Capitan Spaventa).</p>
-      <h3>Cura</h3><p>Piena sotto 150 PV, dimezzata tra 150 e 199.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
     return `<h2>${r.rulesTitle}</h2>
       <div class="lang-switch"><button data-lang="it">IT</button><button class="on" data-lang="en">EN</button></div>
@@ -1823,7 +1816,6 @@ const UI = (() => {
       <p>With only <b>40 cards</b> (no 8-9-10), the odds change: a <b>Flush is rarer than a Full House</b> (so Flush beats Full House) and <b>Three of a Kind is rarer than a Straight</b> (so Trips beats Straight). Strongest to weakest:<br>
       Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.</p>
       <h3>Builds</h3><p>Before the match you can swap each Mask's Attack/Defense (except Meneghino and Capitan Spaventa).</p>
-      <h3>Healing</h3><p>Full below 150 HP, halved from 150 to 199.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
   }
   function optionsHTML(){

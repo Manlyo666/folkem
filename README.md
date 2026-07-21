@@ -16,12 +16,10 @@ Android and use Chrome's *"Add to Home screen"* — it installs as a standalone 
 
 ## How to play
 
-You duel the Opponent. Each player starts with **100 HP**, shown as a wine **otre**
-(wineskin) that fills and empties.
+You duel the Opponent. Each player starts with **100 HP**, shown as a wine **demijohn** that fills and empties.
 
 **You win if:** you bring the Opponent to **0 HP**, or you raise **your own** HP to **200**.
 
-Healing is full below 150 HP and halved from 150–199; attacks always land full.
 
 ### A round — Texas Hold'em (40 cards)
 - 2 private cards + **4 table cards**. Swap one hand card for 10 HP (once per round).
@@ -32,7 +30,7 @@ Healing is full below 150 HP and halved from 150–199; attacks always land full
 - **Attack** deals your Attack value. **Defend**: if you win, heal your Defense value; if you
   **lose**, your Defense **reduces the incoming damage** (parry).
 - The masks appear over the board, the winner **throws its weapon** to shatter the loser's
-  Mask, then strikes the loser's otre. On a heal, the winner's Mask and otre glow.
+  Mask, then strikes the loser's demijohn. On a heal, the winner's Mask and demijohn glow.
 
 ### Setup — 3×3 build grid
 Before the match, **swap Attack/Defense** on any Mask (Meneghino and Capitan Spaventa are fixed).
@@ -75,9 +73,9 @@ Before the match, **swap Attack/Defense** on any Mask (Meneghino and Capitan Spa
 
 Clean three-layer split so a future **online PvP** touches only the boundary:
 - **`GameLogic`** — pure, no DOM: deck, 7-card evaluation with poker tie-breaks, parry
-  resolution, diminishing-returns healing, difficulty-aware AI.
+  resolution, difficulty-aware AI.
 - **`GameState`** — serializable state + actions.
-- **`UI`** — the only DOM layer: modes, 3×3 setup, otre HP bars, center mask overlay,
+- **`UI`** — the only DOM layer: modes, 3×3 setup, demijohn HP bars, center mask overlay,
   weapon-throw animations, PVP flipping, responsive scaling, modals.
 
 Masks, otri, cards-reference, background and icon are the provided artwork. Cards are drawn
@@ -95,6 +93,6 @@ See the in-app **🔄 Updates** screen, or `CHANGELOG` in the source. Versions u
 ### v1.0.4
 Texas Hold'em (2+5), provided artwork wired in, center mask overlay covering the board,
 parry (loser's defense cuts damage), 3 AI difficulties, offline PvP with flipped cards,
-mode menu, thrown weapons + mask destruction + otre hit, 3×3 setup grid, options wheel,
+mode menu, thrown weapons + mask destruction + demijohn hit, 3×3 setup grid, options wheel,
 rules on first launch, installable PWA. Earlier: 1.0.3 redrawn cards & hidden foe mask;
 1.0.2 poker tie-breaks & 0/200 win; 1.0.1 first playable.
