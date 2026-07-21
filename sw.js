@@ -1,7 +1,7 @@
-const CACHE='folkem-v1.1.4';
+const CACHE='folkem-v1.1.5';
 const ASSETS=['./','./index.html','./manifest.json',
-  './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.png'];
-// aggiungo le maschere
+  './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.svg',
+  './assets/icon-192.png','./assets/icon-512.png'];
 const MASKS=['meo','pantalone','brighella','pulcinella','balanzone','arlecchino','colombina','meneghino','capitan'];
 for(const m of MASKS) for(let i=0;i<3;i++) ASSETS.push(`./assets/masks/${m}_${i}.png`);
 for(const su of ['denari','coppe','spade','bastoni']) for(let r=1;r<=10;r++) ASSETS.push(`./assets/cards/${su}_${r}.png`);
@@ -16,5 +16,18 @@ self.addEventListener('activate',e=>{
   self.clients.claim();
 });
 self.addEventListener('fetch',e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+  const url=new URL(e.request.url);
+  const isHTML = e.request.mode==='navigate' || url.pathname.endsWith('index.html') || url.pathname.endsWith('/');
+  if(isHTML){
+    // NETWORK-FIRST per l'HTML: prendi sempre l'ultima versione, fallback alla cache offline
+    e.respondWith(
+      fetch(e.request).then(r=>{
+        const copy=r.clone(); caches.open(CACHE).then(c=>c.put(e.request,copy));
+        return r;
+      }).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html')))
+    );
+  } else {
+    // CACHE-FIRST per gli asset (immagini): veloci e offline
+    e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+  }
 });
