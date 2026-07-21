@@ -1,4 +1,4 @@
-const CACHE='folkem-v1.0.9';
+const CACHE='folkem-v1.1.0';
 const ASSETS=['./','./index.html','./manifest.json',
   './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.png'];
 // aggiungo le maschere
