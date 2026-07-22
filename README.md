@@ -29,6 +29,11 @@ You duel the Opponent. Each player starts with **100 HP**, shown as a wine **dem
 - Higher combination wins (ties broken poker-style: higher cards, then kickers, Ace high).
 - **Attack** deals your Attack value. **Defend**: if you win, heal your Defense value; if you
   **lose**, your Defense **reduces the incoming damage** (parry).
+- **Last Call**: if nobody has closed after **30 rounds**, a **10-hand** countdown begins
+  (announced on screen, with an always-visible counter). When it runs out, **the most HP wins**.
+  No modifiers: damage and healing stay normal.
+- **Diminishing healing**: *consecutive* heals give 100% → 75% → 50% → 25% → 0%.
+  **Attacking resets the counter** and healing returns to full. The **parry is not affected**.
 - The masks appear over the board, the winner **throws its weapon** to shatter the loser's
   Mask, then strikes the loser's demijohn. On a heal, the winner's Mask and demijohn glow.
 

@@ -29,6 +29,11 @@ Sfidi l'Avversario. Ognuno parte con **100 PV**, mostrati come una **damigiana**
 - Vince la combinazione più alta (pareggi alla poker: carte più alte, poi kicker, Asso alto).
 - **Attacco** infligge il tuo Attacco. **Difesa**: se vinci, curi il tuo valore Difesa; se
   **perdi**, la tua Difesa **riduce il danno subito** (parata).
+- **Ultimo Giro**: se dopo **30 round** nessuno ha chiuso, parte un conto alla rovescia di **10 mani**
+  (annunciato a schermo, con contatore sempre visibile). Allo scadere **vince chi ha più PV**.
+  Nessun modificatore: danni e cura restano normali.
+- **Cura a rendimenti decrescenti**: cure *consecutive* rendono 100% → 75% → 50% → 25% → 0%.
+  **Attaccare azzera il contatore** e la cura torna piena. La **parata non è influenzata**.
 - Le maschere appaiono sopra il tavolo, la vincitrice **lancia l'arma** e distrugge la
   Maschera perdente, poi colpisce la damigiana avversaria. In caso di cura, Maschera e damigiana brillano.
 
