@@ -29,6 +29,9 @@ You duel the Opponent. Each player starts with **100 HP**, shown as a wine **dem
 - Higher combination wins (ties broken poker-style: higher cards, then kickers, Ace high).
 - **Attack** deals your Attack value. **Defend**: if you win, heal your Defense value; if you
   **lose**, your Defense **reduces the incoming damage** (parry).
+- **Sound**: cards, buttons, summoning (harp), three attack types (wood/metal/blade), pouring wine,
+  parry, mask tearing, Last Call bell, victory fanfare and defeat theme, plus tavern music.
+  All **synthesised by the game** (no files, no added weight). Mutable with the 🔊 button.
 - **Last Call**: if nobody has closed after **30 rounds**, a **10-hand** countdown begins
   (announced on screen, with an always-visible counter). When it runs out, **the most HP wins**.
   No modifiers: damage and healing stay normal.

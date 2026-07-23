@@ -147,6 +147,7 @@ body[data-portrait="1"] .menu-tools.tools-left{left:2.5vw;right:auto}
 body[data-portrait="1"] .menu-tools{top:1.5vh;right:2.5vw}
 body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .icon-btn:active{transform:scale(.92)}
+.icon-btn.off{opacity:.5;border-color:#6b5535}
 .icon-btn:hover{box-shadow:0 0 14px rgba(255,180,60,.5)}
 /* pulsante lingua: mostra la bandiera dell'ALTRA lingua (quella a cui si passa) */
 .lang-btn{overflow:hidden;padding:0;position:relative}
@@ -226,6 +227,7 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 @keyframes otreHeal{0%,100%{transform:scale(1);filter:none}45%{transform:scale(1.08);filter:drop-shadow(0 0 14px rgba(120,220,120,.8))}}
 .hp-num{font-family:var(--px);font-weight:bold;font-size:17px;color:var(--parch);text-shadow:0 1px 2px #000}
 .hp-num.over{color:var(--brass-hi);text-shadow:0 0 8px rgba(240,208,137,.8)}
+.hp-unit{font-size:.62em;margin-left:2px;opacity:.8;font-weight:normal;letter-spacing:.03em}
 
 /* carte */
 .hand-cards{display:flex;gap:8px}
@@ -281,6 +283,7 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   box-shadow:0 0 40px rgba(224,66,79,.7),inset 0 0 30px rgba(224,66,79,.4)}
 @keyframes summonRing{0%{width:40px;height:40px;opacity:1}100%{width:700px;height:700px;opacity:0}}
 .summon-text{font-family:var(--font-title);font-size:42px;color:var(--brass-hi);text-align:center;
+  -webkit-text-stroke:3px #000;paint-order:stroke fill;   /* contorno nero: si legge su qualsiasi sfondo */
   text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 34px rgba(255,190,90,.95),0 0 60px rgba(255,150,40,.4);z-index:2;
   animation:summonTextIn 1.2s ease forwards;padding:0 20px}
 @keyframes summonTextIn{0%{transform:scale(.5);opacity:0}30%{transform:scale(1.1);opacity:1}70%{transform:scale(1);opacity:1}100%{opacity:.9}}
@@ -415,18 +418,70 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   margin-top:6px;text-shadow:0 2px 5px rgba(0,0,0,.9)}
 @keyframes lcIn{0%{transform:scale(.5) translateY(24px);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}
 @keyframes lcOut{0%{opacity:1}100%{opacity:0;transform:scale(1.15) translateY(-18px)}}
-.lastcall-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:16;
-  display:flex;align-items:center;gap:6px;padding:3px 12px;border-radius:14px;
-  background:linear-gradient(180deg,rgba(60,30,12,.92),rgba(30,14,6,.92));border:1.5px solid var(--brass);
-  box-shadow:0 2px 10px rgba(0,0,0,.6)}
-.lastcall-badge .lcb-t{font-family:var(--font-title);font-size:12px;color:var(--brass-hi);letter-spacing:.05em}
-.lastcall-badge .lcb-n{font-family:"Courier New",monospace;font-weight:bold;font-size:15px;color:#fff}
-.lastcall-badge.urgent{border-color:var(--wine-glow);animation:lcPulse 1s ease-in-out infinite}
-.lastcall-badge.urgent .lcb-n{color:#ff9aa5}
-@keyframes lcPulse{0%,100%{box-shadow:0 2px 10px rgba(0,0,0,.6)}50%{box-shadow:0 0 16px 3px rgba(224,66,79,.75)}}
-body[data-portrait="1"] .lastcall-badge{top:1.4vh;padding:0.4vh 3vw}
-body[data-portrait="1"] .lastcall-badge .lcb-t{font-size:2.9vw}
-body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:3.6vw}
+/* SCUDO sulla maschera che para, col valore assorbito */
+.mask-shield{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:12;
+  display:flex;flex-direction:column;align-items:center;pointer-events:none;
+  animation:msPop .32s cubic-bezier(.2,1.5,.4,1) forwards}
+.mask-shield .ms-ico{font-size:44px;filter:drop-shadow(0 0 12px rgba(120,190,255,.95)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}
+.mask-shield .ms-val{font-family:"Courier New",monospace;font-weight:bold;font-size:22px;color:#cfe8ff;
+  -webkit-text-stroke:3px #062038;paint-order:stroke fill;margin-top:-6px;
+  text-shadow:0 2px 6px rgba(0,0,0,.9)}
+@keyframes msPop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}
+  60%{transform:translate(-50%,-50%) scale(1.18);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.mask-shield{animation:msPop .32s cubic-bezier(.2,1.5,.4,1) forwards, msOut .4s ease 1s forwards}
+@keyframes msOut{to{opacity:0;transform:translate(-50%,-70%) scale(.9)}}
+
+/* CARAFFA che versa vino nella damigiana */
+.carafe-wrap{position:fixed;z-index:55;pointer-events:none;transform:translate(-50%,0)}
+.carafe{width:46px;height:62px;transform-origin:70% 80%;animation:carafeTilt 1.6s ease-in-out forwards}
+.carafe svg{width:100%;height:100%;filter:drop-shadow(0 3px 6px rgba(0,0,0,.7))}
+@keyframes carafeTilt{0%{transform:rotate(0) translateY(-12px);opacity:0}
+  18%{transform:rotate(-52deg) translateY(0);opacity:1}
+  75%{transform:rotate(-58deg) translateY(0);opacity:1}
+  100%{transform:rotate(0) translateY(-14px);opacity:0}}
+.pour-stream{position:absolute;left:14px;top:44px;width:5px;height:0;border-radius:3px;
+  background:linear-gradient(180deg,#c8283c,#7a0e18);opacity:0;
+  animation:pourFlow 1.6s ease-in-out forwards}
+@keyframes pourFlow{0%,15%{height:0;opacity:0}
+  25%{height:38px;opacity:.95}
+  70%{height:42px;opacity:.95}
+  85%,100%{height:0;opacity:0}}
+
+/* DAMIGIANA che si capovolge e rovescia il vino */
+.otre.spilling{animation:spillTip 1.5s cubic-bezier(.35,.1,.4,1) forwards;transform-origin:60% 85%}
+@keyframes spillTip{0%{transform:rotate(0)}
+  22%{transform:rotate(-58deg)}
+  62%{transform:rotate(-64deg)}
+  100%{transform:rotate(0)}}
+.spill-splash{position:fixed;z-index:54;pointer-events:none;transform:translate(-50%,0);
+  width:44px;height:22px;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 30%,#a3121f 0%,rgba(122,14,24,.7) 55%,transparent 78%);
+  animation:splashGrow 1.5s ease-out forwards}
+@keyframes splashGrow{0%{transform:translate(-50%,0) scale(.2);opacity:0}
+  30%{transform:translate(-50%,0) scale(1);opacity:.95}
+  100%{transform:translate(-50%,6px) scale(1.5);opacity:0}}
+
+/* contatore inciso nel legno: niente riquadro, solo lettere scavate nella superficie */
+.lastcall-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:16;
+  display:flex;align-items:baseline;gap:8px;padding:0;background:none;border:none;box-shadow:none;
+  pointer-events:none;user-select:none}
+.lastcall-badge .lcb-t{font-family:var(--font-title);font-size:17px;letter-spacing:.14em;
+  color:rgba(38,20,10,.78);
+  /* incisione: ombra scura dentro + luce sotto, come solco nel legno */
+  text-shadow:0 -1px 0 rgba(0,0,0,.55), 0 1px 0 rgba(214,170,110,.30), 0 2px 1px rgba(255,215,160,.14)}
+.lastcall-badge .lcb-n{font-family:var(--font-title);font-size:24px;line-height:1;
+  color:rgba(30,15,7,.85);
+  text-shadow:0 -1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(224,180,120,.34), 0 2px 1px rgba(255,215,160,.16)}
+/* ultime 3 mani: l'incisione si arrossa, come bruciata */
+.lastcall-badge.urgent .lcb-t,.lastcall-badge.urgent .lcb-n{
+  color:rgba(96,12,18,.88);
+  text-shadow:0 -1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(226,150,120,.34), 0 0 10px rgba(200,40,50,.30);
+  animation:lcCarve 1.4s ease-in-out infinite}
+@keyframes lcCarve{0%,100%{opacity:.85}50%{opacity:1}}
+body[data-portrait="1"] .lastcall-badge{top:1.2vh;gap:2vw}
+body[data-portrait="1"] .lastcall-badge .lcb-t{font-size:3.6vw}
+body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
 .log-box .lastcall-start{color:#ffd27a}
 .log-box .lastcall-count{color:#ffb648}
 .log-box .combo-name{color:var(--brass-hi);font-size:1.08em}
@@ -490,6 +545,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:3.6vw}
     <div class="menu-tools">
       <div class="icon-btn" id="menu-rules" title="Regole">📜</div>
       <div class="icon-btn" id="menu-update" title="Aggiornamenti">🔄</div>
+      <div class="icon-btn" id="menu-sound" title="Audio">🔊</div>
       <div class="icon-btn lang-btn" id="menu-lang" data-shows="en" title="Lingua / Language"><span class="ujack"></span></div>
     </div>
     <div class="sign"><h1 class="fairy">Folk 'Em</h1><div class="sub" data-i18n="subtitle">La Locanda delle Maschere</div></div>
@@ -532,7 +588,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:3.6vw}
       <div class="player-strip foe">
         <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div>
           <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""><div class="spill"><span class="drip d1"></span><span class="drip d2"></span><span class="drip d3"></span><span class="puddle"></span></div></div>
-          <div class="hp-num" id="hp-ai">100</div></div>
+          <div class="hp-num" id="hp-ai">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="foe-hand"></div>
       </div>
     </div>
@@ -554,7 +610,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:3.6vw}
       <div class="player-strip">
         <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div>
           <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""><div class="spill"><span class="drip d1"></span><span class="drip d2"></span><span class="drip d3"></span><span class="puddle"></span></div></div>
-          <div class="hp-num" id="hp-me">100</div></div>
+          <div class="hp-num" id="hp-me">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="my-hand"></div>
       </div>
       <div class="action-bar" id="my-actions">
@@ -1033,14 +1089,18 @@ const GameState = (() => {
       if(d>0) s[side].hp+=healed[side];
       else if(d<0) s[side].hp+=d;
     }
-    // aggiorno le strisce: chi ha curato +1, chi ha ATTACCATO azzera
-    if(out){
-      const w=out.winner;
-      if(out.action==='defend' && w && w!=='tie'){
-        s[w].healStreak=(s[w].healStreak||0)+1;      // ha curato: sale
-      }else if(out.action==='attack' && w && w!=='tie'){
-        s[w].healStreak=0;                            // ha attaccato: azzera
+    // STRISCIA DI CURE — regole:
+    //  - ATTACCARE azzera sempre, basta la SCELTA (non serve vincere né fare danno);
+    //  - la striscia sale solo se ci si è curati DAVVERO (cura effettiva > 0).
+    for(const side of ['me','ai']){
+      const scelta=s[side].choice;
+      if(scelta==='attack'){
+        s[side].healStreak=0;                       // premere Attacco basta
+      } else if(healed[side]>0){
+        s[side].healStreak=(s[side].healStreak||0)+1;   // solo con cura reale
       }
+      // se ha difeso ma non ha curato nulla (parata, sconfitta, o cura già a 0):
+      // la striscia resta com'è, non sale a vuoto.
     }
     checkWin(s); return s;
   }
@@ -1080,6 +1140,311 @@ const GameState = (() => {
   return {SWAP_COST,WIN_HP,LAST_CALL_AT,LAST_CALL_LEN,createInitial,dealRound,revealFifth,visibleCommunity,swapCard,applyDelta,checkWin,checkTimeout,lastCallStatus,buildAiBuild};
 })();
 
+/* ================= AUDIO =================
+   Tutti i suoni sono SINTETIZZATI al volo con Web Audio API:
+   nessun file, nessun peso aggiunto, funziona offline.
+   Il contesto audio si sblocca al primo tocco (regola dei browser). */
+const Sfx=(()=>{
+  let ctx=null, master=null, muted=false, ready=false;
+  let tavern=null;          // nodi della musica di taverna (loop)
+
+  function init(){
+    if(ctx) return ctx;
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC) return null;
+      ctx=new AC();
+      master=ctx.createGain();
+      master.gain.value=0.85;
+      master.connect(ctx.destination);
+      ready=true;
+    }catch(e){ ctx=null; }
+    return ctx;
+  }
+  // i browser bloccano l'audio finché l'utente non interagisce
+  function unlock(){
+    const c=init(); if(!c) return;
+    if(c.state==='suspended') c.resume();
+  }
+  function setMuted(m){
+    muted=!!m;
+    if(master) master.gain.value = muted?0:0.85;
+    if(muted) stopTavern(); else if(ready) startTavern();
+  }
+  function isMuted(){ return muted; }
+
+  // ---------- mattoni di sintesi ----------
+  function env(node, t0, a, d, peak){          // inviluppo attacco/decadimento
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0+a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+a+d);
+    node.connect(g); g.connect(master);
+    return g;
+  }
+  function noiseBuffer(dur){                    // rumore bianco: base per carte/acqua
+    const n=Math.floor(ctx.sampleRate*dur);
+    const b=ctx.createBuffer(1,n,ctx.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+    return b;
+  }
+  function noise(dur, type, freq, q, peak, a, d, t0){
+    const src=ctx.createBufferSource(); src.buffer=noiseBuffer(dur);
+    const f=ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq;
+    if(q!=null) f.Q.value=q;
+    src.connect(f);
+    env(f, t0, a, d, peak);
+    src.start(t0); src.stop(t0+dur+0.02);
+    return src;
+  }
+  function tone(freq, dur, type, peak, t0, glideTo){
+    const o=ctx.createOscillator();
+    o.type=type||'sine';
+    o.frequency.setValueAtTime(freq,t0);
+    if(glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t0+dur);
+    env(o, t0, Math.min(0.012,dur*0.2), dur, peak);
+    o.start(t0); o.stop(t0+dur+0.05);
+    return o;
+  }
+  function now(){ return ctx.currentTime; }
+  function can(){ if(muted) return false; const c=init(); if(!c) return false;
+    if(c.state==='suspended') c.resume(); return true; }
+
+  // ---------- CARTE ----------
+  // fruscio secco di carta che scorre
+  function card(){
+    if(!can()) return;
+    const t=now();
+    noise(0.13,'bandpass',2100,1.1,0.30,0.006,0.11,t);
+    noise(0.05,'highpass',3800,null,0.14,0.003,0.045,t+0.01);
+  }
+  // più carte distribuite in sequenza
+  function deal(n){
+    if(!can()) return;
+    const t=now();
+    for(let i=0;i<(n||1);i++){
+      noise(0.12,'bandpass',1900+Math.random()*500,1.2,0.26,0.006,0.10,t+i*0.09);
+    }
+  }
+  // carta sostituita: fruscio + piccolo "tac"
+  function swap(){
+    if(!can()) return;
+    const t=now();
+    noise(0.14,'bandpass',1700,1.0,0.28,0.006,0.12,t);
+    tone(880,0.06,'triangle',0.16,t+0.10,660);
+  }
+
+  // ---------- INTERFACCIA ----------
+  function click(){
+    if(!can()) return;
+    const t=now();
+    noise(0.035,'highpass',2600,null,0.16,0.002,0.03,t);
+    tone(1250,0.045,'square',0.055,t,900);
+  }
+
+  // ---------- EVOCAZIONE (arpa) ----------
+  // glissando su scala pentatonica: suona "magico" senza stonature
+  function summon(){
+    if(!can()) return;
+    const t=now();
+    const sc=[523.25,587.33,659.25,783.99,880.00,1046.50,1174.66,1318.51,1567.98,1760.00];
+    sc.forEach((f,i)=>{
+      const o=ctx.createOscillator(); o.type='triangle';
+      o.frequency.value=f;
+      const g=ctx.createGain();
+      const s=t+i*0.055;
+      g.gain.setValueAtTime(0.0001,s);
+      g.gain.exponentialRampToValueAtTime(0.20,s+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+1.5);
+      o.connect(g); g.connect(master);
+      o.start(s); o.stop(s+1.6);
+    });
+    // alone luminoso sotto il glissando
+    tone(261.63,1.8,'sine',0.10,t+0.15);
+  }
+
+  // ---------- ATTACCHI (3 tipi) ----------
+  // legno: mazze, bastoni
+  function hitWood(){
+    if(!can()) return;
+    const t=now();
+    tone(190,0.16,'triangle',0.34,t,90);
+    noise(0.09,'lowpass',900,1.0,0.30,0.002,0.08,t);
+    tone(95,0.20,'sine',0.22,t+0.01,55);
+  }
+  // metallico: spade, armature
+  function hitMetal(){
+    if(!can()) return;
+    const t=now();
+    [2400,3100,4300,5200].forEach((f,i)=>tone(f,0.5-i*0.07,'square',0.075,t+i*0.006));
+    noise(0.35,'highpass',3000,null,0.20,0.002,0.32,t);
+    tone(620,0.22,'triangle',0.16,t,300);
+  }
+  // tagliente: lame, colpi affilati
+  function hitSharp(){
+    if(!can()) return;
+    const t=now();
+    noise(0.20,'bandpass',5200,3.5,0.34,0.002,0.18,t);   // sibilo della lama
+    tone(3000,0.13,'sawtooth',0.10,t,900);
+    noise(0.07,'highpass',6500,null,0.16,0.001,0.06,t+0.02);
+  }
+
+  // ---------- PARATA ----------
+  function block(){
+    if(!can()) return;
+    const t=now();
+    tone(320,0.30,'triangle',0.26,t,180);              // rimbombo dello scudo
+    [1500,1900,2600].forEach((f,i)=>tone(f,0.35-i*0.06,'square',0.055,t+i*0.008));
+    noise(0.12,'bandpass',1200,1.6,0.18,0.002,0.10,t);
+  }
+
+  // ---------- STRAPPO DELLA MASCHERA ----------
+  function tear(){
+    if(!can()) return;
+    const t=now();
+    // il rumore sale di frequenza: dà la sensazione della lacerazione
+    const src=ctx.createBufferSource(); src.buffer=noiseBuffer(0.45);
+    const f=ctx.createBiquadFilter(); f.type='bandpass';
+    f.frequency.setValueAtTime(800,t);
+    f.frequency.exponentialRampToValueAtTime(4200,t+0.40);
+    f.Q.value=2.2;
+    src.connect(f); env(f,t,0.01,0.42,0.34);
+    src.start(t); src.stop(t+0.48);
+    tone(140,0.35,'sawtooth',0.12,t+0.05,70);
+  }
+
+  // ---------- DAMIGIANA: vino versato / svuotato ----------
+  // gorgoglio: tanti piccoli "bloop" di frequenza casuale
+  function pour(up){
+    if(!can()) return;
+    const t=now();
+    const src=ctx.createBufferSource(); src.buffer=noiseBuffer(0.75);
+    const f=ctx.createBiquadFilter(); f.type='lowpass';
+    f.frequency.setValueAtTime(up?600:1400,t);
+    f.frequency.exponentialRampToValueAtTime(up?1500:400,t+0.7);   // sale se riempie, scende se svuota
+    f.Q.value=1.0;
+    src.connect(f); env(f,t,0.02,0.72,0.20);
+    src.start(t); src.stop(t+0.8);
+    for(let i=0;i<9;i++){
+      const s=t+0.03+Math.random()*0.6;
+      const base=up? 380+i*45 : 620-i*35;
+      tone(base+Math.random()*120, 0.09, 'sine', 0.11, s, base*(up?1.5:0.6));
+    }
+  }
+
+  // ---------- CAMPANA (Ultimo Giro) ----------
+  function bell(){
+    if(!can()) return;
+    const t=now();
+    [1,2.76,5.40,8.93].forEach((r,i)=>{                 // rapporti inarmonici = campana
+      const o=ctx.createOscillator(); o.type='sine';
+      o.frequency.value=440*r;
+      const g=ctx.createGain();
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.26/(i+1),t+0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+2.6-i*0.35);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t+2.7);
+    });
+    setTimeout(()=>{ if(!muted&&ctx){ const t2=now();
+      [1,2.76,5.40].forEach((r,i)=>{
+        const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=440*r;
+        const g=ctx.createGain();
+        g.gain.setValueAtTime(0.0001,t2);
+        g.gain.exponentialRampToValueAtTime(0.20/(i+1),t2+0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001,t2+2.2-i*0.3);
+        o.connect(g); g.connect(master); o.start(t2); o.stop(t2+2.3);
+      }); }
+    },700);
+  }
+
+  // ---------- FINE PARTITA ----------
+  // fanfara: arpeggio maggiore ascendente + accordo finale
+  function win(){
+    if(!can()) return;
+    const t=now();
+    const mel=[[523.25,0],[659.25,0.13],[783.99,0.26],[1046.50,0.39],[1046.50,0.62],[1318.51,0.75]];
+    mel.forEach(([f,d])=>{
+      [1,2].forEach((h,hi)=>{
+        const o=ctx.createOscillator(); o.type = hi?'triangle':'square';
+        o.frequency.value=f*h;
+        const g=ctx.createGain(); const s=t+d;
+        g.gain.setValueAtTime(0.0001,s);
+        g.gain.exponentialRampToValueAtTime(hi?0.05:0.13,s+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001,s+0.42);
+        o.connect(g); g.connect(master); o.start(s); o.stop(s+0.45);
+      });
+    });
+    [523.25,659.25,783.99,1046.50].forEach(f=>{         // accordo tenuto finale
+      const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=f;
+      const g=ctx.createGain(); const s=t+0.95;
+      g.gain.setValueAtTime(0.0001,s);
+      g.gain.exponentialRampToValueAtTime(0.11,s+0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+1.7);
+      o.connect(g); g.connect(master); o.start(s); o.stop(s+1.8);
+    });
+  }
+  // sconfitta: accordo minore che scivola in basso
+  function lose(){
+    if(!can()) return;
+    const t=now();
+    [[261.63,0],[233.08,0.28],[196.00,0.56]].forEach(([f,d])=>{
+      const o=ctx.createOscillator(); o.type='sawtooth';
+      o.frequency.setValueAtTime(f,t+d);
+      o.frequency.exponentialRampToValueAtTime(f*0.82,t+d+1.5);
+      const fl=ctx.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=900;
+      const g=ctx.createGain(); const s=t+d;
+      g.gain.setValueAtTime(0.0001,s);
+      g.gain.exponentialRampToValueAtTime(0.16,s+0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+1.9);
+      o.connect(fl); fl.connect(g); g.connect(master);
+      o.start(s); o.stop(s+2.0);
+    });
+    tone(65.41,2.2,'sine',0.18,t+0.5);                  // basso cupo
+  }
+
+  // ---------- MUSICA DI TAVERNA (loop discreto) ----------
+  function startTavern(){
+    if(muted||!init()||tavern) return;
+    const g=ctx.createGain(); g.gain.value=0.055; g.connect(master);
+    tavern={gain:g, timer:null, step:0};
+    // giro semplice in minore, strumento tipo liuto
+    const giro=[196.00,233.08,261.63,233.08, 196.00,174.61,196.00,220.00];
+    const bassi=[98.00,98.00,130.81,130.81, 98.00,87.31,98.00,110.00];
+    tavern.timer=setInterval(()=>{
+      if(muted||!tavern) return;
+      const t=now(), i=tavern.step%giro.length;
+      const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=giro[i];
+      const og=ctx.createGain();
+      og.gain.setValueAtTime(0.0001,t);
+      og.gain.exponentialRampToValueAtTime(0.30,t+0.02);
+      og.gain.exponentialRampToValueAtTime(0.0001,t+0.65);
+      o.connect(og); og.connect(tavern.gain); o.start(t); o.stop(t+0.7);
+      if(i%2===0){
+        const b=ctx.createOscillator(); b.type='sine'; b.frequency.value=bassi[i];
+        const bg=ctx.createGain();
+        bg.gain.setValueAtTime(0.0001,t);
+        bg.gain.exponentialRampToValueAtTime(0.34,t+0.03);
+        bg.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+        b.connect(bg); bg.connect(tavern.gain); b.start(t); b.stop(t+0.95);
+      }
+      tavern.step++;
+    }, 620);
+  }
+  function stopTavern(){
+    if(!tavern) return;
+    clearInterval(tavern.timer);
+    try{ tavern.gain.disconnect(); }catch(e){}
+    tavern=null;
+  }
+
+  return {unlock,setMuted,isMuted,
+          card,deal,swap,click,summon,
+          hitWood,hitMetal,hitSharp,block,tear,
+          pour,bell,win,lose,
+          startTavern,stopTavern};
+})();
 /* =====================================================================
  *  CARTE NAPOLETANE — grafica in stile fedele, disegnata come SVG originale.
  *  Semi tradizionali (denari, coppe, spade, bastoni) e figure (Fante/Cavallo/Re)
@@ -1284,10 +1649,10 @@ const I18N = {
     youHave:(m,k)=>`Tu hai ${m} — ${k}.`,
     winClash:(w,isYou)=>isYou?`<b>${w}</b> vinci lo scontro.`:`<b>${w}</b> vince lo scontro.`,
     dealDmg:(n)=>`Danno inflitto: ${n}.`, blocked:(n)=>`Parata: −${n} danni.`,
-    blockedMath:(who,n)=>`${who} para ${n} danni con la Difesa.`,
+    blockedMath:(who,n,isYou)=>isYou?`<b>${who}</b> pari ${n} danni con la Difesa.`:`<b>${who}</b> para ${n} danni con la Difesa.`,
     dmgMath:(raw,blk,fin)=>`Danno: ${raw} − ${blk} = <b>${fin}</b>.`,
     dmgFlat:(n)=>`Danno pieno: <b>${n}</b> (nessuna parata).`,
-    healedBy:(who,n)=>`${who} si cura di <b>+${n}</b> PV.`,
+    healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> ti curi di <b>+${n}</b> PV.`:`<b>${who}</b> si cura di <b>+${n}</b> PV.`,
     healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>. Attacca per azzerare.`,
     healed:(n)=>`Cura: +${n} PV.`, tie:"Pareggio: nessun colpo.",
     win:"HAI VINTO!", lose:"HAI PERSO", p1win:"VINCE GIOCATORE 1", p2win:"VINCE GIOCATORE 2",
@@ -1303,6 +1668,7 @@ const I18N = {
     reason200:"Damigiana colma: 200 PV.", reasonKO:"Damigiana a secco: 0 PV.",
     rulesTitle:"Regole", optsTitle:"Opzioni",
     optRestart:"Riavvia partita", optMenu:"Torna alle modalità", optRules:"Regole", optClose:"Chiudi",
+    soundOn:"Audio", soundOff:"Muto", hpUnit:"PV",
     sureRestart:"Riavviare la partita? I progressi andranno persi.",
     sureMenu:"Tornare al menu? La partita in corso andrà persa.",
     yes:"Sì, procedi", no:"Annulla",
@@ -1339,10 +1705,10 @@ const I18N = {
     youHave:(m,k)=>`You have ${m} — ${k}.`,
     winClash:(w,isYou)=>isYou?`<b>${w}</b> win the clash.`:`<b>${w}</b> wins the clash.`,
     dealDmg:(n)=>`Damage dealt: ${n}.`, blocked:(n)=>`Parry: −${n} damage.`,
-    blockedMath:(who,n)=>`${who} parries ${n} damage with Defense.`,
+    blockedMath:(who,n,isYou)=>isYou?`<b>${who}</b> parry ${n} damage with Defense.`:`<b>${who}</b> parries ${n} damage with Defense.`,
     dmgMath:(raw,blk,fin)=>`Damage: ${raw} − ${blk} = <b>${fin}</b>.`,
     dmgFlat:(n)=>`Full damage: <b>${n}</b> (no parry).`,
-    healedBy:(who,n)=>`${who} heals <b>+${n}</b> HP.`,
+    healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> heal <b>+${n}</b> HP.`:`<b>${who}</b> heals <b>+${n}</b> HP.`,
     healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>. Attack to reset.`,
     healed:(n)=>`Heal: +${n} HP.`, tie:"Tie: no blow lands.",
     win:"YOU WIN!", lose:"YOU LOSE", p1win:"PLAYER 1 WINS", p2win:"PLAYER 2 WINS",
@@ -1358,6 +1724,7 @@ const I18N = {
     reason200:"Demijohn full: 200 HP.", reasonKO:"Demijohn dry: 0 HP.",
     rulesTitle:"Rules", optsTitle:"Options",
     optRestart:"Restart match", optMenu:"Back to modes", optRules:"Rules", optClose:"Close",
+    soundOn:"Sound", soundOff:"Mute", hpUnit:"HP",
     sureRestart:"Restart the match? Progress will be lost.",
     sureMenu:"Back to menu? The current match will be lost.",
     yes:"Yes, proceed", no:"Cancel",
@@ -1366,8 +1733,38 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.0";
+const APP_VERSION="1.5.1";
 const CHANGELOG=[
+  {v:"1.5.1", it:[
+    "Corretto il contatore delle cure: ora sale solo se ti curi DAVVERO (se la cura e gia a zero non sale a vuoto) e si azzera appena premi Attacco, anche se perdi lo scontro o non fai danno.",
+    "Nuove animazioni di fine turno: la maschera non colpisce piu la damigiana. Il vino viene versato con una caraffa quando ti curi, e la damigiana si capovolge rovesciandolo quando subisci danno.",
+    "Lo scudo della parata ora appare direttamente sulla maschera che para, col valore assorbito (es. -6).",
+    "Il contatore dell Ultimo Giro sembra ora inciso nel legno del tavolo, e si arrossa nelle ultime 3 mani.",
+    "Aggiunta la scritta PV (HP in inglese) accanto alla damigiana.",
+    "Corretta la grammatica del riepilogo: Tu ti curi, Tu pari, Tu vinci (prima diceva Tu si cura).",
+    "La scritta Le Maschere si destano ora ha un contorno nero: si legge su qualsiasi sfondo."],
+    en:[
+    "Fixed the healing counter: it now only goes up if you ACTUALLY heal (no more rising when healing is already at zero) and resets as soon as you press Attack, even if you lose the clash or deal no damage.",
+    "New end-of-turn animations: the mask no longer strikes the demijohn. Wine is poured from a carafe when you heal, and the demijohn tips over and spills when you take damage.",
+    "The parry shield now appears directly on the mask that parries, with the absorbed value (e.g. -6).",
+    "The Last Call counter now looks carved into the wood of the table, and turns red for the last 3 hands.",
+    "Added the HP label next to the demijohn.",
+    "Fixed Italian grammar in the log.",
+    "The Masks awaken text now has a black outline: readable on any background."]},
+  {v:"1.5.0", it:[
+    "AUDIO — Il gioco ora ha i suoni: fruscio delle carte quando vengono distribuite, calate o sostituite; click sui pulsanti; arpa magica all evocazione delle Maschere.",
+    "Tre suoni d attacco diversi secondo l arma: legno (Bastone, Manganello, Tomo, Spatola), metallo (Monete, Ombrello d acciaio, Spada) e taglio (Stiletto, Ventaglio affilato).",
+    "Vino versato quando la damigiana si riempie o si svuota, scudo per la parata, strappo per la maschera lacerata, campana per l Ultimo Giro.",
+    "Fanfara per la vittoria e tema cupo per la sconfitta, piu una musica di taverna discreta in sottofondo.",
+    "Nuovo pulsante audio nel menu (e nelle impostazioni in partita) per silenziare tutto. La scelta viene ricordata.",
+    "Tutti i suoni sono generati dal gioco stesso: nessun file scaricato, peso invariato, funzionano offline."],
+    en:[
+    "AUDIO - The game now has sound: card rustle when cards are dealt, drawn or swapped; button clicks; a magical harp when the Masks are summoned.",
+    "Three different attack sounds depending on the weapon: wood (Cudgel, Club, Tome, Spatula), metal (Coins, Steel Umbrella, Sword) and blade (Stiletto, Sharpened Fan).",
+    "Pouring wine when the demijohn fills or empties, a shield for the parry, a rip for the torn mask, a bell for Last Call.",
+    "A fanfare for victory and a grim theme for defeat, plus discreet tavern music in the background.",
+    "New sound button in the menu (and in the in-game settings) to mute everything. The choice is remembered.",
+    "All sounds are generated by the game itself: no downloaded files, no added weight, works offline."]},
   {v:"1.4.0", it:[
     "NUOVA REGOLA — Ultimo Giro: se dopo 30 round nessuno ha chiuso, parte un conto alla rovescia di 10 mani, annunciato a schermo e con un contatore sempre visibile che diventa rosso nelle ultime 3. Allo scadere vince chi ha piu vino nella damigiana. Danni e cura restano normali.",
     "Riepilogo: ora la combinazione dell avversario si legge a colpo d occhio, con il nome in evidenza accanto al suo. Aggiunta una riga di confronto diretto (es. Tris batte Coppia): non devi piu ricostruirla dalle 7 carte.",
@@ -1494,6 +1891,14 @@ const UI = (() => {
     });
   }
   // cambia lingua e riaggiorna tutto (menu, tavolo se in gioco)
+  // AUDIO: accende/spegne e ricorda la scelta
+  function setSound(on){
+    Sfx.setMuted(!on);
+    localStorageSafe('folkem_sound', on?'1':'0');
+    const b=$('menu-sound'); if(b){ b.textContent = on?'🔊':'🔇'; b.classList.toggle('off',!on); }
+  }
+  function toggleSound(){ setSound(Sfx.isMuted()); }
+
   function setLang(l){
     lang=l; applyStatic();
     // la bandiera mostra la lingua a cui si passerà: IT->mostra UK, EN->mostra IT
@@ -1565,7 +1970,8 @@ const UI = (() => {
     // oltre 150 PV (75% di 200) la damigiana è troppo piena: il vino trabocca
     otre.classList.toggle('overflowing', hp>150);
     const num=$(side==='me'?'hp-me':'hp-ai');
-    num.textContent=hp; num.classList.toggle('over',st.hp>100);
+    num.innerHTML=hp+`<span class="hp-unit">${T().hpUnit}</span>`;
+    num.classList.toggle('over',st.hp>100);
   }
   function renderOtri(){ renderOtre('me'); renderOtre('ai'); }
 
@@ -1670,6 +2076,7 @@ const UI = (() => {
     if(mode==='pvp_local'){ state.inv.ai={...pvpP2Inv}; $('foe-name').textContent=T().p2; document.body.dataset.pvp='1'; }
     else { $('foe-name').textContent=T().foe; document.body.dataset.pvp='0'; }
     showScreen('screen-table');
+    if(!Sfx.isMuted()) Sfx.startTavern();   // riprende la musica di taverna
     const lcb=$('lastCallBadge'); if(lcb) lcb.style.display='none';   // azzero il contatore Ultimo Giro
     $('foe-actions').style.display='none';   // i pulsanti di G2 appaiono solo al suo turno
     $('overlay').className='overlay';
@@ -1690,12 +2097,14 @@ const UI = (() => {
     // in PvP: G2 aspetta il suo turno; nascondi i suoi pulsanti finché non tocca a lui
     if(mode==='pvp_local'){ $('foe-actions').style.display='none'; }
     renderOtri();renderCommunity();renderFoeHand(false);renderMyHand();
+    Sfx.deal(6);   // distribuzione: 2 in mano + 4 a terra
     // ULTIMO GIRO: avviso quando parte e mostro le mani rimaste
     const lc=GameState.lastCallStatus(state);
     if(lc.active){
       if(lc.justStarted){
         log(`<span class="lastcall-start">🔔 <b>${T().lastCallTitle}</b> — ${T().lastCallIntro(GameState.LAST_CALL_LEN)}</span>`,'sys');
         showLastCallBanner();
+        Sfx.bell();   // campana: l'oste chiama l'ultimo giro
       }
       log(`— <b>Round ${state.round}</b> · <span class="lastcall-count">${T().lastCallLeft(lc.remaining)}</span> —`,'sys');
     } else {
@@ -1713,6 +2122,7 @@ const UI = (() => {
           const r=GameState.swapCard(state,'ai',plan.swapIndex);
           if(r.ok){
             log(`<span class="ai">${T().foeSwapNow}</span>`,'ai');
+            Sfx.swap();   // anche il cambio dell'IA si sente
             floatText('ai','−10','dmg');
             // animazione: la carta coperta dell'avversario "lampeggia" per segnalare il cambio
             const foeCards=$('foe-hand').querySelectorAll('.card');
@@ -1753,6 +2163,7 @@ const UI = (() => {
   }
   function doSwap(side,i){
     const r=GameState.swapCard(state,side,i); if(!r.ok)return;
+    Sfx.swap();   // carta sostituita
     swapArmed=false;
     (side==='me'?$('btn-swap'):$('p2-swap')).classList.remove('primary');
     (side==='me'?$('btn-swap'):$('p2-swap')).disabled=true;
@@ -1804,6 +2215,7 @@ const UI = (() => {
   function proceedToFifth(){
     state.phase='dealing5';
     GameState.revealFifth(state);
+    Sfx.card();   // la 5ª carta scende sul tavolo
     dealFifthToCenter(()=>{
       state.me.eval=GameLogic.evaluate(state.me.hand.concat(state.community));
       state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community));
@@ -1854,6 +2266,7 @@ const UI = (() => {
 
   // animazione fiabesca a tutto schermo prima del duello
   function playSummonAnimation(done){
+    Sfx.summon();   // arpa: le maschere si destano
     const fx=document.createElement('div'); fx.className='summon-flash';
     fx.innerHTML=`<div class="summon-ring"></div><div class="summon-ring r2"></div>
       <div class="summon-text">${T().summonFlash}</div>`;
@@ -1890,6 +2303,25 @@ const UI = (() => {
   function cardsSymbols(cards){ return cards.map(cardSymbol).join(' '); }
 
   // spiega quali carte formano la combinazione (sempre per entrambi, con simboli)
+  // ogni arma ha il suo tipo di suono: legno, metallo o taglio
+  const WEAPON_SFX={
+    meo:'sharp',         // Stiletto -> lama
+    pantalone:'metal',   // Borsa di monete -> metallo
+    brighella:'wood',    // Bastone nodoso -> legno
+    pulcinella:'wood',   // Manganello -> legno
+    balanzone:'wood',    // Tomo pesante -> tonfo
+    arlecchino:'wood',   // Spatola di legno -> legno
+    colombina:'sharp',   // Ventaglio affilato -> taglio
+    meneghino:'metal',   // Ombrello d'acciaio -> metallo
+    capitan:'metal'      // Spada Strisciata -> metallo
+  };
+  function playHit(maskId){
+    const k=WEAPON_SFX[maskId]||'wood';
+    if(k==='metal') Sfx.hitMetal();
+    else if(k==='sharp') Sfx.hitSharp();
+    else Sfx.hitWood();
+  }
+
   // ULTIMO GIRO: annuncio a schermo intero quando scatta
   function showLastCallBanner(){
     const el=document.createElement('div'); el.className='lastcall-banner';
@@ -1976,25 +2408,23 @@ const UI = (() => {
       const finalDmg=Math.max(0,out.rawDmg-out.blocked);
       winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
       setTimeout(()=>{
+        playHit(state[w].eval.maskId);   // legno / metallo / taglio secondo l'arma
         throwWeapon(w, state[w].eval.maskId, ()=>{
-          loseCard.classList.add('destroyed');
-          tearMask(loseCard);   // la maschera perdente viene STRAPPATA in due
-          // riepilogo con la MATEMATICA della parata
+          // PARATA: lo scudo appare sulla MASCHERA che para, col valore assorbito
           if(out.blocked>0){
-            log(`<span class="sys">${T().blockedMath(lName, out.blocked)}</span>`,'sys'); shieldBlock(l, out.blocked);
-            // es. "Danno: 20 − 7 = 13"
+            shieldOnMask(loseCard, out.blocked);
+            Sfx.block();
+            log(`<span class="sys">${T().blockedMath(lName, out.blocked, l==='me' && mode!=='pvp_local')}</span>`,'sys');
             log(`<span class="${cls}">${T().dmgMath(out.rawDmg, out.blocked, finalDmg)}</span>`,cls);
           } else {
             log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls);
           }
+          // la maschera perdente viene strappata (dopo lo scudo, così si legge)
           setTimeout(()=>{
-            throwWeaponAtOtre(w, l, state[w].eval.maskId, ()=>{
-              const otre=$(l==='me'?'otre-me':'otre-ai'); otre.classList.add('hit');
-              floatText(l, String(gained[l]), 'dmg');
-              setTimeout(()=>otre.classList.remove('hit'),600);
-              renderOtri();
-            });
-          },700);
+            loseCard.classList.add('destroyed');
+            tearMask(loseCard);
+            Sfx.tear();
+          }, out.blocked>0 ? 750 : 0);
         });
       },900);
     }else{
@@ -2003,14 +2433,77 @@ const UI = (() => {
       const streakBefore=(state[w].healStreak||1)-1;   // applyDelta l'ha già incrementata
       const pct=[100,75,50,25,0][Math.min(4,streakBefore)];
       setTimeout(()=>{
-        const otre=$(w==='me'?'otre-me':'otre-ai'); otre.classList.add('heal');
-        floatText(w,'+'+gained[w],'heal');
         if(pct<100) log(`<span class="sys">${T().healReduced(pct)}</span>`,'sys');
-        log(`<span class="${cls}">${T().healedBy(wName, gained[w])}</span>`,cls);
-        setTimeout(()=>otre.classList.remove('heal'),900); renderOtri();
+        log(`<span class="${cls}">${T().healedBy(wName, gained[w], w==='me' && mode!=='pvp_local')}</span>`,cls);
       },700);
     }
-    setTimeout(afterResolve, 4200);
+    // FINE TURNO: le damigiane si aggiornano con caraffa (riempimento) o rovesciamento (svuotamento)
+    setTimeout(()=>{ pourIntoDemijohns(gained); }, out.action==='attack' ? 2600 : 1500);
+    setTimeout(afterResolve, 5200);
+  }
+
+  // Versa o rovescia il vino nelle damigiane a fine turno, con i numeri dei PV.
+  function pourIntoDemijohns(gained){
+    for(const side of ['me','ai']){
+      const delta=gained[side];
+      if(!delta) continue;
+      const otre=$(side==='me'?'otre-me':'otre-ai');
+      if(delta>0){ pourCarafe(otre, side, delta); }
+      else { spillDemijohn(otre, side, delta); }
+    }
+    setTimeout(renderOtri, 450);   // il livello sale/scende mentre si versa
+  }
+
+  // SCUDO sulla MASCHERA che para, con il valore assorbito (es. "-6")
+  function shieldOnMask(cardEl, blocked){
+    if(!cardEl) return;
+    const s=document.createElement('div');
+    s.className='mask-shield';
+    s.innerHTML=`<span class="ms-ico">🛡</span><span class="ms-val">-${blocked}</span>`;
+    cardEl.appendChild(s);
+    setTimeout(()=>s.remove(),1400);
+  }
+
+  // CARAFFA che versa vino nella damigiana (cura)
+  function pourCarafe(otreEl, side, amount){
+    if(!otreEl) return;
+    Sfx.pour(true);
+    const r=otreEl.getBoundingClientRect();
+    const c=document.createElement('div');
+    c.className='carafe-wrap';
+    c.style.left=(r.left+r.width/2)+'px';
+    c.style.top=(r.top-r.height*0.55)+'px';
+    c.innerHTML=`<div class="carafe">${carafeSVG()}</div><div class="pour-stream"></div>`;
+    document.body.appendChild(c);
+    otreEl.classList.add('heal');
+    floatText(side,'+'+amount,'heal');
+    setTimeout(()=>{ c.remove(); otreEl.classList.remove('heal'); },1700);
+  }
+
+  // DAMIGIANA che si capovolge e rovescia il vino (danno)
+  function spillDemijohn(otreEl, side, delta){
+    if(!otreEl) return;
+    Sfx.pour(false);
+    otreEl.classList.add('spilling','hit');
+    const r=otreEl.getBoundingClientRect();
+    const p=document.createElement('div');
+    p.className='spill-splash';
+    p.style.left=(r.left+r.width/2)+'px';
+    p.style.top=(r.bottom-6)+'px';
+    document.body.appendChild(p);
+    floatText(side, String(delta), 'dmg');
+    setTimeout(()=>{ otreEl.classList.remove('spilling','hit'); p.remove(); },1600);
+  }
+
+  function carafeSVG(){
+    return `<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#d9c9a8"/><stop offset="1" stop-color="#9c8560"/></linearGradient></defs>
+      <path d="M22 6 h16 v10 l10 22 v30 a6 6 0 0 1 -6 6 h-24 a6 6 0 0 1 -6 -6 v-30 l10 -22 z"
+            fill="url(#cg)" stroke="#5b4526" stroke-width="2.5" opacity=".95"/>
+      <path d="M22 40 h26 v24 a5 5 0 0 1 -5 5 h-16 a5 5 0 0 1 -5 -5 z" fill="#8e1220" opacity=".85"/>
+      <path d="M46 30 q12 6 6 16" fill="none" stroke="#5b4526" stroke-width="3" stroke-linecap="round"/>
+    </svg>`;
   }
 
   // RAFFICA di armi (stile Vampire Survivors): tante armi grandi e luminose
@@ -2127,6 +2620,9 @@ const UI = (() => {
     const ov=$('overlay'),card=$('endcard');
     ov.className='overlay show'+(meWin?'':' lose-bg');
     card.className='endcard '+(meWin?'win':'lose');
+    // musica di fine partita (in PvP vince sempre "qualcuno": fanfara)
+    Sfx.stopTavern();
+    if(mode==='pvp_local' || meWin) Sfx.win(); else Sfx.lose();
     // determino l'esito preciso (4 casi)
     const by200 = state.me.hp>=GameState.WIN_HP || state.ai.hp>=GameState.WIN_HP;
     let reason;
@@ -2180,6 +2676,8 @@ const UI = (() => {
       <li><b>Solo dopo la scelta</b> cala la <b>5ª carta</b>: può ribaltare tutto. La osservi con calma.</li>
       <li>Premi <b>Evoca Maschera</b>: le mani definitive di 5 su 7 evocano le Maschere che si sfidano.</li>
       <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata).</li></ul>
+      <h3>Audio</h3>
+      <p>Il gioco ha suoni per carte, attacchi, evocazioni e altro. Puoi silenziarlo con il pulsante 🔊 nel menu o dalle impostazioni in partita.</p>
       <h3>Ultimo Giro</h3>
       <p>Se dopo <b>30 round</b> nessuno ha chiuso, parte l'<b>Ultimo Giro</b>: un annuncio ti avvisa e un contatore mostra le <b>10 mani</b> rimaste. Allo scadere <b>vince chi ha più vino</b> nella damigiana. Nient'altro cambia: danni e cura restano normali.</p>
       <h3>Cura a rendimenti decrescenti</h3>
@@ -2200,6 +2698,8 @@ const UI = (() => {
       <li><b>Only after the choice</b> the <b>5th card</b> is dealt: it can turn everything around.</li>
       <li>Press <b>Summon Mask</b>: the final 5-of-7 hands summon the Masks that clash.</li>
       <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry).</li></ul>
+      <h3>Sound</h3>
+      <p>The game has sounds for cards, attacks, summons and more. You can mute it with the 🔊 button in the menu or from the in-game settings.</p>
       <h3>Last Call</h3>
       <p>If nobody has closed after <b>30 rounds</b>, <b>Last Call</b> begins: an announcement warns you and a counter shows the <b>10 hands</b> left. When time runs out, <b>the most wine wins</b>. Nothing else changes: damage and healing stay normal.</p>
       <h3>Diminishing healing</h3>
@@ -2216,6 +2716,7 @@ const UI = (() => {
     return `<h2>${r.optsTitle}</h2>
       <div class="modal-btns" style="flex-direction:column">
         <div class="lang-switch opt-lang"><button class="${lang==='it'?'on':''}" data-optlang="it">🇮🇹 Italiano</button><button class="${lang==='en'?'on':''}" data-optlang="en">🇬🇧 English</button></div>
+        <div class="lang-switch opt-lang"><button class="${!Sfx.isMuted()?'on':''}" data-optsound="1">🔊 ${r.soundOn}</button><button class="${Sfx.isMuted()?'on':''}" data-optsound="0">🔇 ${r.soundOff}</button></div>
         <button class="btn" id="opt-rules">${r.optRules}</button>
         <button class="btn" id="opt-restart">${r.optRestart}</button>
         <button class="btn" id="opt-menu">${r.optMenu}</button>
@@ -2240,6 +2741,7 @@ const UI = (() => {
       if(e.target.id==='modal-close') closeModal();
       if(e.target.dataset&&e.target.dataset.lang){ lang=e.target.dataset.lang; applyStatic(); openModal(rulesHTML()); }
       if(e.target.dataset&&e.target.dataset.optlang){ setLang(e.target.dataset.optlang); openModal(optionsHTML()); }
+      if(e.target.dataset&&e.target.dataset.optsound){ setSound(e.target.dataset.optsound==='1'); openModal(optionsHTML()); }
       if(e.target.id==='opt-rules') openModal(rulesHTML());
       if(e.target.id==='opt-restart'){ const c=confirmHTML(T().sureRestart); openModal(c.html);
         $('cf-yes').onclick=()=>{closeModal(); startGame();}; }
@@ -2250,6 +2752,13 @@ const UI = (() => {
 
   /* ================= BIND ================= */
   function bind(){
+    // AUDIO: sblocco al primo tocco (regola dei browser) e click su ogni pulsante
+    const unlockOnce=()=>{ Sfx.unlock(); if(!Sfx.isMuted()) Sfx.startTavern(); };
+    document.addEventListener('pointerdown', unlockOnce, {once:true});
+    document.addEventListener('click',(e)=>{
+      const t=e.target.closest('.btn, .icon-btn, .mode-btn, .diff-btn, .bc-swap, .lang-switch button');
+      if(t && !t.disabled) Sfx.click();
+    }, true);
     // menu
     $('mode-ai').addEventListener('click',()=>{
       if($('diff-row').style.display==='none' || !$('diff-row').style.display){
@@ -2272,6 +2781,8 @@ const UI = (() => {
     $('menu-rules').addEventListener('click',()=>openModal(rulesHTML()));
     $('menu-update').addEventListener('click',()=>openModal(changelogHTML()));
     $('menu-lang').addEventListener('click',()=>toggleLang());
+    // AUDIO: interruttore con preferenza ricordata
+    $('menu-sound').addEventListener('click',()=>toggleSound());
     // setup
     $('setup-back').addEventListener('click',()=>{
       if(mode==='pvp_local'&&setupTarget==='ai'){ setupTarget='me'; renderSetup(); }  // torna a P1
@@ -2303,6 +2814,8 @@ const UI = (() => {
     const savedLang=localStorageSafe('folkem_lang'); if(savedLang==='it'||savedLang==='en') lang=savedLang;
     applyStatic(); renderSetup(); bind(); fitScale();
     const lb=$('menu-lang'); if(lb) lb.dataset.shows = lang==='it'?'en':'it';
+    // AUDIO: ripristino la preferenza (di default acceso)
+    setSound(localStorageSafe('folkem_sound')!=='0');
     // regole al primo avvio
     if(!localStorageSafe('folkem_seen')){ openModal(rulesHTML()); localStorageSafe('folkem_seen','1'); }
     // service worker: registra, e se trovo una nuova versione forzo il refresh

@@ -29,6 +29,9 @@ Sfidi l'Avversario. Ognuno parte con **100 PV**, mostrati come una **damigiana**
 - Vince la combinazione più alta (pareggi alla poker: carte più alte, poi kicker, Asso alto).
 - **Attacco** infligge il tuo Attacco. **Difesa**: se vinci, curi il tuo valore Difesa; se
   **perdi**, la tua Difesa **riduce il danno subito** (parata).
+- **Audio**: suoni per carte, pulsanti, evocazione (arpa), tre tipi di attacco (legno/metallo/taglio),
+  vino versato, parata, strappo della maschera, campana dell'Ultimo Giro, fanfara e tema di sconfitta,
+  piu musica di taverna. Tutto **sintetizzato dal gioco** (nessun file, nessun peso). Silenziabile col pulsante 🔊.
 - **Ultimo Giro**: se dopo **30 round** nessuno ha chiuso, parte un conto alla rovescia di **10 mani**
   (annunciato a schermo, con contatore sempre visibile). Allo scadere **vince chi ha più PV**.
   Nessun modificatore: danni e cura restano normali.

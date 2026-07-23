@@ -1,4 +1,4 @@
-const CACHE='folkem-v1.4.0';
+const CACHE='folkem-v1.5.1';
 const ASSETS=['./','./index.html','./manifest.json',
   './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.svg',
   './assets/icon-192.png','./assets/icon-512.png','./assets/ujack.svg','./assets/itflag.svg','./assets/victorian.woff2','./assets/isenheim.woff2'];
