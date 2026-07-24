@@ -306,6 +306,12 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   text-shadow:0 3px 10px rgba(0,0,0,.8),0 0 24px rgba(224,66,79,.7);
   padding:6px 20px;background:linear-gradient(90deg,transparent,rgba(122,14,24,.35),transparent);
   max-width:96vw;overflow:hidden}
+/* annuncio della CURA: stesse forme dell attacco, tonalita verde */
+.weapon-announce.heal-announce .wa-mask{color:#9fe89f;
+  text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 24px rgba(80,220,110,.85)}
+.weapon-announce.heal-announce .wa-weapon{color:#eaffea;-webkit-text-stroke:2.5px #0d3d18;
+  text-shadow:0 3px 10px rgba(0,0,0,.8),0 0 24px rgba(70,210,100,.75);
+  background:linear-gradient(90deg,transparent,rgba(20,90,40,.38),transparent)}
 @keyframes waIn{0%{transform:translateY(30px) scale(.6);opacity:0}60%{transform:translateY(0) scale(1.12);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
 @keyframes waOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.25) translateY(-20px)}}
 
@@ -1412,6 +1418,19 @@ const Sfx=(()=>{
   function hitMetal(){ if(!can())return; salvoSample('hit_metal',8,0.60,0.30); }
   function hitSharp(){ if(!can())return; salvoSample('hit_sharp',7,0.60,0.26); }
 
+  // ---------- AZIONE DELLA MASCHERA ----------
+  // La maschera "prende vita" prima di agire. Non avendo un campione dedicato,
+  // uso quelli esistenti riprodotti in modo diverso: l arpa rallentata da un
+  // fruscio grave e magico, il versamento rallentato un respiro liquido.
+  function maskAttack(){
+    if(!can()) return;
+    play('summon', 0.30, 2.6);        // arpa velocizzata: guizzo secco, di scatto
+  }
+  function maskHeal(){
+    if(!can()) return;
+    play('summon', 0.30, 0.62);       // arpa rallentata: calda e distesa
+  }
+
   // ---------- PARATA ----------
   function block(){
     if(!can()) return;
@@ -1597,7 +1616,7 @@ const Sfx=(()=>{
     if(musicMuted||!init()) return;
     if(musica && musica.tipo==='menu') return;
     stopMusic();
-    const g=ctx.createGain(); g.gain.value=0.06; g.connect(musicBus);
+    const g=ctx.createGain(); g.gain.value=0.15; g.connect(musicBus);
     musica={tipo:'menu', gain:g, timer:null, step:0};
     const melodia=[196.00,233.08,261.63,233.08, 196.00,174.61,196.00,220.00];
     const bassi  =[ 98.00, 98.00,130.81,130.81,  98.00, 87.31, 98.00,110.00];
@@ -1615,7 +1634,7 @@ const Sfx=(()=>{
     if(musicMuted||!init()) return;
     if(musica && musica.tipo==='gioco') return;
     stopMusic();
-    const g=ctx.createGain(); g.gain.value=0.075; g.connect(musicBus);
+    const g=ctx.createGain(); g.gain.value=0.18; g.connect(musicBus);
     // riverbero corto: da' spazio, fa sembrare un ambiente e non voci isolate
     const conv=ctx.createConvolver(); conv.buffer=smallHall();
     const wet=ctx.createGain(); wet.gain.value=0.30;
@@ -1738,7 +1757,7 @@ const Sfx=(()=>{
           startMenuMusic,startGameMusic,stopMusic,
           card,deal,swap,click,summon,
           hitWood,hitMetal,hitSharp,block,tear,
-          pour,bell,win,lose,
+          pour,bell,win,lose,maskAttack,maskHeal,
           maskAppear,suspense,lunge,clashWin,clashLose,clashTie,
           startTavern,stopTavern};
 })();
@@ -1965,7 +1984,7 @@ const I18N = {
     reason200:"Damigiana colma: 200 PV.", reasonKO:"Damigiana a secco: 0 PV.",
     rulesTitle:"Regole", optsTitle:"Opzioni",
     optRestart:"Riavvia partita", optMenu:"Torna alle modalità", optRules:"Regole", optClose:"Chiudi",
-    soundOn:"Audio", soundOff:"Muto", hpUnit:"PV",
+    soundOn:"Audio", soundOff:"Muto", hpUnit:"PV", healWord:"Cura",
     sfxLabel:"Effetti", musicLabel:"Musica", onWord:"Sì", offWord:"No",
     sureRestart:"Riavviare la partita? I progressi andranno persi.",
     sureMenu:"Tornare al menu? La partita in corso andrà persa.",
@@ -2022,7 +2041,7 @@ const I18N = {
     reason200:"Demijohn full: 200 HP.", reasonKO:"Demijohn dry: 0 HP.",
     rulesTitle:"Rules", optsTitle:"Options",
     optRestart:"Restart match", optMenu:"Back to modes", optRules:"Rules", optClose:"Close",
-    soundOn:"Sound", soundOff:"Mute", hpUnit:"HP",
+    soundOn:"Sound", soundOff:"Mute", hpUnit:"HP", healWord:"Heal",
     sfxLabel:"Sound FX", musicLabel:"Music", onWord:"On", offWord:"Off",
     sureRestart:"Restart the match? Progress will be lost.",
     sureMenu:"Back to menu? The current match will be lost.",
@@ -2032,8 +2051,20 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.2.9";
+const APP_VERSION="1.2.10";
 const CHANGELOG=[
+  {v:"1.2.10", it:[
+    "Arpa dell evocazione e suono delle carte abbassati; musica di sottofondo alzata (piu che raddoppiata).",
+    "Le carte fanno rumore anche quando vengono scoperte a fine mano.",
+    "Il cambio carta ora rovescia il vino dalla damigiana, col suono del liquido: si vede che stai pagando 10 PV.",
+    "Quando una Maschera cura appare la scritta a centro schermo col suo nome e Cura, in verde, come l annuncio dell arma per l attacco.",
+    "Aggiunto un suono per la Maschera che si anima prima di agire: secco e di scatto quando attacca, caldo e disteso quando cura."],
+    en:[
+    "Summoning harp and card sounds turned down; background music turned up (more than doubled).",
+    "Cards now make a sound when they are revealed at the end of a hand.",
+    "Swapping a card now tips wine out of the demijohn, with the pouring sound: you can see you are paying 10 HP.",
+    "When a Mask heals, its name and Heal appear centre-screen in green, like the weapon announcement for attacks.",
+    "Added a sound for the Mask coming alive before acting: sharp and sudden when attacking, warm and slow when healing."]},
   {v:"1.2.9", it:[
     "Volumi riequalizzati su tutti i suoni: prima fra il piu forte e il piu debole c erano 5,2 volte di differenza, ora 3,1 e sono voluti.",
     "Carte e scudo della parata abbassati: le carte suonano di continuo e non devono stancare, lo scudo era il suono piu aggressivo di tutti.",
@@ -2436,6 +2467,15 @@ const UI = (() => {
     setTimeout(()=>el.classList.add('out'),1100);
     setTimeout(()=>el.remove(),1600);
   }
+  // annuncio della CURA: stesso stile dell'attacco ma in verde
+  function announceHeal(maskId){
+    const m=GameLogic.MASKS[maskId];
+    const el=document.createElement('div'); el.className='weapon-announce heal-announce';
+    el.innerHTML=`<span class="wa-mask">${m.name}</span><span class="wa-weapon">${T().healWord}</span>`;
+    $('scaler').appendChild(el);
+    setTimeout(()=>el.classList.add('out'),1100);
+    setTimeout(()=>el.remove(),1600);
+  }
 
   /* ================= LOG / TOAST ================= */
   function log(msg,cls='sys'){const l=$('log');const d=document.createElement('div');d.className=cls;d.innerHTML=msg;l.appendChild(d);l.scrollTop=l.scrollHeight;}
@@ -2509,12 +2549,11 @@ const UI = (() => {
           if(r.ok){
             log(`<span class="ai">${T().foeSwapNow}</span>`,'ai');
             Sfx.swap();   // anche il cambio dell'IA si sente
-            floatText('ai','−10','dmg');
             // animazione: la carta coperta dell'avversario "lampeggia" per segnalare il cambio
             const foeCards=$('foe-hand').querySelectorAll('.card');
             const swapped=foeCards[plan.swapIndex]; if(swapped) swapped.classList.add('card-swapped');
-            $('otre-ai').classList.add('hit');setTimeout(()=>$('otre-ai').classList.remove('hit'),500);
-            renderOtri();
+            spillDemijohn($('otre-ai'), 'ai', -10);   // costa 10 PV: il vino si rovescia
+            setTimeout(()=>renderOtri(), 400);
             if(GameState.checkWin(state)){renderOtri();endGame();return;}
           }
           state.ai.swapPlanned=true;   // già fatto, non rifarlo in choose
@@ -2554,9 +2593,11 @@ const UI = (() => {
     (side==='me'?$('btn-swap'):$('p2-swap')).classList.remove('primary');
     (side==='me'?$('btn-swap'):$('p2-swap')).disabled=true;
     log(`<span class="${side==='me'?'me':'ai'}">${side==='me'?T().youSwap:T().foeSwap}</span>`,side==='me'?'me':'ai');
-    floatText(side,'−10','dmg');
-    const otre=$(side==='me'?'otre-me':'otre-ai'); otre.classList.add('hit');setTimeout(()=>otre.classList.remove('hit'),500);
-    renderOtri();renderMyHand(); if(mode==='pvp_local')renderFoeHandSelectable();
+    // costa 10 PV: la damigiana si rovescia, col suono del vino versato
+    const otre=$(side==='me'?'otre-me':'otre-ai');
+    spillDemijohn(otre, side, -10);
+    setTimeout(()=>renderOtri(), 400);
+    renderMyHand(); if(mode==='pvp_local')renderFoeHandSelectable();
     if(GameState.checkWin(state)){endGame();return;}
   }
 
@@ -2607,7 +2648,7 @@ const UI = (() => {
       state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community));
       log(`<span class="sys">${T().fifthCardIs(cardSymbol(state.community[4]))}</span>`,'sys');
       // scopro le carte dell'avversario: ora sono visibili (resta ignota solo la sua scelta e la build)
-      if(mode!=='pvp_local') renderFoeHand(true);
+      if(mode!=='pvp_local'){ renderFoeHand(true); Sfx.deal(2); }   // le carte si scoprono
       log(`<span class="ai">${T().foeCardsLabel}: ${cardsSymbols(state.ai.hand)}</span>`,'ai');
       // mostra Evoca Maschera. In PvP servono DUE evocazioni (una per giocatore).
       evokeReady={me:false, ai:(mode!=='pvp_local')};  // in PvE l'IA "evoca" da sola
@@ -2643,7 +2684,7 @@ const UI = (() => {
       if(cmp===0) log(`<span class="sys">⚖ ${nMe} = ${nAi} — ${T().tie}</span>`,'sys');
       else if(cmp>0) log(`<span class="sys">⚖ <b>${nMe}</b> batte ${nAi}</span>`,'sys');
       else log(`<span class="sys">⚖ <b>${nAi}</b> batte ${nMe}</span>`,'sys');
-      renderMyMaskSlot(); renderFoeHand(true); renderFoeMaskRevealed();
+      renderMyMaskSlot(); renderFoeHand(true); Sfx.deal(2); renderFoeMaskRevealed();
       $('maskOverlay').classList.add('show');
       state.phase='reveal';
       setTimeout(resolve, 1500);
@@ -2790,6 +2831,7 @@ const UI = (() => {
     log(`<span class="${cls}">${T().winClash(wName, w==='me' && mode!=='pvp_local')}</span>`,cls);
 
     if(out.action==='attack'){
+      Sfx.maskAttack();                       // la maschera prende vita
       announceWeapon(state[w].eval.maskId);
       const finalDmg=Math.max(0,out.rawDmg-out.blocked);
       winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
@@ -2815,6 +2857,8 @@ const UI = (() => {
       },900);
     }else{
       winCard.classList.add('glow-heal');
+      Sfx.maskHeal();                          // la maschera si desta per curare
+      announceHeal(state[w].eval.maskId);       // annuncio verde a centro schermo
       // se la cura è stata ridotta dalla striscia, lo dico chiaramente
       const streakBefore=(state[w].healStreak||1)-1;   // applyDelta l'ha già incrementata
       const pct=[100,75,50,25,0][Math.min(4,streakBefore)];
