@@ -1,4 +1,4 @@
-const CACHE='folkem-v1.5.1';
+const CACHE='folkem-v1.2.9';
 const ASSETS=['./','./index.html','./manifest.json',
   './assets/bg.jpg','./assets/cardback.png','./assets/otri/otre.svg',
   './assets/icon-192.png','./assets/icon-512.png','./assets/ujack.svg','./assets/itflag.svg','./assets/victorian.woff2','./assets/isenheim.woff2'];
@@ -6,6 +6,9 @@ const MASKS=['meo','pantalone','brighella','pulcinella','balanzone','arlecchino'
 for(const m of MASKS) for(let i=0;i<3;i++) ASSETS.push(`./assets/masks/${m}_${i}.png`);
 for(const su of ['denari','coppe','spade','bastoni']) for(let r=1;r<=10;r++) ASSETS.push(`./assets/cards/${su}_${r}.png`);
 ASSETS.push('./assets/table.jpg');
+const SUONI=['card1','card2','card3','swap','click','summon','hit_wood','hit_metal','hit_sharp',
+             'block','tear','pour_in','pour_out','bell','win','lose'];
+for(const s of SUONI) ASSETS.push(`./assets/audio/${s}.mp3`);
 
 self.addEventListener('install',e=>{
   self.skipWaiting();

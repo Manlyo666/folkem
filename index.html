@@ -148,6 +148,10 @@ body[data-portrait="1"] .menu-tools{top:1.5vh;right:2.5vw}
 body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .icon-btn:active{transform:scale(.92)}
 .icon-btn.off{opacity:.5;border-color:#6b5535}
+/* righe delle opzioni: etichetta a sinistra, interruttore a destra */
+.opt-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:2px 0}
+.opt-row .opt-lbl{font-family:var(--font-body);font-size:15px;color:var(--parch)}
+.opt-row .lang-switch{margin:0}
 .icon-btn:hover{box-shadow:0 0 14px rgba(255,180,60,.5)}
 /* pulsante lingua: mostra la bandiera dell'ALTRA lingua (quella a cui si passa) */
 .lang-btn{overflow:hidden;padding:0;position:relative}
@@ -331,6 +335,9 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .mask-overlay{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;gap:20px;
   background:radial-gradient(circle at 50% 50%,rgba(20,10,6,.82),rgba(10,6,3,.94))}
 .mask-overlay.show{display:flex;animation:fadeIn .3s}
+/* le maschere lasciano il centro prima che il vino venga versato */
+.mask-overlay.closing{animation:maskDuelOut .42s ease forwards}
+@keyframes maskDuelOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.92)}}
 .mask-slot{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 .mask-slot .rank-tag{font-family:var(--font-title);font-size:16px;color:var(--brass-hi);min-height:18px;text-shadow:0 1px 3px rgba(0,0,0,.85)}
 .mask-slot .weapon-tag{font-size:11px;color:var(--parch-dim);font-style:italic;min-height:14px}
@@ -1145,7 +1152,7 @@ const GameState = (() => {
    nessun file, nessun peso aggiunto, funziona offline.
    Il contesto audio si sblocca al primo tocco (regola dei browser). */
 const Sfx=(()=>{
-  let ctx=null, master=null, muted=false, ready=false;
+  let ctx=null, master=null, musicBus=null, muted=false, musicMuted=false, ready=false;
   let tavern=null;          // nodi della musica di taverna (loop)
 
   function init(){
@@ -1154,10 +1161,14 @@ const Sfx=(()=>{
       const AC=window.AudioContext||window.webkitAudioContext;
       if(!AC) return null;
       ctx=new AC();
-      master=ctx.createGain();
+      master=ctx.createGain();          // effetti sonori
       master.gain.value=0.85;
       master.connect(ctx.destination);
+      musicBus=ctx.createGain();        // musica: canale separato
+      musicBus.gain.value=0.85;
+      musicBus.connect(ctx.destination);
       ready=true;
+      loadSamples();                    // carico i suoni SUBITO, non al primo tocco
     }catch(e){ ctx=null; }
     return ctx;
   }
@@ -1165,13 +1176,71 @@ const Sfx=(()=>{
   function unlock(){
     const c=init(); if(!c) return;
     if(c.state==='suspended') c.resume();
+    loadSamples();
   }
+  // EFFETTI (carte, colpi, click...)
   function setMuted(m){
     muted=!!m;
     if(master) master.gain.value = muted?0:0.85;
-    if(muted) stopTavern(); else if(ready) startTavern();
   }
   function isMuted(){ return muted; }
+  // MUSICA: controllo indipendente
+  function setMusicMuted(m){
+    musicMuted=!!m;
+    if(musicBus) musicBus.gain.value = musicMuted?0:0.85;
+    if(musicMuted) stopMusic();
+  }
+  function isMusicMuted(){ return musicMuted; }
+
+
+  // ---------- CAMPIONI REALI ----------
+  // I suoni veri (mp3) hanno la priorita'; se un file manca o non carica,
+  // si ricade automaticamente sulla sintesi, che resta come riserva.
+  const SAMPLES={};      // nome -> AudioBuffer
+  let sampleBase='assets/audio/';
+  const SAMPLE_LIST=['card1','card2','card3','swap','click','summon',
+                     'hit_wood','hit_metal','hit_sharp','block','tear',
+                     'pour_in','pour_out','bell','win','lose'];
+
+  // in modalita' standalone i file sono incorporati come data-URI
+  function sampleURL(nome){
+    if(window.AUDIO_MAP && window.AUDIO_MAP[nome]) return window.AUDIO_MAP[nome];
+    return sampleBase+nome+'.mp3';
+  }
+  function loadSamples(){
+    const c=init(); if(!c) return;
+    SAMPLE_LIST.forEach(nome=>{
+      if(SAMPLES[nome]!==undefined) return;
+      SAMPLES[nome]=null;                       // segno "in caricamento"
+      fetch(sampleURL(nome))
+        .then(r=>r.ok?r.arrayBuffer():Promise.reject())
+        .then(b=>c.decodeAudioData(b))
+        .then(buf=>{ SAMPLES[nome]=buf; })
+        .catch(()=>{ SAMPLES[nome]=false; });   // false = non disponibile, uso la sintesi
+    });
+  }
+  // riproduce un campione; restituisce false se non e' pronto
+  function play(nome, vol, rate){
+    if(muted) return true;                      // "gestito": muto, non deve suonare nulla
+    const c=init(); if(!c) return true;
+    const buf=SAMPLES[nome];
+    // Se il file esiste ma non e' ancora decodificato, NON ripiego sulla sintesi:
+    // meglio un istante di silenzio che un suono finto. Restituisco "gestito".
+    if(!buf) return (SAMPLES[nome]!==false);
+    _log.push('FILE:'+nome);
+    const src=c.createBufferSource(); src.buffer=buf;
+    if(rate) src.playbackRate.value=rate;
+    const g=c.createGain(); g.gain.value=(vol==null?1:vol);
+    src.connect(g); g.connect(master);
+    src.start(0);
+    return true;
+  }
+  // sceglie a caso fra piu varianti: evita l effetto "stesso campione ripetuto"
+  function playAny(nomi, vol, rate){
+    const disp=nomi.filter(n=>SAMPLES[n]);
+    if(!disp.length) return false;
+    return play(disp[Math.floor(Math.random()*disp.length)], vol, rate);
+  }
 
   // ---------- mattoni di sintesi ----------
   function env(node, t0, a, d, peak){          // inviluppo attacco/decadimento
@@ -1190,6 +1259,7 @@ const Sfx=(()=>{
     return b;
   }
   function noise(dur, type, freq, q, peak, a, d, t0){
+    _log.push('SINTESI:noise');
     const src=ctx.createBufferSource(); src.buffer=noiseBuffer(dur);
     const f=ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq;
     if(q!=null) f.Q.value=q;
@@ -1199,6 +1269,7 @@ const Sfx=(()=>{
     return src;
   }
   function tone(freq, dur, type, peak, t0, glideTo){
+    _log.push('SINTESI:tone');
     const o=ctx.createOscillator();
     o.type=type||'sine';
     o.frequency.setValueAtTime(freq,t0);
@@ -1212,32 +1283,61 @@ const Sfx=(()=>{
     if(c.state==='suspended') c.resume(); return true; }
 
   // ---------- CARTE ----------
-  // fruscio secco di carta che scorre
+  // Come nei giochi di carte classici di Windows (Solitario, FreeCell): NON un fruscio,
+  // ma uno SCATTO brevissimo e pulito, tipo click di plastica rigida.
+  // La chiave e' la durata: ~25 ms. Piu lungo di cosi diventa subito un "tonf".
+  function cardClick(t, tono){
+    const f=tono||1;
+    // corpo dello scatto: due sinusoidi acute che si spengono quasi subito
+    const o=ctx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(1750*f,t);
+    o.frequency.exponentialRampToValueAtTime(760*f,t+0.022);
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.28,t);                       // attacco immediato, senza rampa
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.026);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+0.03);
+    // armonica sopra: da' la durezza della plastica
+    const o2=ctx.createOscillator(); o2.type='triangle';
+    o2.frequency.setValueAtTime(3400*f,t);
+    o2.frequency.exponentialRampToValueAtTime(1600*f,t+0.016);
+    const g2=ctx.createGain();
+    g2.gain.setValueAtTime(0.10,t);
+    g2.gain.exponentialRampToValueAtTime(0.0001,t+0.018);
+    o2.connect(g2); g2.connect(master);
+    o2.start(t); o2.stop(t+0.022);
+    // brevissimo transiente iniziale: e' il "bordo" dello scatto, 8 ms
+    const n=ctx.createBufferSource(); n.buffer=noiseBuffer(0.012);
+    const nf=ctx.createBiquadFilter(); nf.type='bandpass';
+    nf.frequency.value=2600*f; nf.Q.value=0.7;
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(0.09,t);
+    ng.gain.exponentialRampToValueAtTime(0.0001,t+0.010);
+    n.connect(nf); nf.connect(ng); ng.connect(master);
+    n.start(t); n.stop(t+0.014);
+  }
   function card(){
     if(!can()) return;
-    const t=now();
-    noise(0.13,'bandpass',2100,1.1,0.30,0.006,0.11,t);
-    noise(0.05,'highpass',3800,null,0.14,0.003,0.045,t+0.01);
+    playAny(['card1','card2','card3'], 0.9, 0.96+Math.random()*0.09);
   }
-  // più carte distribuite in sequenza
+  // distribuzione: scatti in sequenza, ognuno di tono leggermente diverso
   function deal(n){
     if(!can()) return;
-    const t=now();
-    for(let i=0;i<(n||1);i++){
-      noise(0.12,'bandpass',1900+Math.random()*500,1.2,0.26,0.006,0.10,t+i*0.09);
+    const N=n||1;
+    for(let i=0;i<N;i++){
+      setTimeout(()=>{ playAny(['card1','card2','card3'], 0.85, 0.94+Math.random()*0.12); }, i*115);
     }
   }
-  // carta sostituita: fruscio + piccolo "tac"
+  // carta sostituita: due scatti ravvicinati (via la vecchia, giu la nuova)
   function swap(){
     if(!can()) return;
-    const t=now();
-    noise(0.14,'bandpass',1700,1.0,0.28,0.006,0.12,t);
-    tone(880,0.06,'triangle',0.16,t+0.10,660);
+    play('swap', 0.95);
   }
 
   // ---------- INTERFACCIA ----------
   function click(){
     if(!can()) return;
+    if(play('click', 0.55)) return;
     const t=now();
     noise(0.035,'highpass',2600,null,0.16,0.002,0.03,t);
     tone(1250,0.045,'square',0.055,t,900);
@@ -1247,6 +1347,7 @@ const Sfx=(()=>{
   // glissando su scala pentatonica: suona "magico" senza stonature
   function summon(){
     if(!can()) return;
+    if(play('summon', 0.85)) return;
     const t=now();
     const sc=[523.25,587.33,659.25,783.99,880.00,1046.50,1174.66,1318.51,1567.98,1760.00];
     sc.forEach((f,i)=>{
@@ -1265,34 +1366,56 @@ const Sfx=(()=>{
   }
 
   // ---------- ATTACCHI (3 tipi) ----------
-  // legno: mazze, bastoni
-  function hitWood(){
-    if(!can()) return;
-    const t=now();
-    tone(190,0.16,'triangle',0.34,t,90);
-    noise(0.09,'lowpass',900,1.0,0.30,0.002,0.08,t);
-    tone(95,0.20,'sine',0.22,t+0.01,55);
+  // Un colpo solo suonava povero rispetto alla raffica di 9 armi che si vede.
+  // Ora ogni attacco e' una SALVA: tanti colpi ravvicinati, ognuno leggermente
+  // diverso per intonazione e volume, cosi non sembra lo stesso campione ripetuto.
+  function woodHit(t,f){
+    tone(180+Math.random()*70, 0.15, 'triangle', 0.30*f, t, 85);
+    noise(0.08,'lowpass',850+Math.random()*300,1.0,0.26*f,0.002,0.07,t);
+    tone(90+Math.random()*25, 0.18, 'sine', 0.20*f, t+0.008, 52);
   }
-  // metallico: spade, armature
-  function hitMetal(){
-    if(!can()) return;
-    const t=now();
-    [2400,3100,4300,5200].forEach((f,i)=>tone(f,0.5-i*0.07,'square',0.075,t+i*0.006));
-    noise(0.35,'highpass',3000,null,0.20,0.002,0.32,t);
-    tone(620,0.22,'triangle',0.16,t,300);
+  function metalHit(t,f){
+    const base=2200+Math.random()*700;
+    [1,1.34,1.87,2.31].forEach((r,i)=>tone(base*r,0.42-i*0.06,'square',0.055*f,t+i*0.005));
+    noise(0.28,'highpass',2900+Math.random()*600,null,0.16*f,0.002,0.26,t);
+    tone(560+Math.random()*140,0.20,'triangle',0.13*f,t,280);
   }
-  // tagliente: lame, colpi affilati
-  function hitSharp(){
-    if(!can()) return;
-    const t=now();
-    noise(0.20,'bandpass',5200,3.5,0.34,0.002,0.18,t);   // sibilo della lama
-    tone(3000,0.13,'sawtooth',0.10,t,900);
-    noise(0.07,'highpass',6500,null,0.16,0.001,0.06,t+0.02);
+  function sharpHit(t,f){
+    noise(0.17,'bandpass',4600+Math.random()*1200,3.2,0.28*f,0.002,0.15,t);
+    tone(2700+Math.random()*600,0.11,'sawtooth',0.085*f,t,850);
+    noise(0.06,'highpass',6200,null,0.13*f,0.001,0.05,t+0.018);
   }
+  // salva: n colpi sfalsati, come le armi che arrivano una dopo l altra
+  function salvo(fn, n){
+    if(!can()) return;
+    const t=now(), N=n||9;
+    for(let i=0;i<N;i++){
+      const ritardo=i*0.068+Math.random()*0.03;      // stesso passo delle armi in volo
+      const forza=(i===0?1.0:0.55+Math.random()*0.4); // il primo colpo e' il piu forte
+      fn(t+ritardo, forza);
+    }
+  }
+  // salva con CAMPIONE reale: lo stesso colpo ripetuto con tono e volume variabili
+  function salvoSample(nome, n, volBase, spread){
+    if(!SAMPLES[nome]) return false;
+    const N=n||7;
+    for(let i=0;i<N;i++){
+      setTimeout(()=>{
+        const v=volBase*(i===0?1:0.55+Math.random()*0.4);
+        const r=1-spread/2+Math.random()*spread;     // tono diverso a ogni colpo
+        play(nome, v, r);
+      }, i*68+Math.random()*30);
+    }
+    return true;
+  }
+  function hitWood(){  if(!can())return; salvoSample('hit_wood', 8,0.75,0.34); }
+  function hitMetal(){ if(!can())return; salvoSample('hit_metal',8,0.60,0.30); }
+  function hitSharp(){ if(!can())return; salvoSample('hit_sharp',7,0.60,0.26); }
 
   // ---------- PARATA ----------
   function block(){
     if(!can()) return;
+    if(play('block', 0.9)) return;
     const t=now();
     tone(320,0.30,'triangle',0.26,t,180);              // rimbombo dello scudo
     [1500,1900,2600].forEach((f,i)=>tone(f,0.35-i*0.06,'square',0.055,t+i*0.008));
@@ -1302,6 +1425,7 @@ const Sfx=(()=>{
   // ---------- STRAPPO DELLA MASCHERA ----------
   function tear(){
     if(!can()) return;
+    if(play('tear', 0.95)) return;
     const t=now();
     // il rumore sale di frequenza: dà la sensazione della lacerazione
     const src=ctx.createBufferSource(); src.buffer=noiseBuffer(0.45);
@@ -1318,6 +1442,7 @@ const Sfx=(()=>{
   // gorgoglio: tanti piccoli "bloop" di frequenza casuale
   function pour(up){
     if(!can()) return;
+    if(play(up?'pour_in':'pour_out', 0.85)) return;
     const t=now();
     const src=ctx.createBufferSource(); src.buffer=noiseBuffer(0.75);
     const f=ctx.createBiquadFilter(); f.type='lowpass';
@@ -1336,6 +1461,7 @@ const Sfx=(()=>{
   // ---------- CAMPANA (Ultimo Giro) ----------
   function bell(){
     if(!can()) return;
+    if(play('bell', 0.8)) return;
     const t=now();
     [1,2.76,5.40,8.93].forEach((r,i)=>{                 // rapporti inarmonici = campana
       const o=ctx.createOscillator(); o.type='sine';
@@ -1359,10 +1485,58 @@ const Sfx=(()=>{
     },700);
   }
 
+  // ---------- SUONI CHE MANCAVANO ----------
+  // la maschera si materializza (dopo l arpa, quando la carta compare)
+  function maskAppear(){
+    if(!can()) return;
+    const t=now();
+    tone(180,0.5,'sine',0.16,t,520);                      // risucchio verso l alto
+    [523.25,659.25,783.99].forEach((f,i)=>tone(f,0.6-i*0.1,'triangle',0.10,t+0.12+i*0.03));
+    noise(0.3,'highpass',3000,null,0.10,0.01,0.28,t+0.1); // scintillio
+  }
+  // la 5a carta sta per cadere: breve tensione
+  function suspense(){
+    if(!can()) return;
+    const t=now();
+    const o=ctx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(110,t);
+    o.frequency.exponentialRampToValueAtTime(220,t+0.55);
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.11,t+0.4);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.62);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.65);
+  }
+  // la maschera si scaglia in avanti (prima della raffica)
+  function lunge(){
+    if(!can()) return;
+    const t=now();
+    noise(0.22,'bandpass',900,1.4,0.20,0.02,0.19,t);     // spostamento d aria
+    tone(140,0.2,'triangle',0.13,t,300);
+  }
+  // esito dello scontro
+  function clashWin(){
+    if(!can()) return;
+    const t=now();
+    [523.25,659.25,783.99].forEach((f,i)=>tone(f,0.35,'triangle',0.10,t+i*0.045));
+  }
+  function clashLose(){
+    if(!can()) return;
+    const t=now();
+    [392.00,349.23,293.66].forEach((f,i)=>tone(f,0.4,'triangle',0.09,t+i*0.05));
+  }
+  // pareggio: due note uguali, sospese
+  function clashTie(){
+    if(!can()) return;
+    const t=now();
+    tone(440,0.3,'sine',0.09,t); tone(440,0.3,'sine',0.09,t+0.14);
+  }
+
   // ---------- FINE PARTITA ----------
   // fanfara: arpeggio maggiore ascendente + accordo finale
   function win(){
     if(!can()) return;
+    if(play('win', 0.8)) return;
     const t=now();
     const mel=[[523.25,0],[659.25,0.13],[783.99,0.26],[1046.50,0.39],[1046.50,0.62],[1318.51,0.75]];
     mel.forEach(([f,d])=>{
@@ -1388,6 +1562,7 @@ const Sfx=(()=>{
   // sconfitta: accordo minore che scivola in basso
   function lose(){
     if(!can()) return;
+    if(play('lose', 0.85)) return;
     const t=now();
     [[261.63,0],[233.08,0.28],[196.00,0.56]].forEach(([f,d])=>{
       const o=ctx.createOscillator(); o.type='sawtooth';
@@ -1404,45 +1579,167 @@ const Sfx=(()=>{
     tone(65.41,2.2,'sine',0.18,t+0.5);                  // basso cupo
   }
 
-  // ---------- MUSICA DI TAVERNA (loop discreto) ----------
-  function startTavern(){
-    if(muted||!init()||tavern) return;
-    const g=ctx.createGain(); g.gain.value=0.055; g.connect(master);
-    tavern={gain:g, timer:null, step:0};
-    // giro semplice in minore, strumento tipo liuto
-    const giro=[196.00,233.08,261.63,233.08, 196.00,174.61,196.00,220.00];
-    const bassi=[98.00,98.00,130.81,130.81, 98.00,87.31,98.00,110.00];
-    tavern.timer=setInterval(()=>{
-      if(muted||!tavern) return;
-      const t=now(), i=tavern.step%giro.length;
-      const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=giro[i];
-      const og=ctx.createGain();
-      og.gain.setValueAtTime(0.0001,t);
-      og.gain.exponentialRampToValueAtTime(0.30,t+0.02);
-      og.gain.exponentialRampToValueAtTime(0.0001,t+0.65);
-      o.connect(og); og.connect(tavern.gain); o.start(t); o.stop(t+0.7);
-      if(i%2===0){
-        const b=ctx.createOscillator(); b.type='sine'; b.frequency.value=bassi[i];
-        const bg=ctx.createGain();
-        bg.gain.setValueAtTime(0.0001,t);
-        bg.gain.exponentialRampToValueAtTime(0.34,t+0.03);
-        bg.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
-        b.connect(bg); bg.connect(tavern.gain); b.start(t); b.stop(t+0.95);
-      }
-      tavern.step++;
-    }, 620);
-  }
-  function stopTavern(){
-    if(!tavern) return;
-    clearInterval(tavern.timer);
-    try{ tavern.gain.disconnect(); }catch(e){}
-    tavern=null;
+  // ---------- MUSICA ----------
+  // Due temi distinti:
+  //  MENU  -> liuto semplice (quello di prima): sobrio, non stanca mentre scegli
+  //  GIOCO -> versione orchestrata: liuto + basso + archi tenuti + tamburo + controcanto
+  let musica=null;
+
+  function stopMusic(){
+    if(!musica) return;
+    clearInterval(musica.timer);
+    try{ musica.gain.disconnect(); }catch(e){}
+    musica=null;
   }
 
-  return {unlock,setMuted,isMuted,
+  // --- tema del MENU: liuto e basso, essenziale ---
+  function startMenuMusic(){
+    if(musicMuted||!init()) return;
+    if(musica && musica.tipo==='menu') return;
+    stopMusic();
+    const g=ctx.createGain(); g.gain.value=0.06; g.connect(musicBus);
+    musica={tipo:'menu', gain:g, timer:null, step:0};
+    const melodia=[196.00,233.08,261.63,233.08, 196.00,174.61,196.00,220.00];
+    const bassi  =[ 98.00, 98.00,130.81,130.81,  98.00, 87.31, 98.00,110.00];
+    musica.timer=setInterval(()=>{
+      if(musicMuted||!musica) return;
+      const t=now(), i=musica.step%melodia.length;
+      pluck(melodia[i], t, 0.30, 0.65, musica.gain);
+      if(i%2===0) bass(bassi[i], t, 0.34, 0.9, musica.gain);
+      musica.step++;
+    }, 620);
+  }
+
+  // --- tema del GIOCO: orchestrato ---
+  function startGameMusic(){
+    if(musicMuted||!init()) return;
+    if(musica && musica.tipo==='gioco') return;
+    stopMusic();
+    const g=ctx.createGain(); g.gain.value=0.075; g.connect(musicBus);
+    // riverbero corto: da' spazio, fa sembrare un ambiente e non voci isolate
+    const conv=ctx.createConvolver(); conv.buffer=smallHall();
+    const wet=ctx.createGain(); wet.gain.value=0.30;
+    g.connect(conv); conv.connect(wet); wet.connect(musicBus);
+    musica={tipo:'gioco', gain:g, timer:null, step:0};
+
+    // giro di 16 passi in Re minore: piu ampio del tema del menu
+    const mel  =[293.66,349.23,440.00,392.00, 349.23,293.66,329.63,293.66,
+                 261.63,293.66,349.23,392.00, 440.00,392.00,349.23,293.66];
+    const bassi=[146.83,146.83,110.00,110.00, 174.61,174.61,146.83,146.83,
+                 130.81,130.81,110.00,110.00, 146.83,146.83,164.81,164.81];
+    // archi tenuti: cambiano ogni 4 passi, reggono l armonia sotto
+    const archi=[[146.83,220.00,293.66],[174.61,261.63,349.23],
+                 [130.81,196.00,261.63],[146.83,220.00,293.66]];
+
+    musica.timer=setInterval(()=>{
+      if(musicMuted||!musica) return;
+      const t=now(), i=musica.step%16;
+      // melodia principale (liuto)
+      pluck(mel[i], t, 0.26, 0.55, musica.gain);
+      // controcanto una quinta sopra, piu piano e leggermente in ritardo
+      if(i%2===1) pluck(mel[i]*1.5, t+0.055, 0.11, 0.40, musica.gain);
+      // basso su ogni battere
+      if(i%2===0) bass(bassi[i], t, 0.30, 0.85, musica.gain);
+      // archi: accordo tenuto a inizio di ogni gruppo di 4
+      if(i%4===0) strings(archi[(i/4)%archi.length], t, musica.gain);
+      // tamburo: battere forte e contrattempo debole
+      if(i%4===0) drum(t, 0.30, musica.gain);
+      else if(i%4===2) drum(t, 0.14, musica.gain);
+      musica.step++;
+    }, 430);
+  }
+
+  // corda pizzicata (liuto)
+  function pluck(freq,t,vol,dur,dest){
+    const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=freq;
+    const f=ctx.createBiquadFilter(); f.type='lowpass';
+    f.frequency.setValueAtTime(3200,t);
+    f.frequency.exponentialRampToValueAtTime(700,t+dur);   // il timbro si scurisce: corda che si spegne
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(f); f.connect(g); g.connect(dest);
+    o.start(t); o.stop(t+dur+0.05);
+  }
+  // basso profondo
+  function bass(freq,t,vol,dur,dest){
+    const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq;
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(dest);
+    o.start(t); o.stop(t+dur+0.05);
+  }
+  // archi tenuti: piu oscillatori leggermente scordati = suono d insieme
+  function strings(freqs,t,dest){
+    const dur=1.7;
+    freqs.forEach((fr,idx)=>{
+      [0,+0.6,-0.6].forEach(det=>{           // tre voci scordate: sembra una sezione
+        const o=ctx.createOscillator(); o.type='sawtooth';
+        o.frequency.value=fr; o.detune.value=det*7;
+        const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=1500;
+        const g=ctx.createGain();
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(0.030/(idx+1),t+0.35);   // entrata morbida
+        g.gain.setValueAtTime(0.030/(idx+1),t+dur*0.55);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+        o.connect(f); f.connect(g); g.connect(dest);
+        o.start(t); o.stop(t+dur+0.05);
+      });
+    });
+  }
+  // tamburo di pelle
+  function drum(t,vol,dest){
+    const o=ctx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(160,t);
+    o.frequency.exponentialRampToValueAtTime(55,t+0.16);
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+    o.connect(g); g.connect(dest);
+    o.start(t); o.stop(t+0.26);
+    const n=ctx.createBufferSource(); n.buffer=noiseBuffer(0.06);
+    const nf=ctx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=420;
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(vol*0.5,t);
+    ng.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+    n.connect(nf); nf.connect(ng); ng.connect(dest);
+    n.start(t); n.stop(t+0.08);
+  }
+  // riverbero corto: rumore che decade, usato come risposta all impulso
+  function smallHall(){
+    const len=Math.floor(ctx.sampleRate*1.1);
+    const b=ctx.createBuffer(2,len,ctx.sampleRate);
+    for(let c=0;c<2;c++){
+      const d=b.getChannelData(c);
+      for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);
+    }
+    return b;
+  }
+
+  // compatibilita con i nomi usati prima
+  function startTavern(){ startGameMusic(); }
+  function stopTavern(){ stopMusic(); }
+
+  // diagnosi: dice quali campioni sono caricati e cosa e' stato suonato davvero
+  const _log=[];
+  function _diag(){
+    const stato={};
+    SAMPLE_LIST.forEach(n=>{
+      const v=SAMPLES[n];
+      stato[n] = v===undefined?'mai richiesto' : (v===null?'in caricamento' : (v===false?'FALLITO':'caricato '+v.duration.toFixed(2)+'s'));
+    });
+    return {campioni:stato, ultimi:_log.slice(-40)};
+  }
+  return {_diag,unlock,setMuted,isMuted,setMusicMuted,isMusicMuted,
+          startMenuMusic,startGameMusic,stopMusic,
           card,deal,swap,click,summon,
           hitWood,hitMetal,hitSharp,block,tear,
           pour,bell,win,lose,
+          maskAppear,suspense,lunge,clashWin,clashLose,clashTie,
           startTavern,stopTavern};
 })();
 /* =====================================================================
@@ -1669,6 +1966,7 @@ const I18N = {
     rulesTitle:"Regole", optsTitle:"Opzioni",
     optRestart:"Riavvia partita", optMenu:"Torna alle modalità", optRules:"Regole", optClose:"Chiudi",
     soundOn:"Audio", soundOff:"Muto", hpUnit:"PV",
+    sfxLabel:"Effetti", musicLabel:"Musica", onWord:"Sì", offWord:"No",
     sureRestart:"Riavviare la partita? I progressi andranno persi.",
     sureMenu:"Tornare al menu? La partita in corso andrà persa.",
     yes:"Sì, procedi", no:"Annulla",
@@ -1725,6 +2023,7 @@ const I18N = {
     rulesTitle:"Rules", optsTitle:"Options",
     optRestart:"Restart match", optMenu:"Back to modes", optRules:"Rules", optClose:"Close",
     soundOn:"Sound", soundOff:"Mute", hpUnit:"HP",
+    sfxLabel:"Sound FX", musicLabel:"Music", onWord:"On", offWord:"Off",
     sureRestart:"Restart the match? Progress will be lost.",
     sureMenu:"Back to menu? The current match will be lost.",
     yes:"Yes, proceed", no:"Cancel",
@@ -1733,9 +2032,67 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.5.1";
+const APP_VERSION="1.2.9";
 const CHANGELOG=[
-  {v:"1.5.1", it:[
+  {v:"1.2.9", it:[
+    "Volumi riequalizzati su tutti i suoni: prima fra il piu forte e il piu debole c erano 5,2 volte di differenza, ora 3,1 e sono voluti.",
+    "Carte e scudo della parata abbassati: le carte suonano di continuo e non devono stancare, lo scudo era il suono piu aggressivo di tutti.",
+    "Alzati i suoni che si sentivano appena: arpa dell evocazione, vino versato e lama.",
+    "Tolto il rischio di distorsione: nessun suono arriva piu al limite massimo."],
+    en:[
+    "Volumes rebalanced across all sounds: the gap between loudest and quietest went from 5.2x to 3.1x, and now it is intentional.",
+    "Cards and the parry shield turned down: cards play constantly and should not tire the ear, and the shield was the harshest sound of all.",
+    "Turned up the barely audible ones: summoning harp, pouring wine and blade.",
+    "Removed clipping risk: no sound reaches maximum level any more."]},
+  {v:"1.2.8", it:[
+    "RISOLTO alla radice il problema dei suoni vecchi: la sintesi non viene piu usata come riserva per i suoni che hanno un file. Se un campione non e' ancora pronto ora resta un istante di silenzio, invece di suonare la versione finta.",
+    "I suoni ora si caricano all avvio della pagina invece che al primo tocco: sono pronti prima che tu prema qualsiasi cosa.",
+    "Il primo click sul menu faceva partire due suoni sintetici perche' i campioni erano ancora in caricamento: non succede piu."],
+    en:[
+    "FIXED the old-sounds problem at its root: synthesis is no longer used as a fallback for sounds that have a real file. If a sample is not ready yet there is now a brief silence instead of a fake sound.",
+    "Sounds now load when the page opens rather than on first tap: they are ready before you press anything.",
+    "The first menu click used to trigger two synthesised sounds because samples were still loading: that no longer happens."]},
+  {v:"1.2.7", it:[
+    "Tolti i sei suoni sintetizzati rimasti (scintillio delle maschere, tensione prima della 5a carta, affondo, e gli accordi di esito dello scontro): erano aggiunte mie mai richieste ed erano gli unici suoni finti rimasti in partita. Ora in gioco si sentono SOLO i suoni veri.",
+    "L arpa dell evocazione e' ora esattamente il file originale, solo accorciato: nessuna inversione, nessun ritocco.",
+    "Corretti i tagli di tutti i campioni: prima il filtro tagliava al primo rumore invece che al colpo vero, e alcuni suoni risultavano sbagliati."],
+    en:[
+    "Removed the six remaining synthesised sounds (mask sparkle, pre-5th-card tension, lunge, and the clash outcome chords): they were unrequested additions of mine and the only fake sounds left in play. Now only real sounds are heard in game.",
+    "The summoning harp is now exactly the original file, only shortened: no reversing, no processing.",
+    "Fixed the trimming of all samples: the filter used to cut at the first faint noise instead of the actual hit, so some sounds came out wrong."]},
+  {v:"1.2.6", it:[
+    "SUONI VERI al posto di quelli sintetizzati: carte, click, arpa dell evocazione, i tre tipi di attacco, parata, strappo, vino versato, campana, fanfara e sconfitta. Se un file non carica, il gioco torna da solo ai suoni sintetizzati.",
+    "L arpa dell evocazione e' stata ritagliata e INVERTITA: ora sale invece di scendere, e dura 2,8s invece di 19. Niente piu sibilo finale.",
+    "Le carte a terra ora scendono UNA ALLA VOLTA, ognuna col proprio suono, come farebbe un mazziere vero.",
+    "Gli attacchi usano il campione reale ripetuto in salva, con tono e volume diversi a ogni colpo: tante manganellate che non sembrano lo stesso suono incollato.",
+    "Le tre varianti del suono carta si alternano a caso, cosi la distribuzione non suona meccanica."],
+    en:[
+    "REAL SOUNDS replacing the synthesised ones: cards, clicks, summoning harp, the three attack types, parry, tear, pouring wine, bell, fanfare and defeat. If a file fails to load, the game falls back to synthesis on its own.",
+    "The summoning harp was trimmed and REVERSED: it now rises instead of falling, and lasts 2.8s instead of 19. No more trailing hiss.",
+    "Table cards are now dealt ONE AT A TIME, each with its own sound, like a real dealer would.",
+    "Attacks use the real sample repeated in a salvo, with different pitch and volume on each blow.",
+    "The three card sound variants alternate randomly, so dealing never sounds mechanical."]},
+  {v:"1.2.5", it:[
+    "Suono delle carte rifatto daccapo, ispirato ai giochi di carte classici di Windows: uno scatto netto e asciutto, senza fruscio.",
+    "NUMERAZIONE CORRETTA: le versioni erano gonfiate. La seconda cifra ora sale SOLO quando cambiano regole o gameplay (finora due volte: cura decrescente e Ultimo Giro), la terza a ogni rifinitura. Il changelog e' stato rinumerato: quella che era la 1.6.0 e' in realta' la 1.2.5."],
+    en:[
+    "Card sound remade from scratch, inspired by the classic Windows card games: a clean, dry click with no rustle.",
+    "VERSION NUMBERING FIXED: versions were inflated. The second digit now only goes up when rules or gameplay change (twice so far: diminishing healing and Last Call), the third on every refinement. The changelog has been renumbered: what was 1.6.0 is really 1.2.5."]},
+  {v:"1.2.4", it:[
+    "Suono delle carte rifatto: ora e' un colpo secco sul tavolo con un breve scorrimento, invece del fruscio di prima.",
+    "Musica di gioco orchestrata: liuto, basso, archi tenuti, tamburo e controcanto, con un riverbero che da' spazio. Il tema semplice di prima resta come musica dei menu.",
+    "Gli attacchi non sono piu un colpo solo ma una SALVA di colpi ravvicinati, uno per ogni arma che vola: tante manganellate, tante lame, tanti clangori.",
+    "Nelle impostazioni ora ci sono DUE interruttori separati: uno per la Musica e uno per gli Effetti.",
+    "Aggiunti i suoni che mancavano: tensione quando sta per cadere la 5a carta, materializzazione delle maschere, affondo prima del colpo, e un accordo diverso a seconda che tu vinca, perda o pareggi lo scontro.",
+    "Le maschere ora lasciano il centro PRIMA che le damigiane si riempiano o si svuotino: non restano piu li durante il versamento."],
+    en:[
+    "Card sound remade: now a dry snap on the table with a short slide, instead of the previous rustle.",
+    "Orchestrated game music: lute, bass, sustained strings, drum and counter-melody, with reverb for space. The previous simple theme is now the menu music.",
+    "Attacks are no longer a single hit but a SALVO of rapid blows, one per flying weapon.",
+    "Settings now have TWO separate switches: one for Music and one for Sound FX.",
+    "Added the missing sounds: tension before the 5th card drops, masks materialising, a lunge before the strike, and a different chord depending on whether you win, lose or tie the clash.",
+    "Masks now leave the centre BEFORE the demijohns fill or empty: they no longer linger during the pour."]},
+  {v:"1.2.3", it:[
     "Corretto il contatore delle cure: ora sale solo se ti curi DAVVERO (se la cura e gia a zero non sale a vuoto) e si azzera appena premi Attacco, anche se perdi lo scontro o non fai danno.",
     "Nuove animazioni di fine turno: la maschera non colpisce piu la damigiana. Il vino viene versato con una caraffa quando ti curi, e la damigiana si capovolge rovesciandolo quando subisci danno.",
     "Lo scudo della parata ora appare direttamente sulla maschera che para, col valore assorbito (es. -6).",
@@ -1751,7 +2108,7 @@ const CHANGELOG=[
     "Added the HP label next to the demijohn.",
     "Fixed Italian grammar in the log.",
     "The Masks awaken text now has a black outline: readable on any background."]},
-  {v:"1.5.0", it:[
+  {v:"1.2.2", it:[
     "AUDIO — Il gioco ora ha i suoni: fruscio delle carte quando vengono distribuite, calate o sostituite; click sui pulsanti; arpa magica all evocazione delle Maschere.",
     "Tre suoni d attacco diversi secondo l arma: legno (Bastone, Manganello, Tomo, Spatola), metallo (Monete, Ombrello d acciaio, Spada) e taglio (Stiletto, Ventaglio affilato).",
     "Vino versato quando la damigiana si riempie o si svuota, scudo per la parata, strappo per la maschera lacerata, campana per l Ultimo Giro.",
@@ -1765,7 +2122,7 @@ const CHANGELOG=[
     "A fanfare for victory and a grim theme for defeat, plus discreet tavern music in the background.",
     "New sound button in the menu (and in the in-game settings) to mute everything. The choice is remembered.",
     "All sounds are generated by the game itself: no downloaded files, no added weight, works offline."]},
-  {v:"1.4.0", it:[
+  {v:"1.2.1", it:[
     "NUOVA REGOLA — Ultimo Giro: se dopo 30 round nessuno ha chiuso, parte un conto alla rovescia di 10 mani, annunciato a schermo e con un contatore sempre visibile che diventa rosso nelle ultime 3. Allo scadere vince chi ha piu vino nella damigiana. Danni e cura restano normali.",
     "Riepilogo: ora la combinazione dell avversario si legge a colpo d occhio, con il nome in evidenza accanto al suo. Aggiunta una riga di confronto diretto (es. Tris batte Coppia): non devi piu ricostruirla dalle 7 carte.",
     "Corretto un errore di grammatica nel riepilogo (Tu vinci lo scontro, non Tu vince)."],
@@ -1773,7 +2130,7 @@ const CHANGELOG=[
     "NEW RULE - Last Call: if nobody has closed after 30 rounds, a 10-hand countdown begins, announced on screen with an always-visible counter that turns red for the last 3. When it runs out, the most wine wins. Damage and healing stay normal.",
     "Log: the opponent's combination is now readable at a glance, with its name highlighted next to yours. Added a direct comparison line (e.g. Trips beats Pair): no more reconstructing it from the 7 cards.",
     "Fixed a grammar slip in the Italian log."]},
-  {v:"1.3.0", it:[
+  {v:"1.1.1", it:[
     "NUOVA REGOLA — Cura a rendimenti decrescenti: cure consecutive rendono 100%, 75%, 50%, 25%, poi 0%. Attaccare azzera il contatore e la cura torna piena. La parata non e influenzata. Niente decimali: si arrotonda sempre per eccesso.",
     "IA molto piu forte e finalmente in scala: Facile e davvero facile, Media competente, Difficile competitiva. La Difficile calcola tutte le carte possibili come quinta, usa una build da META e ti legge: se abusi della cura passa all attacco totale.",
     "Corretto un difetto grave dell IA: sprecava PV in cambi carta inutili fino a suicidarsi.",
@@ -1791,39 +2148,39 @@ const CHANGELOG=[
     "Above 150 HP the demijohn is too full and the wine overflows: dripping wine and a puddle at the base.",
     "Settings wheel moved to the top left.",
     "The log warns when healing is reduced, so you always know where you stand."]},
-  {v:"1.2.6", it:["Tolta la voce 'Cura' dalle regole e dal README: senza restrizioni è ovvio che sia piena. Ripuliti anche i README (niente più 'otre', ora 'damigiana')."],
+  {v:"1.0.26", it:["Tolta la voce 'Cura' dalle regole e dal README: senza restrizioni è ovvio che sia piena. Ripuliti anche i README (niente più 'otre', ora 'damigiana')."],
     en:["Removed the 'Healing' entry from the rules and README: with no restrictions, full healing is obvious. Also cleaned up the READMEs ('otre' is now 'demijohn')."]},
-  {v:"1.2.5", it:["Rimossa la penalità sulla cura: ora è sempre piena fino a 200 PV (prima era dimezzata sopra 150). Regole aggiornate."],
+  {v:"1.0.25", it:["Rimossa la penalità sulla cura: ora è sempre piena fino a 200 PV (prima era dimezzata sopra 150). Regole aggiornate."],
     en:["Removed the healing penalty: it is now always full up to 200 HP (it used to be halved above 150). Rules updated."]},
-  {v:"1.2.4", it:["Nel duello: la tua maschera ora è a sinistra, quella dell'avversario (IA o Giocatore 2) a destra."],
+  {v:"1.0.24", it:["Nel duello: la tua maschera ora è a sinistra, quella dell'avversario (IA o Giocatore 2) a destra."],
     en:["In the duel: your mask is now on the left, the opponent's (AI or Player 2) on the right."]},
-  {v:"1.2.3", it:["Setup: titolo \'Forgia la tua build\' ancora più grande, descrizione ancora più piccola per un contrasto netto."],
+  {v:"1.0.23", it:["Setup: titolo \'Forgia la tua build\' ancora più grande, descrizione ancora più piccola per un contrasto netto."],
     en:["Setup: \'Forge your build\' title even bigger, description even smaller for a clear contrast."]},
-  {v:"1.2.2", it:["Setup: titolo \'Forgia la tua build\' ingrandito, descrizione sotto rimpicciolita per dare più respiro."],
+  {v:"1.0.22", it:["Setup: titolo \'Forgia la tua build\' ingrandito, descrizione sotto rimpicciolita per dare più respiro."],
     en:["Setup: \'Forge your build\' title enlarged, the description below made smaller for more breathing room."]},
-  {v:"1.2.1", it:["Victorian Decade ora su tutti i titoli, i nomi delle maschere, il titolo Folk \'Em e i messaggi evocativi (Le Maschere si destano…), più grande e con ombra marcata.","Isenheim riservato a pulsanti, comandi e definizioni (più leggibile)."],
+  {v:"1.0.21", it:["Victorian Decade ora su tutti i titoli, i nomi delle maschere, il titolo Folk \'Em e i messaggi evocativi (Le Maschere si destano…), più grande e con ombra marcata.","Isenheim riservato a pulsanti, comandi e definizioni (più leggibile)."],
     en:["Victorian Decade now on all titles, mask names, the Folk \'Em title and evocative messages (The Masks awaken…), larger and with a stronger shadow.","Isenheim reserved for buttons, commands and definitions (more legible)."]},
-  {v:"1.2.0", it:["Nuovi font: Isenheim per testi e descrizioni, Victorian Decade per titoli e messaggi (Vittoria, Hai Perso…) con effetto in risalto.","Fine partita: messaggi personalizzati per i 4 esiti (hai svuotato/riempito la damigiana, l'avversario te l'ha svuotata/riempita). In PvP: Damigiana a secco / piena.","Fine partita: mostrato solo il punteggio (es. 115 − 0), niente più PV; lo zero non si confonde più con la O.","La bandiera del pulsante lingua ora mostra quella a cui passi: in italiano vedi la Union Jack, in inglese il tricolore.","Ovunque 'otre' è diventato 'damigiana'."],
+  {v:"1.0.20", it:["Nuovi font: Isenheim per testi e descrizioni, Victorian Decade per titoli e messaggi (Vittoria, Hai Perso…) con effetto in risalto.","Fine partita: messaggi personalizzati per i 4 esiti (hai svuotato/riempito la damigiana, l'avversario te l'ha svuotata/riempita). In PvP: Damigiana a secco / piena.","Fine partita: mostrato solo il punteggio (es. 115 − 0), niente più PV; lo zero non si confonde più con la O.","La bandiera del pulsante lingua ora mostra quella a cui passi: in italiano vedi la Union Jack, in inglese il tricolore.","Ovunque 'otre' è diventato 'damigiana'."],
     en:["New fonts: Isenheim for text and descriptions, Victorian Decade for titles and messages (Win, You Lose…) with a highlighted effect.","End of match: personalized messages for the 4 outcomes (you drained/filled the demijohn, the opponent drained/filled it). In PvP: Demijohn dry / full.","End of match: only the score is shown (e.g. 115 − 0), no more HP; the zero is no longer confused with the letter O.","The language button flag now shows the one you switch to: in Italian you see the Union Jack, in English the tricolour.","Everywhere 'otre' became 'demijohn'."]},
-  {v:"1.1.9", it:["Icona lingua: ora una Union Jack disegnata come si deve, riconoscibile anche piccola."],
+  {v:"1.0.19", it:["Icona lingua: ora una Union Jack disegnata come si deve, riconoscibile anche piccola."],
     en:["Language icon: now a properly drawn Union Jack, recognizable even when small."]},
-  {v:"1.1.8", it:["Icona lingua: ora è la sola Union Jack, spostata come terza icona."],
+  {v:"1.0.18", it:["Icona lingua: ora è la sola Union Jack, spostata come terza icona."],
     en:["Language icon: now just the Union Jack, moved to be the third icon."]},
-  {v:"1.1.7", it:["RISOLTO il bug del tavolo vuoto su Android: la schermata di gioco restava sempre attiva sopra il menu e intercettava i tocchi, così il menu modalità sembrava sparito e le impostazioni non rispondevano. Ora ogni schermata si mostra solo quando è la sua."],
+  {v:"1.0.17", it:["RISOLTO il bug del tavolo vuoto su Android: la schermata di gioco restava sempre attiva sopra il menu e intercettava i tocchi, così il menu modalità sembrava sparito e le impostazioni non rispondevano. Ora ogni schermata si mostra solo quando è la sua."],
     en:["FIXED the empty-table bug on Android: the game screen stayed permanently on top of the menu and intercepted taps, so the mode menu looked gone and settings did nothing. Now each screen shows only when it is its turn."]},
-  {v:"1.1.6", it:["L'IA ora cambia carta all'INIZIO del round, così lo vedi (lampeggio sulla sua carta + PV che calano subito) e puoi ragionarci prima di scegliere.","Le carte non si spostano più quando i pulsanti compaiono/scompaiono: resta un piccolo spazio fisso per loro.","Icona del pulsante lingua ridisegnata (mezzo tricolore / mezzo Union Jack).","Android: aggiunto un controllo che rileva una nuova versione e ricarica da solo, per superare la cache vecchia che mostrava il tavolo vuoto."],
+  {v:"1.0.16", it:["L'IA ora cambia carta all'INIZIO del round, così lo vedi (lampeggio sulla sua carta + PV che calano subito) e puoi ragionarci prima di scegliere.","Le carte non si spostano più quando i pulsanti compaiono/scompaiono: resta un piccolo spazio fisso per loro.","Icona del pulsante lingua ridisegnata (mezzo tricolore / mezzo Union Jack).","Android: aggiunto un controllo che rileva una nuova versione e ricarica da solo, per superare la cache vecchia che mostrava il tavolo vuoto."],
     en:["The AI now swaps a card at the START of the round, so you see it (flash on its card + HP dropping immediately) and can reason about it before choosing.","Cards no longer shift when buttons appear/disappear: a small fixed space is reserved for them.","Language button icon redesigned (half Italian tricolour / half Union Jack).","Android: added a check that detects a new version and reloads by itself, to get past the stale cache that showed the empty table."]},
-  {v:"1.1.5", it:["Riepilogo in basso: ora mostra tutto anche di computer/Giocatore 2 (scelta attacco/difesa) e il danno con la matematica della parata (es. Danno: 20 − 3 = 17). Si resetta a ogni nuova partita ed è più grande.","Nuovo pulsante lingua (bandiera metà IT / metà EN) nel menu iniziale; la lingua si cambia anche dal menu impostazioni in partita. La scelta viene ricordata.","Corretto: quando l'IA cambia carta ora i suoi PV calano subito a schermo (prima restavano 100).","Android: risolta la cache che serviva una versione vecchia (ora l'HTML si aggiorna sempre). Se prima ti mandava a un tavolo vuoto, ora parte dal menu modalità.","Il nome dell'arma annunciato a centro schermo non va più a capo: resta centrato e si rimpicciolisce se troppo lungo."],
+  {v:"1.0.15", it:["Riepilogo in basso: ora mostra tutto anche di computer/Giocatore 2 (scelta attacco/difesa) e il danno con la matematica della parata (es. Danno: 20 − 3 = 17). Si resetta a ogni nuova partita ed è più grande.","Nuovo pulsante lingua (bandiera metà IT / metà EN) nel menu iniziale; la lingua si cambia anche dal menu impostazioni in partita. La scelta viene ricordata.","Corretto: quando l'IA cambia carta ora i suoi PV calano subito a schermo (prima restavano 100).","Android: risolta la cache che serviva una versione vecchia (ora l'HTML si aggiorna sempre). Se prima ti mandava a un tavolo vuoto, ora parte dal menu modalità.","Il nome dell'arma annunciato a centro schermo non va più a capo: resta centrato e si rimpicciolisce se troppo lungo."],
     en:["Bottom log: now shows everything the computer/Player 2 does too (attack/defend choice) and damage with the parry math (e.g. Damage: 20 − 3 = 17). It resets each new match and is bigger.","New language button (half IT / half EN flag) in the main menu; language can also be changed from the in-game options menu. The choice is remembered.","Fixed: when the AI swaps a card its HP now drops on screen immediately (used to stay 100).","Android: fixed the cache serving an old version (HTML now always updates). If it used to drop you into an empty table, it now starts from the mode menu.","The center-screen weapon name no longer wraps: it stays centered and shrinks if too long."]},
-  {v:"1.1.4", it:["Corretto un bug di gerarchia: con un Tris E una Scala nella stessa mano ora vince il Tris (più raro, più forte). Prima sceglieva la Scala.","Android: layout completamente rifatto — riempie lo schermo reale, niente più cornice a rombi, carte non più tagliate (nemmeno con la 5ª). Le 9 maschere del setup stanno tutte senza scorrere.","La damigiana avversaria in PvP ora si capovolge col vino incluso.","Il nome dell'arma non sta più sotto la maschera: appare a centro schermo con un'animazione quando parte l'attacco (la maschera annuncia il colpo).","Pulsante opzioni: ora è un ingranaggio, più grande e tutto cliccabile."],
+  {v:"1.0.14", it:["Corretto un bug di gerarchia: con un Tris E una Scala nella stessa mano ora vince il Tris (più raro, più forte). Prima sceglieva la Scala.","Android: layout completamente rifatto — riempie lo schermo reale, niente più cornice a rombi, carte non più tagliate (nemmeno con la 5ª). Le 9 maschere del setup stanno tutte senza scorrere.","La damigiana avversaria in PvP ora si capovolge col vino incluso.","Il nome dell'arma non sta più sotto la maschera: appare a centro schermo con un'animazione quando parte l'attacco (la maschera annuncia il colpo).","Pulsante opzioni: ora è un ingranaggio, più grande e tutto cliccabile."],
     en:["Fixed a hierarchy bug: with both Trips AND a Straight in the same hand, Trips now wins (rarer, stronger). It used to pick the Straight.","Android: layout fully reworked — fills the real screen, no more diamond frame, cards no longer cut (even with the 5th). All 9 setup masks fit without scrolling.","The opponent demijohn in PvP now flips with the wine included.","The weapon name no longer sits under the mask: it appears center-screen with an animation as the attack starts (the mask announces the blow).","Options button: now a gear, bigger and fully clickable."]},
-  {v:"1.1.3", it:["Rimosso 'Rivela il Destino': ora Cambia/Attacca/Difendi sono subito visibili. Premi Attacca o Difendi (scelta cieca), poi cala la 5ª carta, poi Evoca Maschera.","In PvP: turno per turno (prima G1, poi G2), poi entrambi premono Evoca. Il gioco non prosegue finché entrambi non hanno scelto.","PvP: risolto il cambio carta del Giocatore 2 (ora funziona in ogni mano). Damigiana avversaria capovolta.","Android: il pulsante 'Al tavolo' e l'Inverti di Arlecchino non escono più dallo schermo; la griglia scorre e i pulsanti restano visibili.","Numeri danni/cure più grandi e visibili più a lungo.","README: gerarchia aggiornata (Tris batte Scala) e link app cliccabile."],
+  {v:"1.0.13", it:["Rimosso 'Rivela il Destino': ora Cambia/Attacca/Difendi sono subito visibili. Premi Attacca o Difendi (scelta cieca), poi cala la 5ª carta, poi Evoca Maschera.","In PvP: turno per turno (prima G1, poi G2), poi entrambi premono Evoca. Il gioco non prosegue finché entrambi non hanno scelto.","PvP: risolto il cambio carta del Giocatore 2 (ora funziona in ogni mano). Damigiana avversaria capovolta.","Android: il pulsante 'Al tavolo' e l'Inverti di Arlecchino non escono più dallo schermo; la griglia scorre e i pulsanti restano visibili.","Numeri danni/cure più grandi e visibili più a lungo.","README: gerarchia aggiornata (Tris batte Scala) e link app cliccabile."],
     en:["Removed 'Reveal Fate': Swap/Attack/Defend are now shown immediately. Press Attack or Defend (blind), then the 5th card is dealt, then Summon Mask.","In PvP: turn by turn (P1 first, then P2), then both press Summon. The game waits until both have chosen.","PvP: fixed Player 2's card swap (now works every hand). Opponent demijohn flipped.","Android: the 'To the table' button and Arlecchino's Invert no longer go off-screen; the grid scrolls and buttons stay visible.","Damage/heal numbers bigger and visible longer.","README: updated hierarchy (Trips beats Straight) and clickable app link."]},
-  {v:"1.1.2", it:["Appena cala la 5ª carta, le carte dell'avversario vengono scoperte. Resta ignota solo la sua scelta (attacco/difesa) e come ha impostato le maschere."],
+  {v:"1.0.12", it:["Appena cala la 5ª carta, le carte dell'avversario vengono scoperte. Resta ignota solo la sua scelta (attacco/difesa) e come ha impostato le maschere."],
     en:["As soon as the 5th card is dealt, the opponent's cards are revealed. Only their choice (attack/defend) and mask setup stay hidden."]},
-  {v:"1.1.1", it:["PvP offline: risolto il blocco. Ora G1 rivela e sceglie, G2 sceglie, poi entrambi premono Evoca Maschera.","Armi lanciate stile Vampire Survivors: tante armi, grandi e luminose, sopra il velo, con esplosioni all'impatto.","Numeri danni/cure stile Balatro: grandi, danni in rosso e cure in verde, con bordo bianco.","Damigiane ai lati opposti: Giocatore 1 a sinistra, avversario a destra (in PvP il Giocatore 2 la vede a sinistra sua).","Link app cliccabile nei README."],
+  {v:"1.0.11", it:["PvP offline: risolto il blocco. Ora G1 rivela e sceglie, G2 sceglie, poi entrambi premono Evoca Maschera.","Armi lanciate stile Vampire Survivors: tante armi, grandi e luminose, sopra il velo, con esplosioni all'impatto.","Numeri danni/cure stile Balatro: grandi, danni in rosso e cure in verde, con bordo bianco.","Damigiane ai lati opposti: Giocatore 1 a sinistra, avversario a destra (in PvP il Giocatore 2 la vede a sinistra sua).","Link app cliccabile nei README."],
     en:["Offline PvP: fixed the freeze. Now P1 reveals and chooses, P2 chooses, then both press Summon Mask.","Vampire-Survivors-style thrown weapons: many, big and glowing, above the veil, with impact bursts.","Balatro-style damage/heal numbers: large, damage in red and heals in green, with white outline.","Demijohns on opposite sides: Player 1 left, opponent right (in PvP, Player 2 sees theirs on their left).","Clickable app link in the READMEs."]},
-  {v:"1.1.0", it:["Nuovo flusso: premi Rivela il Destino, scegli Attacco/Difesa ALLA CIECA sulle 4 carte, poi cala la 5ª (il rischio!), poi premi Evoca Maschera.","Animazione fiabesca a tutto schermo all'evocazione, prima del duello.","Damigiana ridisegnata (panciuta, come una vera damigiana), il vino resta dentro il corpo, simmetrica tra i due giocatori.","Android: layout verticale che riempie lo schermo — pulsanti menu grandi, 9 maschere che riempiono il setup, carte del tavolo più grandi, meno spazio tra le file.","Pulsanti Cambia/Rivela affiancati (non più impilati). Le mie carte hanno la stessa dimensione dell'avversario."],
+  {v:"1.0.10", it:["Nuovo flusso: premi Rivela il Destino, scegli Attacco/Difesa ALLA CIECA sulle 4 carte, poi cala la 5ª (il rischio!), poi premi Evoca Maschera.","Animazione fiabesca a tutto schermo all'evocazione, prima del duello.","Damigiana ridisegnata (panciuta, come una vera damigiana), il vino resta dentro il corpo, simmetrica tra i due giocatori.","Android: layout verticale che riempie lo schermo — pulsanti menu grandi, 9 maschere che riempiono il setup, carte del tavolo più grandi, meno spazio tra le file.","Pulsanti Cambia/Rivela affiancati (non più impilati). Le mie carte hanno la stessa dimensione dell'avversario."],
     en:["New flow: press Reveal Fate, choose Attack/Defend BLIND on the 4 cards, then the 5th is dealt (the risk!), then press Summon Mask.","Fullscreen fairy animation on summon, before the duel.","Redrawn demijohn (bulbous, like a real one), wine stays inside the body, symmetric between players.","Android: portrait layout that fills the screen — big menu buttons, 9 masks filling setup, bigger table cards, less space between rows.","Swap/Reveal buttons side by side (no longer stacked). My cards are the same size as the opponent's."]},
   {v:"1.0.9", it:["Simboli dei semi napoletani nel log: 🪙 denari, 🏆 coppe, 🗡️ spade, 🪵 bastoni (prima erano quelli francesi, fuorvianti).","Verificato: tutti e 4 i semi sono contati correttamente per colore e punteggi."],
     en:["Neapolitan suit symbols in the log: 🪙 coins, 🏆 cups, 🗡️ swords, 🪵 clubs (were French suits before, misleading).","Verified: all 4 suits are counted correctly for flush and scoring."]},
@@ -1898,6 +2255,14 @@ const UI = (() => {
     const b=$('menu-sound'); if(b){ b.textContent = on?'🔊':'🔇'; b.classList.toggle('off',!on); }
   }
   function toggleSound(){ setSound(Sfx.isMuted()); }
+  // MUSICA: interruttore indipendente dagli effetti
+  function setMusic(on){
+    Sfx.setMusicMuted(!on);
+    localStorageSafe('folkem_music', on?'1':'0');
+    const b=$('menu-music'); if(b){ b.textContent = on?'🎵':'🎵'; b.classList.toggle('off',!on); }
+    if(on){ const t=document.querySelector('#screen-table.active'); t?Sfx.startGameMusic():Sfx.startMenuMusic(); }
+  }
+  function toggleMusic(){ setMusic(Sfx.isMusicMuted()); }
 
   function setLang(l){
     lang=l; applyStatic();
@@ -1915,6 +2280,9 @@ const UI = (() => {
   function showScreen(id){
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     $(id).classList.add('active'); fitScale();
+    // la musica segue la schermata: tema sobrio nei menu, orchestrato al tavolo
+    if(id==='screen-table') Sfx.startGameMusic();
+    else Sfx.startMenuMusic();
   }
 
   /* ================= SETUP 3x3 ================= */
@@ -1994,6 +2362,23 @@ const UI = (() => {
     const c=$('community'); c.innerHTML='';
     const vis=GameState.visibleCommunity(state);
     vis.forEach(x=>c.appendChild(cardEl(x,{cls:'mid',deal:true})));
+  }
+  // Distribuzione a inizio round: le carte scendono UNA ALLA VOLTA,
+  // ognuna col proprio suono, come farebbe un mazziere vero.
+  function dealCommunityOneByOne(done){
+    const c=$('community'); c.innerHTML='';
+    const vis=GameState.visibleCommunity(state);
+    vis.forEach((x,i)=>{
+      const el=cardEl(x,{cls:'mid'});
+      el.style.visibility='hidden';
+      c.appendChild(el);
+      setTimeout(()=>{
+        el.style.visibility='';
+        el.classList.add('deal');
+        Sfx.card();                       // uno scatto per ogni carta che tocca il tavolo
+      }, 90+i*230);
+    });
+    if(done) setTimeout(done, 90+vis.length*230+200);
   }
   function renderFoeHand(revealed){
     const foe=$('foe-hand'); foe.innerHTML='';
@@ -2076,7 +2461,7 @@ const UI = (() => {
     if(mode==='pvp_local'){ state.inv.ai={...pvpP2Inv}; $('foe-name').textContent=T().p2; document.body.dataset.pvp='1'; }
     else { $('foe-name').textContent=T().foe; document.body.dataset.pvp='0'; }
     showScreen('screen-table');
-    if(!Sfx.isMuted()) Sfx.startTavern();   // riprende la musica di taverna
+    Sfx.startGameMusic();   // tema di gioco: piu orchestrato
     const lcb=$('lastCallBadge'); if(lcb) lcb.style.display='none';   // azzero il contatore Ultimo Giro
     $('foe-actions').style.display='none';   // i pulsanti di G2 appaiono solo al suo turno
     $('overlay').className='overlay';
@@ -2096,8 +2481,9 @@ const UI = (() => {
     $('btn-defend').style.display='';$('btn-defend').disabled=false;
     // in PvP: G2 aspetta il suo turno; nascondi i suoi pulsanti finché non tocca a lui
     if(mode==='pvp_local'){ $('foe-actions').style.display='none'; }
-    renderOtri();renderCommunity();renderFoeHand(false);renderMyHand();
-    Sfx.deal(6);   // distribuzione: 2 in mano + 4 a terra
+    renderOtri();renderFoeHand(false);renderMyHand();
+    // le 4 carte a terra scendono una alla volta, ognuna col suo suono
+    dealCommunityOneByOne();
     // ULTIMO GIRO: avviso quando parte e mostro le mani rimaste
     const lc=GameState.lastCallStatus(state);
     if(lc.active){
@@ -2215,7 +2601,7 @@ const UI = (() => {
   function proceedToFifth(){
     state.phase='dealing5';
     GameState.revealFifth(state);
-    Sfx.card();   // la 5ª carta scende sul tavolo
+    Sfx.card();                           // la 5ª carta tocca il tavolo
     dealFifthToCenter(()=>{
       state.me.eval=GameLogic.evaluate(state.me.hand.concat(state.community));
       state.ai.eval=GameLogic.evaluate(state.ai.hand.concat(state.community));
@@ -2266,7 +2652,7 @@ const UI = (() => {
 
   // animazione fiabesca a tutto schermo prima del duello
   function playSummonAnimation(done){
-    Sfx.summon();   // arpa: le maschere si destano
+    Sfx.summon();                          // arpa: le maschere si destano
     const fx=document.createElement('div'); fx.className='summon-flash';
     fx.innerHTML=`<div class="summon-ring"></div><div class="summon-ring r2"></div>
       <div class="summon-text">${T().summonFlash}</div>`;
@@ -2437,9 +2823,20 @@ const UI = (() => {
         log(`<span class="${cls}">${T().healedBy(wName, gained[w], w==='me' && mode!=='pvp_local')}</span>`,cls);
       },700);
     }
-    // FINE TURNO: le damigiane si aggiornano con caraffa (riempimento) o rovesciamento (svuotamento)
-    setTimeout(()=>{ pourIntoDemijohns(gained); }, out.action==='attack' ? 2600 : 1500);
-    setTimeout(afterResolve, 5200);
+    // FINE TURNO, in ordine: prima spariscono le maschere dal centro,
+    // POI si versa o si rovescia il vino nelle damigiane.
+    const attesaDuello = out.action==='attack' ? 2600 : 1500;
+    setTimeout(()=>{ closeMaskDuel(); }, attesaDuello);
+    setTimeout(()=>{ pourIntoDemijohns(gained); }, attesaDuello+650);
+    setTimeout(afterResolve, attesaDuello+2600);
+  }
+
+  // toglie le maschere dal centro con una dissolvenza
+  function closeMaskDuel(){
+    const ov=$('maskOverlay');
+    if(!ov || !ov.classList.contains('show')) return;
+    ov.classList.add('closing');
+    setTimeout(()=>{ ov.classList.remove('show','closing'); },420);
   }
 
   // Versa o rovescia il vino nelle damigiane a fine turno, con i numeri dei PV.
@@ -2621,7 +3018,7 @@ const UI = (() => {
     ov.className='overlay show'+(meWin?'':' lose-bg');
     card.className='endcard '+(meWin?'win':'lose');
     // musica di fine partita (in PvP vince sempre "qualcuno": fanfara)
-    Sfx.stopTavern();
+    Sfx.stopMusic();
     if(mode==='pvp_local' || meWin) Sfx.win(); else Sfx.lose();
     // determino l'esito preciso (4 casi)
     const by200 = state.me.hp>=GameState.WIN_HP || state.ai.hp>=GameState.WIN_HP;
@@ -2716,7 +3113,10 @@ const UI = (() => {
     return `<h2>${r.optsTitle}</h2>
       <div class="modal-btns" style="flex-direction:column">
         <div class="lang-switch opt-lang"><button class="${lang==='it'?'on':''}" data-optlang="it">🇮🇹 Italiano</button><button class="${lang==='en'?'on':''}" data-optlang="en">🇬🇧 English</button></div>
-        <div class="lang-switch opt-lang"><button class="${!Sfx.isMuted()?'on':''}" data-optsound="1">🔊 ${r.soundOn}</button><button class="${Sfx.isMuted()?'on':''}" data-optsound="0">🔇 ${r.soundOff}</button></div>
+        <div class="opt-row"><span class="opt-lbl">${r.sfxLabel}</span>
+          <div class="lang-switch"><button class="${!Sfx.isMuted()?'on':''}" data-optsound="1">${r.onWord}</button><button class="${Sfx.isMuted()?'on':''}" data-optsound="0">${r.offWord}</button></div></div>
+        <div class="opt-row"><span class="opt-lbl">${r.musicLabel}</span>
+          <div class="lang-switch"><button class="${!Sfx.isMusicMuted()?'on':''}" data-optmusic="1">${r.onWord}</button><button class="${Sfx.isMusicMuted()?'on':''}" data-optmusic="0">${r.offWord}</button></div></div>
         <button class="btn" id="opt-rules">${r.optRules}</button>
         <button class="btn" id="opt-restart">${r.optRestart}</button>
         <button class="btn" id="opt-menu">${r.optMenu}</button>
@@ -2742,6 +3142,7 @@ const UI = (() => {
       if(e.target.dataset&&e.target.dataset.lang){ lang=e.target.dataset.lang; applyStatic(); openModal(rulesHTML()); }
       if(e.target.dataset&&e.target.dataset.optlang){ setLang(e.target.dataset.optlang); openModal(optionsHTML()); }
       if(e.target.dataset&&e.target.dataset.optsound){ setSound(e.target.dataset.optsound==='1'); openModal(optionsHTML()); }
+      if(e.target.dataset&&e.target.dataset.optmusic){ setMusic(e.target.dataset.optmusic==='1'); openModal(optionsHTML()); }
       if(e.target.id==='opt-rules') openModal(rulesHTML());
       if(e.target.id==='opt-restart'){ const c=confirmHTML(T().sureRestart); openModal(c.html);
         $('cf-yes').onclick=()=>{closeModal(); startGame();}; }
@@ -2753,7 +3154,7 @@ const UI = (() => {
   /* ================= BIND ================= */
   function bind(){
     // AUDIO: sblocco al primo tocco (regola dei browser) e click su ogni pulsante
-    const unlockOnce=()=>{ Sfx.unlock(); if(!Sfx.isMuted()) Sfx.startTavern(); };
+    const unlockOnce=()=>{ Sfx.unlock(); Sfx.startMenuMusic(); };
     document.addEventListener('pointerdown', unlockOnce, {once:true});
     document.addEventListener('click',(e)=>{
       const t=e.target.closest('.btn, .icon-btn, .mode-btn, .diff-btn, .bc-swap, .lang-switch button');
@@ -2816,6 +3217,7 @@ const UI = (() => {
     const lb=$('menu-lang'); if(lb) lb.dataset.shows = lang==='it'?'en':'it';
     // AUDIO: ripristino la preferenza (di default acceso)
     setSound(localStorageSafe('folkem_sound')!=='0');
+    setMusic(localStorageSafe('folkem_music')!=='0');
     // regole al primo avvio
     if(!localStorageSafe('folkem_seen')){ openModal(rulesHTML()); localStorageSafe('folkem_seen','1'); }
     // service worker: registra, e se trovo una nuova versione forzo il refresh
