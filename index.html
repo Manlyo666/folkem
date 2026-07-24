@@ -75,8 +75,8 @@ body[data-portrait="1"] .build-card{flex-direction:column;padding:0.8vw;gap:0.4v
 body[data-portrait="1"] .bc-mask{width:auto;height:auto;flex:1 1 auto;min-height:0;aspect-ratio:3/4;max-width:100%;margin:0 auto}
 body[data-portrait="1"] .bc-mask img{width:100%;height:100%;object-fit:contain}
 body[data-portrait="1"] .bc-info{width:100%;flex-shrink:0}
-body[data-portrait="1"] .bc-info .rank-label{font-size:2.3vw;line-height:1.1}
-body[data-portrait="1"] .bc-info .bc-name{font-size:2.6vw;line-height:1.1}
+body[data-portrait="1"] .bc-info .rank-label{font-size:2.0vw;line-height:1.1}
+body[data-portrait="1"] .bc-info .bc-name{font-size:3.2vw;line-height:1.1}
 body[data-portrait="1"] .bc-stats{gap:2vw;flex-shrink:0}
 body[data-portrait="1"] .bc-stats .st b{font-size:3.2vw}
 body[data-portrait="1"] .bc-stats .st span{font-size:2.2vw}
@@ -171,8 +171,8 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .bc-mask img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .bc-info{flex:1;min-width:0}
 .bc-info .rank-label{font-size:9px;color:var(--brass);letter-spacing:.08em;text-transform:uppercase}
-.bc-info .bc-name{font-family:var(--font-title);font-size:16px;color:var(--parch);line-height:1.05;
-  text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.bc-info .bc-name{font-family:var(--font-title);font-size:19px;color:var(--parch-hi,#f0e2c4);line-height:1.05;
+  text-shadow:0 1px 3px rgba(0,0,0,.85)}
 .bc-stats{display:flex;gap:5px;margin-top:3px}
 .bc-stats .st{flex:1;text-align:center;font-size:10px;border-radius:4px;padding:2px;background:rgba(0,0,0,.35)}
 .bc-stats .st b{display:block;font-family:var(--px);font-size:13px}
@@ -306,9 +306,7 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   text-shadow:0 3px 10px rgba(0,0,0,.8),0 0 24px rgba(224,66,79,.7);
   padding:6px 20px;background:linear-gradient(90deg,transparent,rgba(122,14,24,.35),transparent);
   max-width:96vw;overflow:hidden}
-/* annuncio della CURA: stesse forme dell attacco, tonalita verde */
-.weapon-announce.heal-announce .wa-mask{color:#9fe89f;
-  text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 24px rgba(80,220,110,.85)}
+/* annuncio della CURA: il NOME resta dorato come nell attacco, solo "Cura" e verde */
 .weapon-announce.heal-announce .wa-weapon{color:#eaffea;-webkit-text-stroke:2.5px #0d3d18;
   text-shadow:0 3px 10px rgba(0,0,0,.8),0 0 24px rgba(70,210,100,.75);
   background:linear-gradient(90deg,transparent,rgba(20,90,40,.38),transparent)}
@@ -327,7 +325,18 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .shield-fx .blocked-n{position:absolute;left:50%;top:52%;transform:translateX(-50%);
   font-size:13px;font-family:var(--px);font-weight:bold;color:#dceaff;text-shadow:0 1px 2px #000}
 
-.board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center}
+.board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center;min-height:16px}
+/* ULTIMO GIRO al posto della scritta "Carte a terra": inciso nel legno */
+.board-label.lastcall-inline{font-family:var(--font-title);letter-spacing:.12em;
+  color:rgba(38,20,10,.82);
+  text-shadow:0 -1px 0 rgba(0,0,0,.55),0 1px 0 rgba(214,170,110,.32),0 2px 1px rgba(255,215,160,.15)}
+.board-label.lastcall-inline .lcb-t{font-size:15px}
+.board-label.lastcall-inline .lcb-n{font-size:19px;font-weight:bold}
+.board-label.lastcall-inline.urgent{color:rgba(102,12,18,.9);
+  text-shadow:0 -1px 0 rgba(0,0,0,.6),0 1px 0 rgba(226,150,120,.34),0 0 10px rgba(200,40,50,.32);
+  animation:lcCarve 1.4s ease-in-out infinite}
+body[data-portrait="1"] .board-label.lastcall-inline .lcb-t{font-size:3.4vw}
+body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .community-row{display:flex;gap:7px;justify-content:center}
 
 /* pulsanti azione (bottom + top per pvp) */
@@ -408,11 +417,17 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 @keyframes impactPop{0%{transform:translate(-50%,-50%) scale(.2);opacity:1}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
 
 /* NUMERI danni/cure stile Balatro: grandi, con bordo bianco */
-.float{position:absolute;left:50%;top:0%;transform:translateX(-50%);font-family:var(--font-display),Georgia,serif;
-  font-weight:900;font-size:48px;pointer-events:none;animation:floatUp 2.4s cubic-bezier(.15,.9,.3,1) forwards;z-index:33;
-  -webkit-text-stroke:2.5px #fff;paint-order:stroke fill;letter-spacing:-1px}
-.float.dmg{color:#e01f2d;text-shadow:0 0 12px rgba(224,31,45,.8),0 3px 0 rgba(120,0,0,.6)}
-.float.heal{color:#33c04a;text-shadow:0 0 12px rgba(51,192,74,.8),0 3px 0 rgba(0,80,20,.6)}
+/* numeri di danno/cura: font a cifre NETTE (il Victorian confondeva 3 e 8),
+   bordo nero spesso fuori e alone chiaro dentro: leggibili su qualsiasi sfondo */
+.float{position:absolute;left:50%;top:0%;transform:translateX(-50%);
+  font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+  font-weight:900;font-size:46px;pointer-events:none;animation:floatUp 2.4s cubic-bezier(.15,.9,.3,1) forwards;z-index:33;
+  -webkit-text-stroke:5px #12060a;paint-order:stroke fill;letter-spacing:0;
+  font-variant-numeric:tabular-nums}
+.float.dmg{color:#ff5a63;
+  text-shadow:0 0 3px #12060a,0 0 6px #12060a,0 0 16px rgba(255,60,70,.9),0 3px 0 rgba(90,0,8,.9)}
+.float.heal{color:#6ef07f;
+  text-shadow:0 0 3px #06200c,0 0 6px #06200c,0 0 16px rgba(80,240,110,.9),0 3px 0 rgba(0,60,15,.9)}
 .float.block{color:var(--brass-hi);font-size:30px;-webkit-text-stroke:2px #fff}
 @keyframes floatUp{0%{opacity:0;transform:translate(-50%,20px) scale(.4) rotate(-8deg)}
   15%{opacity:1;transform:translate(-50%,-6px) scale(1.4) rotate(3deg)}
@@ -608,7 +623,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
 
     <!-- centro -->
     <div class="table-mid">
-      <div class="board-label" data-i18n="onTable">Carte a terra</div>
+      <div class="board-label" id="boardLabel"></div>
       <div class="community-row" id="community"></div>
       <!-- overlay maschere -->
       <div class="mask-overlay" id="maskOverlay">
@@ -704,7 +719,7 @@ const GameLogic = (() => {
     pantalone: {name:'Pantalone',        weapon:'Borsa di monete',atk:6,  cur:3,  fixed:false},
     brighella: {name:'Brighella',        weapon:'Bastone nodoso',         atk:10, cur:5,  fixed:false},
     pulcinella:{name:'Pulcinella',       weapon:'Manganello',    atk:20, cur:10, fixed:false},
-    balanzone: {name:'Dottor Balanzone', weapon:'Tomo pesante',  atk:15, cur:7,  fixed:false},
+    balanzone: {name:'Dottor Balanzone', weapon:'Tomo pesante',  atk:15, cur:8,  fixed:false},
     arlecchino:{name:'Arlecchino',       weapon:'Spatola di legno',       atk:30, cur:15, fixed:false},
     colombina: {name:'Colombina',        weapon:'Ventaglio affilato',     atk:25, cur:13, fixed:false},
     meneghino: {name:'Meneghino',        weapon:"Ombrello d'acciaio",     atk:50, cur:50, fixed:true},
@@ -2051,8 +2066,26 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.2.10";
+const APP_VERSION="1.2.11";
 const CHANGELOG=[
+  {v:"1.2.11", it:[
+    "Arpa, versamento del vino e musiche di vittoria/sconfitta ancora abbassati.",
+    "Quando la parata azzera del tutto il danno non si aspetta piu l animazione della damigiana: si passa subito al turno dopo (da 9 a 5 secondi).",
+    "Tolto un rumore di carte di troppo quando si scoprono le mani.",
+    "Nell annuncio della cura il nome della Maschera e ora dorato come nell attacco: solo la parola Cura resta verde.",
+    "Numeri di danno e cura ridisegnati con cifre nette e bordo piu marcato: il 3 non si confonde piu con l 8.",
+    "Tolta la scritta Carte a terra dal tavolo; al suo posto compare il contatore dell Ultimo Giro quando serve.",
+    "Dottor Balanzone ora ha 15 di Attacco e 8 di Difesa (prima 15/7).",
+    "Nel setup ogni Maschera mostra prima il proprio nome, piu grande, e sotto la combinazione a cui corrisponde, piu piccola."],
+    en:[
+    "Harp, wine pouring and victory/defeat music turned down further.",
+    "When a parry cancels all damage the demijohn animation is skipped: the next turn starts right away (from 9 to 5 seconds).",
+    "Removed an extra card sound when hands are revealed.",
+    "In the heal announcement the Mask name is now golden as in attacks: only the word Heal stays green.",
+    "Damage and heal numbers redrawn with clear digits and a stronger outline: 3 is no longer mistaken for 8.",
+    "Removed the Table cards label; the Last Call counter now appears in its place when needed.",
+    "Dottor Balanzone now has 15 Attack and 8 Defence (was 15/7).",
+    "In setup each Mask shows its own name first, larger, with the matching hand below, smaller."]},
   {v:"1.2.10", it:[
     "Arpa dell evocazione e suono delle carte abbassati; musica di sottofondo alzata (piu che raddoppiata).",
     "Le carte fanno rumore anche quando vengono scoperte a fine mano.",
@@ -2344,8 +2377,8 @@ const UI = (() => {
       card.innerHTML=`
         <div class="bc-mask"><img src="${maskImg(h.maskId,0)}" alt=""></div>
         <div class="bc-info">
-          <div class="rank-label">${rankLabel(h.key)}</div>
           <div class="bc-name">${m.name}</div>
+          <div class="rank-label">${rankLabel(h.key)}</div>
           <div class="bc-stats">
             <div class="st atk"><span>${T().atkS}</span><b>${atk}</b></div>
             <div class="st def"><span>${T().defS}</span><b>${def}</b></div>
@@ -2502,7 +2535,7 @@ const UI = (() => {
     else { $('foe-name').textContent=T().foe; document.body.dataset.pvp='0'; }
     showScreen('screen-table');
     Sfx.startGameMusic();   // tema di gioco: piu orchestrato
-    const lcb=$('lastCallBadge'); if(lcb) lcb.style.display='none';   // azzero il contatore Ultimo Giro
+    const lcb=$('boardLabel'); if(lcb){ lcb.innerHTML=''; lcb.className='board-label'; }
     $('foe-actions').style.display='none';   // i pulsanti di G2 appaiono solo al suo turno
     $('overlay').className='overlay';
     newRound();
@@ -2684,7 +2717,7 @@ const UI = (() => {
       if(cmp===0) log(`<span class="sys">⚖ ${nMe} = ${nAi} — ${T().tie}</span>`,'sys');
       else if(cmp>0) log(`<span class="sys">⚖ <b>${nMe}</b> batte ${nAi}</span>`,'sys');
       else log(`<span class="sys">⚖ <b>${nAi}</b> batte ${nMe}</span>`,'sys');
-      renderMyMaskSlot(); renderFoeHand(true); Sfx.deal(2); renderFoeMaskRevealed();
+      renderMyMaskSlot(); renderFoeHand(true); renderFoeMaskRevealed();
       $('maskOverlay').classList.add('show');
       state.phase='reveal';
       setTimeout(resolve, 1500);
@@ -2760,16 +2793,12 @@ const UI = (() => {
   }
   // contatore sempre visibile al tavolo durante l'Ultimo Giro
   function updateLastCallBadge(){
-    let b=$('lastCallBadge');
+    // il contatore prende il posto della vecchia scritta "Carte a terra"
+    const b=$('boardLabel'); if(!b) return;
     const lc=state?GameState.lastCallStatus(state):{active:false};
-    if(!lc.active){ if(b) b.style.display='none'; return; }
-    if(!b){
-      b=document.createElement('div'); b.id='lastCallBadge'; b.className='lastcall-badge';
-      $('screen-table').appendChild(b);
-    }
-    b.style.display='';
-    b.innerHTML=`<span class="lcb-t">${T().lastCallTitle}</span><span class="lcb-n">${lc.remaining}</span>`;
-    b.classList.toggle('urgent', lc.remaining<=3);
+    if(!lc.active){ b.innerHTML=''; b.className='board-label'; return; }
+    b.className='board-label lastcall-inline'+(lc.remaining<=3?' urgent':'');
+    b.innerHTML=`<span class="lcb-t">${T().lastCallTitle}</span> <span class="lcb-n">${lc.remaining}</span>`;
   }
 
   function logHandBreakdown(side){
@@ -2871,8 +2900,15 @@ const UI = (() => {
     // POI si versa o si rovescia il vino nelle damigiane.
     const attesaDuello = out.action==='attack' ? 2600 : 1500;
     setTimeout(()=>{ closeMaskDuel(); }, attesaDuello);
-    setTimeout(()=>{ pourIntoDemijohns(gained); }, attesaDuello+650);
-    setTimeout(afterResolve, attesaDuello+2600);
+    // Se il danno e' stato completamente parato (o non c'e' nulla da versare),
+    // non ha senso aspettare l'animazione della damigiana: si va avanti subito.
+    const cambiaQualcosa = (gained.me!==0 || gained.ai!==0);
+    if(cambiaQualcosa){
+      setTimeout(()=>{ pourIntoDemijohns(gained); }, attesaDuello+650);
+      setTimeout(afterResolve, attesaDuello+2600);
+    } else {
+      setTimeout(afterResolve, attesaDuello+500);
+    }
   }
 
   // toglie le maschere dal centro con una dissolvenza
