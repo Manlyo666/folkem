@@ -26,6 +26,7 @@
 }
 @font-face{font-family:"Isenheim";src:url("assets/isenheim.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"VictorianDecade";src:url("assets/victorian.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Scar";src:url("assets/scar.woff2") format("woff2");font-display:swap}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
@@ -326,14 +327,20 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   font-size:13px;font-family:var(--px);font-weight:bold;color:#dceaff;text-shadow:0 1px 2px #000}
 
 .board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center;min-height:16px}
-/* ULTIMO GIRO al posto della scritta "Carte a terra": inciso nel legno */
-.board-label.lastcall-inline{font-family:var(--font-title);letter-spacing:.12em;
-  color:rgba(38,20,10,.82);
-  text-shadow:0 -1px 0 rgba(0,0,0,.55),0 1px 0 rgba(214,170,110,.32),0 2px 1px rgba(255,215,160,.15)}
-.board-label.lastcall-inline .lcb-t{font-size:15px}
-.board-label.lastcall-inline .lcb-n{font-size:19px;font-weight:bold}
-.board-label.lastcall-inline.urgent{color:rgba(102,12,18,.9);
-  text-shadow:0 -1px 0 rgba(0,0,0,.6),0 1px 0 rgba(226,150,120,.34),0 0 10px rgba(200,40,50,.32);
+/* ULTIMO GIRO al posto della scritta "Carte a terra": inciso nel tavolo.
+   Font Scar in maiuscolo, beige chiaro con contorno nero → si legge ovunque. */
+.board-label.lastcall-inline{font-family:"Scar",var(--font-title);letter-spacing:.1em;
+  text-transform:uppercase;
+  color:#e8d3a6;
+  -webkit-text-stroke:1.2px #1a1109;paint-order:stroke fill;
+  text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.board-label.lastcall-inline .lcb-t{font-size:16px}
+.board-label.lastcall-inline .lcb-n{font-size:22px;font-weight:bold;
+  color:#e8d3a6;-webkit-text-stroke:1.2px #1a1109;paint-order:stroke fill}
+/* ultime 3 mani: i NUMERI diventano rossi con bordo rosso più chiaro */
+.board-label.lastcall-inline.urgent .lcb-n{color:#c0272e;
+  -webkit-text-stroke:1.2px #e8636a;paint-order:stroke fill;
+  text-shadow:0 0 8px rgba(200,40,50,.35);
   animation:lcCarve 1.4s ease-in-out infinite}
 body[data-portrait="1"] .board-label.lastcall-inline .lcb-t{font-size:3.4vw}
 body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
@@ -441,7 +448,8 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
   animation:lcIn .5s cubic-bezier(.2,1.3,.4,1) forwards}
 .lastcall-banner.out{animation:lcOut .55s ease forwards}
 .lastcall-banner .lc-title{font-family:var(--font-title);font-size:clamp(28px,9vw,54px);color:#ffd27a;
-  text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 30px rgba(255,170,50,.9),0 0 60px rgba(255,120,30,.5);letter-spacing:.04em}
+  -webkit-text-stroke:3px #140b04;paint-order:stroke fill;
+  text-shadow:0 3px 5px rgba(0,0,0,.95),0 0 30px rgba(255,170,50,.85),0 0 60px rgba(255,120,30,.45);letter-spacing:.04em}
 .lastcall-banner .lc-sub{font-family:var(--font-body);font-size:clamp(12px,3.4vw,17px);color:var(--parch);
   margin-top:6px;text-shadow:0 2px 5px rgba(0,0,0,.9)}
 @keyframes lcIn{0%{transform:scale(.5) translateY(24px);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}
@@ -878,163 +886,116 @@ const GameLogic = (() => {
     return Math.ceil(raw*f);     // per eccesso: niente decimali, 0.1 -> 1
   }
 
-  // ---- IA: sceglie scambio + azione, consapevole della propria build ----
-  // Principi:
-  //  - se può UCCIDERE ora (atk >= PV avversario) e ha vinto lo scontro, attacca sempre;
-  //  - se ha invertito (cura alta, atk basso) tende a curarsi quando non può chiudere;
-  //  - se i PV avversari sono bassi, punta a uccidere anche rinunciando alla cura;
-  //  - difende se in pericolo di vita.
-  // IA con 3 difficoltà: 'easy' | 'medium' | 'hard'.
-  //  - easy: sceglie spesso a caso, non para, cambia raramente.
-  //  - medium: euristica base (come prima).
-  //  - hard: considera parata, letale, build curativa, e cambia carta se conviene.
-  // Stima quanto è probabile MIGLIORARE la mano cambiando la carta peggiore.
-  // Nel formato 2 private + 5 comuni, cambiare una privata pesca dal mazzo (~33 carte).
-  // Vale la pena solo se la mano è debole E ho PV da spendere.
-  function swapWorth(ev, myHp, foeHp, aggressive){
-    // se sono in vantaggio o a corto di PV, non sprecare PV in cambi
-    if(myHp<=40) return false;
-    if(myHp>=foeHp+40) return false;          // sto vincendo comodo: non rischiare PV
-    // conviene solo con mani molto deboli (carta alta o coppia bassa)
-    if(ev.rankIndex>=2) return false;          // doppia coppia o meglio: tieni
-    if(ev.rankIndex===1){                       // coppia: cambia solo se aggressivo e PV alti
-      return aggressive && myHp>70;
+  // ===================== IA A VALORE ATTESO =====================
+  // L'IA stima l'esito atteso del turno per ATTACCO e DIFESA contro la
+  // distribuzione delle mani avversarie possibili (che non vede), tenendo
+  // conto di parata, cura a rendimenti decrescenti e lettura dell'avversario.
+  // Sceglie l'azione col valore atteso più alto. Le tre difficoltà scalano con:
+  //  - noise:    rumore sul valore (più alto = più errori)   [easy alto, hard zero]
+  //  - randAct:  probabilità di agire a caso                 [easy alta, hard zero]
+  //  - foeSample:campioni di mano avversaria (stima migliore)[easy pochi, hard molti]
+  //  - readProb: probabilità di "leggere" la scelta reale dell'avversario
+  //  - power:    moltiplicatore strutturale a danni/cure dell'IA (vantaggio/svantaggio)
+  const AI_PARAMS={
+    easy:   {noise:11, randAct:0.47, foeSample:6,  readProb:0.0,  power:0.80, swapSmart:false},
+    medium: {noise:4,  randAct:0.13, foeSample:16, readProb:0.0,  power:0.98, swapSmart:false},
+    hard:   {noise:0,  randAct:0.0,  foeSample:30, readProb:0.40, power:1.18, swapSmart:true},
+  };
+  function aiPower(difficulty){ return (AI_PARAMS[difficulty]||AI_PARAMS.medium).power; }
+
+  function _unseen(known){
+    const seen=new Set(known.map(c=>c.suit+'_'+c.r));
+    const rest=[];
+    for(const s of SUITS) for(const rk of RANKS){ const id=s.id+'_'+rk.r; if(!seen.has(id)) rest.push({suit:s.id,r:rk.r}); }
+    return rest;
+  }
+  function _myFinalDist(hand, community4, inv){
+    const rest=_unseen(hand.concat(community4)); const out=[];
+    for(const fifth of rest){ const ev=evaluate(hand.concat(community4).concat([fifth])); out.push({ev, st:maskStats(ev.maskId, inv)}); }
+    return out;
+  }
+  function _foeDist(myHand, community4, sampleK, rng){
+    const pool=_unseen(myHand.concat(community4)); const dist=[];
+    for(let k=0;k<sampleK;k++){
+      const i=Math.floor(rng()*pool.length); let j=Math.floor(rng()*pool.length); if(j===i) j=(j+1)%pool.length;
+      const priv=[pool[i],pool[j]];
+      const banned=new Set([pool[i].suit+'_'+pool[i].r, pool[j].suit+'_'+pool[j].r]);
+      const fifthPool=pool.filter(c=>!banned.has(c.suit+'_'+c.r));
+      const fifth=fifthPool[Math.floor(rng()*fifthPool.length)];
+      const comm=community4.slice(0,4).concat([fifth]);
+      dist.push(evaluate(priv.concat(comm)));
     }
-    return true;                                // carta alta: quasi sempre conviene provare
+    return dist;
+  }
+  const _HEAL=[1,0.75,0.5,0.25,0];
+  function _effHeal(raw,streak){ const f=streak<_HEAL.length?_HEAL[Math.max(0,streak)]:0; return f<=0?0:Math.ceil(raw*f); }
+
+  function _expected(action, myDist, foeEvs, ctx){
+    let total=0,n=0;
+    for(const mine of myDist){ for(const fe of foeEvs){
+      const cmp=compare(mine.ev, fe); const foeSt=maskStats(fe.maskId, ctx.foeInv); const iWin=cmp>0;
+      for(const foeAtt of [true,false]){
+        const w=foeAtt?ctx.foeAttackProb:(1-ctx.foeAttackProb); if(w<=0) continue;
+        let v=0;
+        if(action==='attack'){
+          if(iWin){ const blocked=foeAtt?0:Math.min(foeSt.cur, mine.st.atk); v+=Math.max(0,mine.st.atk-blocked)*ctx.power; }
+          else { if(foeAtt) v-=foeSt.atk; else v-=_effHeal(foeSt.cur,0)*0.6; }
+        } else {
+          if(iWin){ v+=_effHeal(mine.st.cur, ctx.myStreak)*0.9*ctx.power; }
+          else { if(foeAtt){ const blocked=Math.min(mine.st.cur, foeSt.atk); v-=Math.max(0,foeSt.atk-blocked); v+=blocked*0.5; } else { v-=_effHeal(foeSt.cur,0)*0.6; } }
+        }
+        total+=v*w; n+=w;
+      }
+    }}
+    return n? total/n : 0;
   }
 
+  // Decisione atk/def alla cieca sulle 4 carte comuni. foeChoice (opz.) = scelta reale
+  // dell'avversario, se già nota (scelta simultanea già bloccata): usata dall'hard per la lettura.
+  function aiDecideEV(state, difficulty, foeChoice, rng){
+    rng=rng||Math.random;
+    const P=AI_PARAMS[difficulty]||AI_PARAMS.medium;
+    const ai=state.ai, foe=state.me, community4=state.community.slice(0,4);
+    const myDist=_myFinalDist(ai.hand, community4, state.inv.ai);
+    const foeEvs=_foeDist(ai.hand, community4, P.foeSample, rng);
+    const hist=state._foeHist||{atk:0,def:0}; const tot=hist.atk+hist.def;
+    let foeAttackProb=tot>=3?hist.atk/tot:0.55;
+    if(P.readProb>0 && foeChoice && rng()<P.readProb) foeAttackProb = foeChoice==='attack'?0.95:0.05;
+    foeAttackProb=Math.max(0.05,Math.min(0.95,foeAttackProb));
+    const ctx={myStreak:ai.healStreak||0, foeInv:state.inv.me, foeAttackProb, power:P.power};
+    if(rng()<P.randAct) return rng()<0.5?'attack':'defend';
+    let va=_expected('attack',myDist,foeEvs,ctx);
+    let vd=_expected('defend',myDist,foeEvs,ctx);
+    const bestAtk=Math.max.apply(null, myDist.map(m=>m.st.atk));
+    if(bestAtk>=foe.hp) va+=1000;                    // posso chiudere: priorità assoluta
+    if(P.noise>0){ va+=(Math.random()-0.5)*2*P.noise; vd+=(Math.random()-0.5)*2*P.noise; }
+    return va>=vd?'attack':'defend';
+  }
+
+  // scelta scambio carta (a inizio round). Coerente con le difficoltà.
+  function aiSwapPlan(state, difficulty){
+    const P=AI_PARAMS[difficulty]||AI_PARAMS.medium;
+    const ai=state.ai, foe=state.me, community4=state.community.slice(0,4);
+    const ev4=evaluate(ai.hand.concat(community4));
+    if(P.swapSmart){ if(ev4.rankIndex<=0 && ai.hp>50 && ai.hp<foe.hp+60) return ai.hand[0].r<=ai.hand[1].r?0:1; return -1; }
+    if(ev4.rankIndex<=0 && ai.hp>40 && ai.hp<foe.hp+40 && Math.random()<(difficulty==='easy'?0.25:0.6)) return ai.hand[0].r<=ai.hand[1].r?0:1;
+    return -1;
+  }
+
+  // API compatibile col resto del codice:
+  //  aiChoose  -> {swapIndex, choice}  (usata a inizio round per lo swap; choice ricalcolata dopo)
+  //  aiChooseBlind(state,difficulty,foeChoice) -> 'attack'|'defend'
   function aiChoose(state, difficulty){
     const diff=difficulty||state.difficulty||'medium';
-    const ai=state.ai;
-    const ev=evaluate(ai.hand.concat(state.community));
-    const st=maskStats(ev.maskId, state.inv.ai);
-    const foeHp=state.me.hp, myHp=ai.hp;
-    // lettura dell'avversario: quante volte ha attaccato vs curato
-    const hist=state._foeHist||{atk:0,def:0};
-    const foeTotal=hist.atk+hist.def;
-    const foeMostlyHeals = foeTotal>=2 && hist.def>hist.atk*2;   // cura molto più che attaccare
-    const foeMostlyAttacks = foeTotal>=2 && hist.atk>hist.def*2;
-
-    if(diff==='easy'){
-      const choice = Math.random()<0.55 ? 'attack':'defend';
-      let swapIndex=-1;
-      if(ev.rankIndex<=0 && Math.random()<0.3 && myHp>35)
-        swapIndex = ai.hand[0].r<=ai.hand[1].r?0:1;
-      return {swapIndex, choice};
-    }
-
-    let choice='attack';
-    const canKill = st.atk>=foeHp;
-    const invertedHealer = st.cur>st.atk;
-    const myStreak = ai.healStreak||0;
-    // con la cura a rendimenti decrescenti, curare di fila rende sempre meno:
-    // se ho già curato 2+ volte, l'attacco vale di più.
-    const healSpent = myStreak>=2;
-
-    if(canKill){ choice='attack'; }                       // posso chiudere: attacco
-    else if(foeMostlyHeals){ choice='attack'; }           // se cura sempre, aggredisco
-    else if(foeHp<=25){ choice='attack'; }                // avversario quasi morto
-    else if(myHp<35 && !healSpent){ choice='defend'; }    // sto per morire: curo (se la cura rende ancora)
-    else if(healSpent){ choice='attack'; }                // cura esaurita: torno ad attaccare per resettarla
-    else if(invertedHealer && myHp<180){ choice='defend'; }
-    else if(myHp>=160 && ev.rankIndex>=3){ choice='defend'; }
-    else { choice='attack'; }
-
-    // HARD: gioco ottimale sulla meccanica della cura decrescente.
-    // Alterna attacco/cura per tenere la cura sempre al massimo rendimento,
-    // e para solo quando la parata vale davvero (mano molto debole + avversario che picchia forte).
-    if(diff==='hard'){
-      if(canKill){ choice='attack'; }
-      else if(foeMostlyHeals){ choice='attack'; }        // punisce lo spam di cura
-      else if(myStreak>=1 && !invertedHealer){ choice='attack'; }  // resetta la striscia appena cala
-      else if(myHp<30 && myStreak===0){ choice='defend'; }         // cura piena quando serve davvero
-      else if(invertedHealer && myStreak===0 && myHp<180){ choice='defend'; } // sfrutta la cura piena
-      else { choice='attack'; }
-    }
-
-    // CAMBIO CARTA: solo se ne vale davvero la pena (non sanguinare PV a vuoto)
-    let swapIndex=-1;
-    if(diff==='hard'){
-      // hard: cambia solo se il guadagno atteso supera il costo di 10 PV.
-      // Con mani già decenti (doppia coppia+) non conviene mai.
-      const od=hardOdds(state);
-      const weak = ev.rankIndex<=0 && od.avgRank<1.0;   // carta alta e poche speranze
-      if(weak && myHp>50 && myHp<foeHp+60){
-        swapIndex = ai.hand[0].r<=ai.hand[1].r ? 0 : 1;
-      }
-    } else if(swapWorth(ev, myHp, foeHp, false)){
-      swapIndex = ai.hand[0].r<=ai.hand[1].r ? 0 : 1;
-    }
-    return {swapIndex, choice};
+    return { swapIndex: aiSwapPlan(state,diff), choice: aiDecideEV(state,diff,null) };
   }
-
-  // scelta atk/dif ALLA CIECA sulle 4 carte a terra (come il giocatore)
-  // HARD: calcola davvero cosa può succedere con la 5ª carta.
-  // Enumera le carte non viste e misura quanto spesso la mia mano finale batte
-  // una mano avversaria media. È il vantaggio "da computer": conti esatti, non intuito.
-  function hardOdds(state){
-    const ai=state.ai;
-    const known=ai.hand.concat(state.community.slice(0,4));
-    const seen=new Set(known.map(c=>c.suit+'_'+c.r));
-    // carte ancora possibili (mazzo da 40 meno quelle che vedo)
-    const rest=[];
-    for(const s of SUITS) for(const r of RANKS){
-      const id=s+'_'+r; if(!seen.has(id)) rest.push({suit:s,r});
-    }
-    let sumRank=0, best=-1, n=0;
-    for(const fifth of rest){
-      const community5=state.community.slice(0,4).concat([fifth]);
-      const ev=evaluate(ai.hand.concat(community5));
-      sumRank+=ev.rankIndex; if(ev.rankIndex>best) best=ev.rankIndex;
-      n++;
-    }
-    return {avgRank: n? sumRank/n : 0, bestRank: best, outs:n};
-  }
-
-  function aiChooseBlind(state, difficulty){
+  function aiChooseBlind(state, difficulty, foeChoice){
     const diff=difficulty||state.difficulty||'medium';
-    const ai=state.ai;
-    const ev=evaluate(ai.hand.concat(state.community.slice(0,4)));
-    const st=maskStats(ev.maskId, state.inv.ai);
-    const foeHp=state.me.hp, myHp=ai.hp;
-    const hist=state._foeHist||{atk:0,def:0};
-    const foeTotal=hist.atk+hist.def;
-    const foeMostlyHeals = foeTotal>=2 && hist.def>hist.atk*2;
-
-    if(diff==='easy') return Math.random()<0.55?'attack':'defend';
-    const canKill = st.atk>=foeHp, invertedHealer = st.cur>st.atk;
-    const myStreak = ai.healStreak||0;
-    const healSpent = myStreak>=2;
-
-    if(diff==='hard'){
-      // vantaggio da computer: calcolo la forza attesa dopo la 5ª carta
-      const od=hardOdds(state);
-      // stima della maschera che evocherò mediamente e del suo attacco
-      const likelyKey = HAND_TABLE[Math.max(0,Math.min(HAND_TABLE.length-1,Math.round(od.avgRank)))];
-      const likelySt = likelyKey ? maskStats(likelyKey.maskId, state.inv.ai) : st;
-      const likelyKill = likelySt.atk>=foeHp;
-
-      if(canKill||likelyKill) return 'attack';                // posso (o potrò) chiudere
-      if(foeMostlyHeals) return 'attack';                     // punisce lo spam di cura
-      if(myStreak>=1 && !invertedHealer) return 'attack';     // resetta la striscia appena cala
-      if(myHp<30 && myStreak===0) return 'defend';
-      // se la mia mano è mediamente debole e sono sotto, la parata vale più dell'attacco
-      if(od.avgRank<1.2 && myHp<foeHp && myStreak===0) return 'defend';
-      if(invertedHealer && myStreak===0 && myHp<180) return 'defend';
-      return 'attack';
-    }
-    if(canKill) return 'attack';
-    if(foeMostlyHeals) return 'attack';
-    if(foeHp<=25) return 'attack';
-    if(myHp<35 && !healSpent) return 'defend';
-    if(healSpent) return 'attack';
-    if(invertedHealer && myHp<180) return 'defend';
-    if(myHp>=160 && ev.rankIndex>=3) return 'defend';
-    return 'attack';
+    return aiDecideEV(state,diff,foeChoice||null);
   }
 
   return {SUITS,RANKS,MASKS,HAND_TABLE,RANK_LABEL,RANK_LABEL_EN,
-    buildDeck,shuffle,evaluate,compare,maskStats,resolveShowdown,effectiveHeal,aiChoose,aiChooseBlind};
+    buildDeck,shuffle,evaluate,compare,maskStats,resolveShowdown,effectiveHeal,aiChoose,aiChooseBlind,aiPower};
 })();
 
 const GameState = (() => {
@@ -1339,7 +1300,12 @@ const Sfx=(()=>{
   }
   function card(){
     if(!can()) return;
-    playAny(['card1','card2','card3'], 0.9, 0.96+Math.random()*0.09);
+    // se i campioni MP3 non sono ancora decodificati (tipico sul PRIMISSIMO round
+    // appena avviato l'audio) ripiego sullo scatto sintetico: così tutte e 4 le
+    // carte iniziali producono sempre un suono, nessuno scatto va perso.
+    const ready = SAMPLES['card1']||SAMPLES['card2']||SAMPLES['card3'];
+    if(ready) playAny(['card1','card2','card3'], 0.9, 0.96+Math.random()*0.09);
+    else cardClick(now(), 0.94+Math.random()*0.12);
   }
   // distribuzione: scatti in sequenza, ognuno di tono leggermente diverso
   function deal(n){
@@ -1631,7 +1597,7 @@ const Sfx=(()=>{
     if(musicMuted||!init()) return;
     if(musica && musica.tipo==='menu') return;
     stopMusic();
-    const g=ctx.createGain(); g.gain.value=0.15; g.connect(musicBus);
+    const g=ctx.createGain(); g.gain.value=0.22; g.connect(musicBus);
     musica={tipo:'menu', gain:g, timer:null, step:0};
     const melodia=[196.00,233.08,261.63,233.08, 196.00,174.61,196.00,220.00];
     const bassi  =[ 98.00, 98.00,130.81,130.81,  98.00, 87.31, 98.00,110.00];
@@ -1649,7 +1615,7 @@ const Sfx=(()=>{
     if(musicMuted||!init()) return;
     if(musica && musica.tipo==='gioco') return;
     stopMusic();
-    const g=ctx.createGain(); g.gain.value=0.18; g.connect(musicBus);
+    const g=ctx.createGain(); g.gain.value=0.26; g.connect(musicBus);
     // riverbero corto: da' spazio, fa sembrare un ambiente e non voci isolate
     const conv=ctx.createConvolver(); conv.buffer=smallHall();
     const wet=ctx.createGain(); wet.gain.value=0.30;
@@ -1987,7 +1953,7 @@ const I18N = {
     healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>. Attacca per azzerare.`,
     healed:(n)=>`Cura: +${n} PV.`, tie:"Pareggio: nessun colpo.",
     win:"HAI VINTO!", lose:"HAI PERSO", p1win:"VINCE GIOCATORE 1", p2win:"VINCE GIOCATORE 2",
-    lastCallTitle:"ULTIMO GIRO", lastCallIntro:(n)=>`Restano ${n} mani: poi vince chi ha più vino.`,
+    lastCallTitle:"ULTIMI DIECI GIRI", lastCallBoard:"Ultimo giro", lastCallIntro:(n)=>`Restano ${n} mani: poi vince chi ha più vino.`,
     lastCallLeft:(n)=>`ultime ${n} mani`,
     wonOnPointsYou:"Allo scadere avevi più vino nella damigiana.",
     wonOnPointsFoe:"Allo scadere l'avversario aveva più vino nella damigiana.",
@@ -2044,7 +2010,7 @@ const I18N = {
     healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>. Attack to reset.`,
     healed:(n)=>`Heal: +${n} HP.`, tie:"Tie: no blow lands.",
     win:"YOU WIN!", lose:"YOU LOSE", p1win:"PLAYER 1 WINS", p2win:"PLAYER 2 WINS",
-    lastCallTitle:"LAST CALL", lastCallIntro:(n)=>`${n} hands left: then the most wine wins.`,
+    lastCallTitle:"THE LAST TEN ROUNDS", lastCallBoard:"Last call", lastCallIntro:(n)=>`${n} hands left: then the most wine wins.`,
     lastCallLeft:(n)=>`${n} hands left`,
     wonOnPointsYou:"When time ran out you had more wine in your demijohn.",
     wonOnPointsFoe:"When time ran out the opponent had more wine.",
@@ -2066,8 +2032,34 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.2.11";
+const APP_VERSION="1.3.1";
 const CHANGELOG=[
+  {v:"1.3.1", it:[
+    "Dopo una parata la Maschera si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore di strappo.",
+    "Il contatore dell Ultimo Giro inciso nel tavolo ora dice \"Ultimo giro -X\" nel carattere Scar maiuscolo; negli ultimi tre giri il numero e' rosso.",
+    "La scritta grande a schermo che avverte dell Ultimo Giro ora recita \"Ultimi Dieci Giri\" con un bordo nero piu netto, cosi si legge bene su qualsiasi sfondo."],
+    en:[
+    "After a parry the Mask is torn only if the blow lands: if the parry fully cancels the damage the Mask holds, with no tear and no tearing sound.",
+    "The Last Call counter carved into the table now reads \"Last call -X\" in the uppercase Scar typeface; in the last three rounds the number turns red.",
+    "The big on-screen Last Call warning now reads \"The Last Ten Rounds\" with a crisper black outline, so it reads clearly on any background."]},
+  {v:"1.3.0", it:[
+    "Avversario rifatto da capo: ora ragiona sul valore atteso del turno invece di seguire regole fisse. Para davvero quando conviene (mano debole e rischio di subire), non solo per curarsi, e attacca con le mani forti invece di sprecarle in cura.",
+    "Le tre difficolta ora sono davvero diverse: in Facile vinci circa 3 volte su 4, in Media e' equilibrata, in Difficile e' l avversario a vincere circa 3 volte su 4. La difficile e' pensata per essere una vera sfida.",
+    "In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e colpisce piu duro; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo.",
+    "Musica di sottofondo piu presente sia nel menu sia durante la partita.",
+    "Le quattro carte iniziali ora fanno sempre sentire tutti e quattro gli scatti, anche il primissimo appena avviato il gioco."],
+    en:[
+    "Opponent rebuilt from scratch: it now reasons on the expected value of the turn instead of following fixed rules. It really parries when it's worth it (weak hand and risk of taking damage), not just to heal, and attacks with strong hands instead of wasting them on healing.",
+    "The three difficulties are now genuinely different: on Easy you win about 3 times out of 4, Medium is balanced, on Hard the opponent wins about 3 times out of 4. Hard is meant to be a real challenge.",
+    "On Hard the opponent plays like an expert: it reads your intentions and hits harder; on Easy it's unsure and makes mistakes. No cheating on the cards, only how well it plays changes.",
+    "Background music is more present both in the menu and during the match.",
+    "The four opening cards now always play all four snaps, including the very first one right after starting the game."]},
+  {v:"1.2.12", it:[
+    "Il contatore dell Ultimo Giro ora e scritto in un carattere inciso, in beige chiaro con contorno nero: si legge su qualsiasi sfondo del tavolo.",
+    "Nelle ultime 3 mani il numero rimasto diventa rosso con bordo rosso piu chiaro, cosi lo urgenza si vede a colpo d occhio."],
+    en:[
+    "The Last Call counter is now written in a carved typeface, light beige with a black outline: readable on any table background.",
+    "In the last 3 hands the remaining number turns red with a lighter-red outline, so the urgency is obvious at a glance."]},
   {v:"1.2.11", it:[
     "Arpa, versamento del vino e musiche di vittoria/sconfitta ancora abbassati.",
     "Quando la parata azzera del tutto il danno non si aspetta piu l animazione della damigiana: si passa subito al turno dopo (da 9 a 5 secondi).",
@@ -2440,9 +2432,9 @@ const UI = (() => {
         el.style.visibility='';
         el.classList.add('deal');
         Sfx.card();                       // uno scatto per ogni carta che tocca il tavolo
-      }, 90+i*230);
+      }, 90+i*260);
     });
-    if(done) setTimeout(done, 90+vis.length*230+200);
+    if(done) setTimeout(done, 90+vis.length*260+200);
   }
   function renderFoeHand(revealed){
     const foe=$('foe-hand'); foe.innerHTML='';
@@ -2661,9 +2653,11 @@ const UI = (() => {
         return;
       }
     } else {
-      // PvE: l'IA ha già cambiato carta a inizio round; qui sceglie solo atk/dif
-      state.ai.choice=GameLogic.aiChooseBlind(state,difficulty);
+      // PvE: l'IA ha già cambiato carta a inizio round; qui sceglie solo atk/dif.
+      // La scelta del giocatore (c) è già bloccata: l'IA difficile può "leggerla"
+      // con probabilità readProb (vantaggio da avversario esperto, non da imbroglio).
       state.me.choice=c;
+      state.ai.choice=GameLogic.aiChooseBlind(state,difficulty,c);
       log(`<span class="me">${T().youChose(c==='attack'?T().attack:T().defend)}</span>`,'me');
       $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
       $('btn-swap').style.display='none';$('btn-attack').style.display='none';$('btn-defend').style.display='none';
@@ -2798,7 +2792,7 @@ const UI = (() => {
     const lc=state?GameState.lastCallStatus(state):{active:false};
     if(!lc.active){ b.innerHTML=''; b.className='board-label'; return; }
     b.className='board-label lastcall-inline'+(lc.remaining<=3?' urgent':'');
-    b.innerHTML=`<span class="lcb-t">${T().lastCallTitle}</span> <span class="lcb-n">${lc.remaining}</span>`;
+    b.innerHTML=`<span class="lcb-t">${T().lastCallBoard}</span> <span class="lcb-n">-${lc.remaining}</span>`;
   }
 
   function logHandBreakdown(side){
@@ -2835,6 +2829,18 @@ const UI = (() => {
       if(!state._foeHist) state._foeHist={atk:0,def:0};
       if(state.me.choice==='attack') state._foeHist.atk++;
       else if(state.me.choice==='defend') state._foeHist.def++;
+    }
+    // VANTAGGIO DI DIFFICOLTÀ: l'IA facile colpisce/cura meno, la difficile di più.
+    // Non tocca le carte né le regole: scala solo l'entità di danni e cure dell'IA,
+    // così "facile/medio/difficile" corrispondono a ~75/50/25% di vittorie del giocatore.
+    if(mode!=='pvp_local'){
+      const pow=GameLogic.aiPower(difficulty);
+      if(pow && pow!==1){
+        if(out.winner==='ai' && out.action==='attack' && out.delta.me<0) out.delta.me=Math.round(out.delta.me*pow);
+        else if(out.winner==='ai' && out.action==='defend' && out.delta.ai>0) out.delta.ai=Math.round(out.delta.ai*pow);
+        else if(out.winner==='me' && out.action==='attack' && out.delta.ai<0) out.delta.ai=Math.round(out.delta.ai/pow);
+        else if(out.winner==='me' && out.action==='defend' && out.delta.me>0) out.delta.me=Math.round(out.delta.me/pow);
+      }
     }
     const before={me:state.me.hp,ai:state.ai.hp};
     GameState.applyDelta(state,out.delta,out);
@@ -2876,12 +2882,16 @@ const UI = (() => {
           } else {
             log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls);
           }
-          // la maschera perdente viene strappata (dopo lo scudo, così si legge)
-          setTimeout(()=>{
-            loseCard.classList.add('destroyed');
-            tearMask(loseCard);
-            Sfx.tear();
-          }, out.blocked>0 ? 750 : 0);
+          // la maschera si strappa SOLO se il colpo passa (danno finale > 0):
+          // se la parata azzera del tutto il danno, la maschera regge e non c'è
+          // strappo né rumore di strappo.
+          if(finalDmg>0){
+            setTimeout(()=>{
+              loseCard.classList.add('destroyed');
+              tearMask(loseCard);
+              Sfx.tear();
+            }, out.blocked>0 ? 750 : 0);
+          }
         });
       },900);
     }else{
