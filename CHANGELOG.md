@@ -1,5 +1,18 @@
 # Changelog — Folk 'Em
 
+## 1.4.0
+
+- Difficulties now follow the EXACT RULES: the opponent deals damage and heals by the same rules as the player, with no hidden multiplier. So the on-screen numbers always match, 100%, the Wine Points lost or recovered.
+- The difficulty advantage is now honest and visible: the opponent starts with more or less wine in its demijohn. On Easy it starts behind (70 HP), on Medium even (100 HP), on Hard ahead (130 HP). The duel rules stay identical for everyone.
+- The Hard opponent now chooses its Attack/Defense inversions as part of its strategy: it inverts the three weakest Masks to heal well on frequent hands, and weighs each turn whether to attack or defend instead of attacking almost always. It reads your intentions more often so it won't strike into a parry.
+- Easy and Medium stay more uncertain and make more mistakes. No cheating on the cards: what changes is the quality of choices and the starting wine.
+
+## 1.3.2
+
+- Fixed: with a partial parry (damage reduced but not fully cancelled) the defeated Mask now tears as it should. It only survives when the parry cancels the blow entirely.
+- Fixed: the damage and heal numbers shown now always match the Wine Points actually lost or recovered. Before, because of the difficulty advantage, the on-screen number could disagree with what was poured into the demijohn.
+- Re-tuned the balance of the three difficulties after the fix: Easy ~75% wins for you, Medium even, Hard ~25%.
+
 ## 1.3.1
 
 - After a parry the Mask is torn only if the blow lands: if the parry fully cancels the damage the Mask holds, with no tear and no tearing sound.
@@ -10,7 +23,7 @@
 
 - Opponent rebuilt from scratch: it now reasons on the expected value of the turn instead of following fixed rules. It really parries when it's worth it (weak hand and risk of taking damage), not just to heal, and attacks with strong hands instead of wasting them on healing.
 - The three difficulties are now genuinely different: on Easy you win about 3 times out of 4, Medium is balanced, on Hard the opponent wins about 3 times out of 4. Hard is meant to be a real challenge.
-- On Hard the opponent plays like an expert: it reads your intentions and hits harder; on Easy it's unsure and makes mistakes. No cheating on the cards, only how well it plays changes.
+- On Hard the opponent plays like an expert: it reads your intentions and chooses optimally; on Easy it's unsure and makes mistakes. No cheating on the cards, only how well it chooses changes.
 - Background music is more present both in the menu and during the match.
 - The four opening cards now always play all four snaps, including the very first one right after starting the game.
 

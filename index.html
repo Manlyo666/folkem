@@ -855,12 +855,13 @@ const GameLogic = (() => {
     if(choiceW==='attack'){
       action='attack';
       rawDmg=stW.atk;
+      // parata: la DIFESA del perdente riduce il danno (nessun malus, piena).
       if(choiceL==='defend'){ blocked=Math.min(stL.cur, rawDmg); }
       const dmg=Math.max(0, rawDmg-blocked);
       delta[l]=-dmg;
     }else{
       action='defend';
-      healAmt=stW.cur;
+      healAmt=stW.cur;   // difesa vincente = cura (la striscia decrescente è applicata in applyDelta)
       delta[w]=+healAmt;
     }
     return {winner, loser:l, action, delta, blocked, rawDmg, healAmt,
@@ -895,13 +896,14 @@ const GameLogic = (() => {
   //  - randAct:  probabilità di agire a caso                 [easy alta, hard zero]
   //  - foeSample:campioni di mano avversaria (stima migliore)[easy pochi, hard molti]
   //  - readProb: probabilità di "leggere" la scelta reale dell'avversario
-  //  - power:    moltiplicatore strutturale a danni/cure dell'IA (vantaggio/svantaggio)
+  //  - readProb: probabilità che (in difficile) l'IA "legga" la scelta reale
+  //  L'IA NON ha moltiplicatori su danni/cure: rispetta le regole esatte come il
+  //  giocatore. Le difficoltà cambiano solo la QUALITÀ delle sue scelte.
   const AI_PARAMS={
-    easy:   {noise:11, randAct:0.47, foeSample:6,  readProb:0.0,  power:0.80, swapSmart:false},
-    medium: {noise:4,  randAct:0.13, foeSample:16, readProb:0.0,  power:0.98, swapSmart:false},
-    hard:   {noise:0,  randAct:0.0,  foeSample:30, readProb:0.40, power:1.18, swapSmart:true},
+    easy:   {noise:12, randAct:0.50, foeSample:5,  readProb:0.0,  swapSmart:false},
+    medium: {noise:5,  randAct:0.16, foeSample:14, readProb:0.0,  swapSmart:false},
+    hard:   {noise:0,  randAct:0.0,  foeSample:30, readProb:0.65, swapSmart:true},
   };
-  function aiPower(difficulty){ return (AI_PARAMS[difficulty]||AI_PARAMS.medium).power; }
 
   function _unseen(known){
     const seen=new Set(known.map(c=>c.suit+'_'+c.r));
@@ -938,10 +940,10 @@ const GameLogic = (() => {
         const w=foeAtt?ctx.foeAttackProb:(1-ctx.foeAttackProb); if(w<=0) continue;
         let v=0;
         if(action==='attack'){
-          if(iWin){ const blocked=foeAtt?0:Math.min(foeSt.cur, mine.st.atk); v+=Math.max(0,mine.st.atk-blocked)*ctx.power; }
+          if(iWin){ const blocked=foeAtt?0:Math.min(foeSt.cur, mine.st.atk); v+=Math.max(0,mine.st.atk-blocked); }
           else { if(foeAtt) v-=foeSt.atk; else v-=_effHeal(foeSt.cur,0)*0.6; }
         } else {
-          if(iWin){ v+=_effHeal(mine.st.cur, ctx.myStreak)*0.9*ctx.power; }
+          if(iWin){ v+=_effHeal(mine.st.cur, ctx.myStreak)*0.9; }
           else { if(foeAtt){ const blocked=Math.min(mine.st.cur, foeSt.atk); v-=Math.max(0,foeSt.atk-blocked); v+=blocked*0.5; } else { v-=_effHeal(foeSt.cur,0)*0.6; } }
         }
         total+=v*w; n+=w;
@@ -962,7 +964,7 @@ const GameLogic = (() => {
     let foeAttackProb=tot>=3?hist.atk/tot:0.55;
     if(P.readProb>0 && foeChoice && rng()<P.readProb) foeAttackProb = foeChoice==='attack'?0.95:0.05;
     foeAttackProb=Math.max(0.05,Math.min(0.95,foeAttackProb));
-    const ctx={myStreak:ai.healStreak||0, foeInv:state.inv.me, foeAttackProb, power:P.power};
+    const ctx={myStreak:ai.healStreak||0, foeInv:state.inv.me, foeAttackProb};
     if(rng()<P.randAct) return rng()<0.5?'attack':'defend';
     let va=_expected('attack',myDist,foeEvs,ctx);
     let vd=_expected('defend',myDist,foeEvs,ctx);
@@ -977,7 +979,15 @@ const GameLogic = (() => {
     const P=AI_PARAMS[difficulty]||AI_PARAMS.medium;
     const ai=state.ai, foe=state.me, community4=state.community.slice(0,4);
     const ev4=evaluate(ai.hand.concat(community4));
-    if(P.swapSmart){ if(ev4.rankIndex<=0 && ai.hp>50 && ai.hp<foe.hp+60) return ai.hand[0].r<=ai.hand[1].r?0:1; return -1; }
+    if(P.swapSmart){
+      // HARD: cambia SOLO con carta alta pura (nessuna coppia) e con buon margine
+      // di PV — lo swap costa 10 PV, sprecarlo su mani gia' decenti logora. Non
+      // insegue la doppia coppia a ogni mano.
+      if(ev4.rankIndex<=0 && ai.hp>55 && ai.hp<foe.hp+60){
+        return ai.hand[0].r<=ai.hand[1].r?0:1;
+      }
+      return -1;
+    }
     if(ev4.rankIndex<=0 && ai.hp>40 && ai.hp<foe.hp+40 && Math.random()<(difficulty==='easy'?0.25:0.6)) return ai.hand[0].r<=ai.hand[1].r?0:1;
     return -1;
   }
@@ -995,11 +1005,19 @@ const GameLogic = (() => {
   }
 
   return {SUITS,RANKS,MASKS,HAND_TABLE,RANK_LABEL,RANK_LABEL_EN,
-    buildDeck,shuffle,evaluate,compare,maskStats,resolveShowdown,effectiveHeal,aiChoose,aiChooseBlind,aiPower};
+    buildDeck,shuffle,evaluate,compare,maskStats,resolveShowdown,effectiveHeal,aiChoose,aiChooseBlind};
 })();
 
 const GameState = (() => {
   const SWAP_COST=10, WIN_HP=200;
+  // HANDICAP DI DIFFICOLTÀ (onesto, trasparente): l'IA parte con PV diversi.
+  // Le regole di danno/cura restano IDENTICHE per tutti, così i numeri a schermo
+  // corrispondono sempre ai PV persi/curati. Il giocatore parte sempre a 100.
+  //   easy  70  -> il giocatore vince piu' spesso
+  //   medium 100 -> pari PV
+  //   hard  130 -> l'IA parte avvantaggiata
+  const AI_START_HP={easy:70, medium:100, hard:130};
+  function aiStartHp(difficulty){ return AI_START_HP[difficulty] || 100; }
   // ULTIMO GIRO: dopo LAST_CALL_AT round parte un conto alla rovescia di LAST_CALL_LEN mani.
   // Allo scadere vince chi ha più PV (nessun modificatore ai danni o alla cura).
   const LAST_CALL_AT=30, LAST_CALL_LEN=10;
@@ -1010,7 +1028,7 @@ const GameState = (() => {
       difficulty: opts.difficulty||'medium',
       inv:{me:{...inversions}, ai: opts.mode==='pvp_local' ? {} : buildAiBuild(opts.difficulty)},
       me:{hp:100,hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0},
-      ai:{hp:100,hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0},
+      ai:{hp: opts.mode==='pvp_local' ? 100 : aiStartHp(opts.difficulty), hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0},
       community:[], deck:[], phase:'draw', round:0, winner:null,
       _foeHist:{atk:0,def:0},
       fifthRevealed:false,
@@ -1022,12 +1040,14 @@ const GameState = (() => {
     // Le maschere fisse (Meneghino/Capitan) non si invertono.
     // Con l'inversione una maschera scambia ATK<->DEF: es. Brighella 10/5 -> 5/10.
     if(diff==='hard'){
-      // Con la cura a rendimenti decrescenti, accumulare cura non paga:
-      // conviene ATK pieno ovunque e usare la cura solo come rimbalzo occasionale
-      // (una cura piena ogni volta che si è attaccato). Tengo invertita solo
-      // Colombina come valvola di sicurezza sulle mani rare.
-      return { pantalone:false, brighella:false, balanzone:false,
-               pulcinella:false, arlecchino:false, colombina:true };
+      // STRATEGIA "prime tre invertite" (la build che regge meglio nel gioco reale):
+      // le tre Maschere piu deboli — Pantalone, Brighella, Balanzone — vengono
+      // invertite, cosi le loro mani (frequentissime: coppia/doppia coppia/tris)
+      // diventano forti in CURA. Con una mano scarsa l'IA difende e cura bene;
+      // con una mano servita (doppia coppia in su non invertita, o le Maschere
+      // alte) rischia e attacca. Colombina/Arlecchino restano in attacco pieno.
+      return { pantalone:true, brighella:true, balanzone:true,
+               pulcinella:false, arlecchino:false, colombina:false };
     }
     if(diff==='medium'){
       return { pantalone:false, brighella:false, balanzone:true,
@@ -2032,8 +2052,26 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.1";
+const APP_VERSION="1.4.0";
 const CHANGELOG=[
+  {v:"1.4.0", it:[
+    "Le difficolta ora rispettano le REGOLE ESATTE: l avversario infligge danni e cure secondo le stesse regole del giocatore, senza nessun moltiplicatore nascosto. Cosi i numeri a schermo corrispondono sempre, al 100%, ai Punti Vino persi o recuperati.",
+    "Il vantaggio di difficolta e' ora onesto e visibile: l avversario parte con piu o meno vino nella damigiana. In Facile parte in svantaggio (70 PV), in Media alla pari (100 PV), in Difficile in vantaggio (130 PV). Le regole del duello restano identiche per tutti.",
+    "L avversario Difficile ora sceglie le inversioni Attacco/Difesa come parte della strategia: inverte le tre Maschere piu deboli per curare bene con le mani frequenti, e valuta ogni turno se conviene attaccare o difendere invece di attaccare quasi sempre. Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.",
+    "Facile e Media restano piu incerte e commettono piu errori. Nessun imbroglio sulle carte: cambia la bravura nelle scelte e il vino di partenza."],
+    en:[
+    "Difficulties now follow the EXACT RULES: the opponent deals damage and heals by the same rules as the player, with no hidden multiplier. So the on-screen numbers always match, 100%, the Wine Points lost or recovered.",
+    "The difficulty advantage is now honest and visible: the opponent starts with more or less wine in its demijohn. On Easy it starts behind (70 HP), on Medium even (100 HP), on Hard ahead (130 HP). The duel rules stay identical for everyone.",
+    "The Hard opponent now chooses its Attack/Defense inversions as part of its strategy: it inverts the three weakest Masks to heal well on frequent hands, and weighs each turn whether to attack or defend instead of attacking almost always. It reads your intentions more often so it won't strike into a parry.",
+    "Easy and Medium stay more uncertain and make more mistakes. No cheating on the cards: what changes is the quality of choices and the starting wine."]},
+  {v:"1.3.2", it:[
+    "Corretto: con una parata parziale (il danno viene ridotto ma non azzerato) la Maschera sconfitta ora si strappa come deve. Si salva solo quando la parata annulla del tutto il colpo.",
+    "Corretto: i numeri di danno e cura mostrati ora coincidono sempre con i Punti Vino davvero persi o recuperati. Prima, per via del vantaggio di difficolta, il numero a schermo poteva non tornare con quello versato nella damigiana.",
+    "Rifinito l equilibrio delle tre difficolta dopo la correzione: Facile ~75% di vittorie per te, Media equilibrata, Difficile ~25%."],
+    en:[
+    "Fixed: with a partial parry (damage reduced but not fully cancelled) the defeated Mask now tears as it should. It only survives when the parry cancels the blow entirely.",
+    "Fixed: the damage and heal numbers shown now always match the Wine Points actually lost or recovered. Before, because of the difficulty advantage, the on-screen number could disagree with what was poured into the demijohn.",
+    "Re-tuned the balance of the three difficulties after the fix: Easy ~75% wins for you, Medium even, Hard ~25%."]},
   {v:"1.3.1", it:[
     "Dopo una parata la Maschera si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore di strappo.",
     "Il contatore dell Ultimo Giro inciso nel tavolo ora dice \"Ultimo giro -X\" nel carattere Scar maiuscolo; negli ultimi tre giri il numero e' rosso.",
@@ -2045,13 +2083,13 @@ const CHANGELOG=[
   {v:"1.3.0", it:[
     "Avversario rifatto da capo: ora ragiona sul valore atteso del turno invece di seguire regole fisse. Para davvero quando conviene (mano debole e rischio di subire), non solo per curarsi, e attacca con le mani forti invece di sprecarle in cura.",
     "Le tre difficolta ora sono davvero diverse: in Facile vinci circa 3 volte su 4, in Media e' equilibrata, in Difficile e' l avversario a vincere circa 3 volte su 4. La difficile e' pensata per essere una vera sfida.",
-    "In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e colpisce piu duro; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo.",
+    "In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e sceglie al meglio; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo a scegliere.",
     "Musica di sottofondo piu presente sia nel menu sia durante la partita.",
     "Le quattro carte iniziali ora fanno sempre sentire tutti e quattro gli scatti, anche il primissimo appena avviato il gioco."],
     en:[
     "Opponent rebuilt from scratch: it now reasons on the expected value of the turn instead of following fixed rules. It really parries when it's worth it (weak hand and risk of taking damage), not just to heal, and attacks with strong hands instead of wasting them on healing.",
     "The three difficulties are now genuinely different: on Easy you win about 3 times out of 4, Medium is balanced, on Hard the opponent wins about 3 times out of 4. Hard is meant to be a real challenge.",
-    "On Hard the opponent plays like an expert: it reads your intentions and hits harder; on Easy it's unsure and makes mistakes. No cheating on the cards, only how well it plays changes.",
+    "On Hard the opponent plays like an expert: it reads your intentions and chooses optimally; on Easy it's unsure and makes mistakes. No cheating on the cards, only how well it chooses changes.",
     "Background music is more present both in the menu and during the match.",
     "The four opening cards now always play all four snaps, including the very first one right after starting the game."]},
   {v:"1.2.12", it:[
@@ -2823,24 +2861,14 @@ const UI = (() => {
   }
 
   function resolve(){
+    // L'IA rispetta le REGOLE ESATTE: nessun moltiplicatore su danni o cure.
+    // Le difficoltà cambiano solo COME l'IA sceglie (rumore, campioni, lettura).
     const out=GameLogic.resolveShowdown(state.me.eval,state.ai.eval,state.me.choice,state.ai.choice,state.inv);
     // in PvE registro la scelta del giocatore umano (me) così l'IA può adattarsi
     if(mode!=='pvp_local'){
       if(!state._foeHist) state._foeHist={atk:0,def:0};
       if(state.me.choice==='attack') state._foeHist.atk++;
       else if(state.me.choice==='defend') state._foeHist.def++;
-    }
-    // VANTAGGIO DI DIFFICOLTÀ: l'IA facile colpisce/cura meno, la difficile di più.
-    // Non tocca le carte né le regole: scala solo l'entità di danni e cure dell'IA,
-    // così "facile/medio/difficile" corrispondono a ~75/50/25% di vittorie del giocatore.
-    if(mode!=='pvp_local'){
-      const pow=GameLogic.aiPower(difficulty);
-      if(pow && pow!==1){
-        if(out.winner==='ai' && out.action==='attack' && out.delta.me<0) out.delta.me=Math.round(out.delta.me*pow);
-        else if(out.winner==='ai' && out.action==='defend' && out.delta.ai>0) out.delta.ai=Math.round(out.delta.ai*pow);
-        else if(out.winner==='me' && out.action==='attack' && out.delta.ai<0) out.delta.ai=Math.round(out.delta.ai/pow);
-        else if(out.winner==='me' && out.action==='defend' && out.delta.me>0) out.delta.me=Math.round(out.delta.me/pow);
-      }
     }
     const before={me:state.me.hp,ai:state.ai.hp};
     GameState.applyDelta(state,out.delta,out);
@@ -2868,7 +2896,7 @@ const UI = (() => {
     if(out.action==='attack'){
       Sfx.maskAttack();                       // la maschera prende vita
       announceWeapon(state[w].eval.maskId);
-      const finalDmg=Math.max(0,out.rawDmg-out.blocked);
+      const finalDmg=Math.max(0, out.rawDmg-out.blocked);
       winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
       setTimeout(()=>{
         playHit(state[w].eval.maskId);   // legno / metallo / taglio secondo l'arma
@@ -2882,9 +2910,10 @@ const UI = (() => {
           } else {
             log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls);
           }
-          // la maschera si strappa SOLO se il colpo passa (danno finale > 0):
-          // se la parata azzera del tutto il danno, la maschera regge e non c'è
-          // strappo né rumore di strappo.
+          // La carta sconfitta si strappa se il colpo va a segno (danno finale>0).
+          // Se la parata azzera del tutto il danno, la maschera regge: nessuno
+          // strappo né rumore. rawDmg, blocked, finalDmg e delta sono per
+          // costruzione coerenti (finalDmg = rawDmg-blocked = -delta del perdente).
           if(finalDmg>0){
             setTimeout(()=>{
               loseCard.classList.add('destroyed');

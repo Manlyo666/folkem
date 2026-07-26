@@ -1,5 +1,18 @@
 # Changelog — Folk 'Em
 
+## 1.4.0
+
+- Le difficolta ora rispettano le REGOLE ESATTE: l avversario infligge danni e cure secondo le stesse regole del giocatore, senza nessun moltiplicatore nascosto. Cosi i numeri a schermo corrispondono sempre, al 100%, ai Punti Vino persi o recuperati.
+- Il vantaggio di difficolta e' ora onesto e visibile: l avversario parte con piu o meno vino nella damigiana. In Facile parte in svantaggio (70 PV), in Media alla pari (100 PV), in Difficile in vantaggio (130 PV). Le regole del duello restano identiche per tutti.
+- L avversario Difficile ora sceglie le inversioni Attacco/Difesa come parte della strategia: inverte le tre Maschere piu deboli per curare bene con le mani frequenti, e valuta ogni turno se conviene attaccare o difendere invece di attaccare quasi sempre. Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.
+- Facile e Media restano piu incerte e commettono piu errori. Nessun imbroglio sulle carte: cambia la bravura nelle scelte e il vino di partenza.
+
+## 1.3.2
+
+- Corretto: con una parata parziale (il danno viene ridotto ma non azzerato) la Maschera sconfitta ora si strappa come deve. Si salva solo quando la parata annulla del tutto il colpo.
+- Corretto: i numeri di danno e cura mostrati ora coincidono sempre con i Punti Vino davvero persi o recuperati. Prima, per via del vantaggio di difficolta, il numero a schermo poteva non tornare con quello versato nella damigiana.
+- Rifinito l equilibrio delle tre difficolta dopo la correzione: Facile ~75% di vittorie per te, Media equilibrata, Difficile ~25%.
+
 ## 1.3.1
 
 - Dopo una parata la Maschera si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore di strappo.
@@ -10,7 +23,7 @@
 
 - Avversario rifatto da capo: ora ragiona sul valore atteso del turno invece di seguire regole fisse. Para davvero quando conviene (mano debole e rischio di subire), non solo per curarsi, e attacca con le mani forti invece di sprecarle in cura.
 - Le tre difficolta ora sono davvero diverse: in Facile vinci circa 3 volte su 4, in Media e' equilibrata, in Difficile e' l avversario a vincere circa 3 volte su 4. La difficile e' pensata per essere una vera sfida.
-- In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e colpisce piu duro; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo.
+- In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e sceglie al meglio; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo a scegliere.
 - Musica di sottofondo piu presente sia nel menu sia durante la partita.
 - Le quattro carte iniziali ora fanno sempre sentire tutti e quattro gli scatti, anche il primissimo appena avviato il gioco.
 
