@@ -44,7 +44,7 @@ Sfidi l'Avversario. Ognuno parte con **100 PV**, mostrati come una **damigiana**
 Prima della partita, **inverti Attacco/Difesa** di ogni Maschera (Meneghino e Capitan Spaventa fissi).
 
 ### Modalità
-- **Giocatore vs IA** con tre difficoltà (Facile / Media / Difficile).
+- **Giocatore vs IA** con tre difficoltà (Facile / Media / Difficile). L IA valuta il valore atteso di ogni turno; le difficoltà sono tarate perché il giocatore vinca circa il 75% / 50% / 25% delle partite.
 - **PvP offline** — un telefono al centro; carte e pulsanti del Giocatore 2 capovolti, così
   entrambi leggono dritto.
 - **PvP online** — grigia per ora.
@@ -88,7 +88,7 @@ più una sessione Playwright che gioca round completi con **zero errori JS**.
 ---
 
 ## Changelog
-Vedi la schermata **🔄 Aggiornamenti** in-app, o `CHANGELOG` nel sorgente. Versioni `1.0.x`.
+Vedi la schermata **🔄 Aggiornamenti** in-app, o `CHANGELOG` nel sorgente. Versioni `1.x.y` (la seconda cifra sale per i cambi di gameplay).
 
 ### v1.0.4
 Texas Hold'em (2+5), grafica fornita integrata, overlay maschere centrale che copre le carte,

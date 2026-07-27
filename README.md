@@ -44,7 +44,7 @@ You duel the Opponent. Each player starts with **100 HP**, shown as a wine **dem
 Before the match, **swap Attack/Defense** on any Mask (Meneghino and Capitan Spaventa are fixed).
 
 ### Modes
-- **Player vs AI** with three difficulties (Easy / Medium / Hard).
+- **Player vs AI** with three difficulties (Easy / Medium / Hard). The AI evaluates the expected value of each turn; difficulties are tuned so the player wins about 75% / 50% / 25% of games respectively.
 - **Offline PvP** — one phone in the middle; Player 2's cards and buttons are flipped so
   both read right-side up.
 - **Online PvP** — greyed out for now.
@@ -96,7 +96,7 @@ plus a Playwright run that plays full rounds with **zero JS errors**.
 ---
 
 ## Changelog
-See the in-app **🔄 Updates** screen, or `CHANGELOG` in the source. Versions use `1.0.x`.
+See the in-app **🔄 Updates** screen, or `CHANGELOG` in the source. Versions use `1.x.y` (second digit bumps for gameplay changes).
 
 ### v1.0.4
 Texas Hold'em (2+5), provided artwork wired in, center mask overlay covering the board,
