@@ -1,31 +1,16 @@
 # Changelog — Folk 'Em
 
-## 1.4.0
-
-- Le difficolta ora rispettano le REGOLE ESATTE: l avversario infligge danni e cure secondo le stesse regole del giocatore, senza nessun moltiplicatore nascosto. Cosi i numeri a schermo corrispondono sempre, al 100%, ai Punti Vino persi o recuperati.
-- Il vantaggio di difficolta e' ora onesto e visibile: l avversario parte con piu o meno vino nella damigiana. In Facile parte in svantaggio (70 PV), in Media alla pari (100 PV), in Difficile in vantaggio (130 PV). Le regole del duello restano identiche per tutti.
-- L avversario Difficile ora sceglie le inversioni Attacco/Difesa come parte della strategia: inverte le tre Maschere piu deboli per curare bene con le mani frequenti, e valuta ogni turno se conviene attaccare o difendere invece di attaccare quasi sempre. Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.
-- Facile e Media restano piu incerte e commettono piu errori. Nessun imbroglio sulle carte: cambia la bravura nelle scelte e il vino di partenza.
-
-## 1.3.2
-
-- Corretto: con una parata parziale (il danno viene ridotto ma non azzerato) la Maschera sconfitta ora si strappa come deve. Si salva solo quando la parata annulla del tutto il colpo.
-- Corretto: i numeri di danno e cura mostrati ora coincidono sempre con i Punti Vino davvero persi o recuperati. Prima, per via del vantaggio di difficolta, il numero a schermo poteva non tornare con quello versato nella damigiana.
-- Rifinito l equilibrio delle tre difficolta dopo la correzione: Facile ~75% di vittorie per te, Media equilibrata, Difficile ~25%.
-
-## 1.3.1
-
-- Dopo una parata la Maschera si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore di strappo.
-- Il contatore dell Ultimo Giro inciso nel tavolo ora dice "Ultimo giro -X" nel carattere Scar maiuscolo; negli ultimi tre giri il numero e' rosso.
-- La scritta grande a schermo che avverte dell Ultimo Giro ora recita "Ultimi Dieci Giri" con un bordo nero piu netto, cosi si legge bene su qualsiasi sfondo.
-
 ## 1.3.0
 
-- Avversario rifatto da capo: ora ragiona sul valore atteso del turno invece di seguire regole fisse. Para davvero quando conviene (mano debole e rischio di subire), non solo per curarsi, e attacca con le mani forti invece di sprecarle in cura.
-- Le tre difficolta ora sono davvero diverse: in Facile vinci circa 3 volte su 4, in Media e' equilibrata, in Difficile e' l avversario a vincere circa 3 volte su 4. La difficile e' pensata per essere una vera sfida.
-- In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e sceglie al meglio; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo a scegliere.
-- Musica di sottofondo piu presente sia nel menu sia durante la partita.
-- Le quattro carte iniziali ora fanno sempre sentire tutti e quattro gli scatti, anche il primissimo appena avviato il gioco.
+- Avversario rifatto: ora ragiona sul valore atteso di ogni turno invece di seguire regole rigide, e rispetta le REGOLE ESATTE del gioco — infligge danni e cura come il giocatore, senza moltiplicatori nascosti. I numeri a schermo corrispondono sempre ai Punti Vino persi o recuperati.
+- Le tre difficolta si distinguono in modo onesto: l avversario parte con piu o meno vino nella damigiana (Facile 70, Media 100, Difficile 130 PV) e gioca con piu o meno bravura. Nessun imbroglio sulle carte.
+- In Difficile l avversario cambia strategia a ogni partita, scegliendo tra tre build di Maschere diverse: Cura-difensiva (inverte le tre piu deboli, gioca di rimessa), Aggressiva pura (tutte in attacco) e Full-cura (inverte le Maschere ad alto danno per cure enormi). Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.
+- Parata: lo scudo mostra il valore PIENO della Difesa. Se l attacco fa 6 e la Difesa vale 10, sullo scudo compare 10 (il colpo resta annullato).
+- Dopo una parata la Maschera sconfitta si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore.
+- Il contatore dell Ultimo Giro inciso nel tavolo dice "Ultimo giro -X" nel carattere Scar maiuscolo; negli ultimi tre giri il numero e' rosso. La scritta grande a schermo recita "Ultimi Dieci Giri" con un bordo nero piu netto.
+- Dopo l avviso dell Ultimo Giro la musica di sottofondo accelera per dare il senso della corsa finale; in generale la musica e' piu presente nel menu e in partita.
+- Vittoria ai punti: il messaggio dice "Allo scadere dei turni avevi piu vino nella damigiana".
+- Le quattro carte iniziali fanno sempre sentire tutti e quattro gli scatti.
 
 ## 1.2.12
 

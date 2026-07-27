@@ -851,12 +851,15 @@ const GameLogic = (() => {
     const stW=maskStats(evalW.maskId, inv[w]);
     const stL=maskStats(evalL.maskId, inv[l]);
 
-    let action, blocked=0, rawDmg=0, healAmt=0;
+    let action, blocked=0, rawDmg=0, healAmt=0, shieldShown=0;
     if(choiceW==='attack'){
       action='attack';
       rawDmg=stW.atk;
       // parata: la DIFESA del perdente riduce il danno (nessun malus, piena).
-      if(choiceL==='defend'){ blocked=Math.min(stL.cur, rawDmg); }
+      if(choiceL==='defend'){
+        blocked=Math.min(stL.cur, rawDmg);   // assorbito REALE (per il calcolo del danno)
+        shieldShown=stL.cur;                 // valore PIENO della difesa (per lo scudo a schermo)
+      }
       const dmg=Math.max(0, rawDmg-blocked);
       delta[l]=-dmg;
     }else{
@@ -864,7 +867,7 @@ const GameLogic = (() => {
       healAmt=stW.cur;   // difesa vincente = cura (la striscia decrescente è applicata in applyDelta)
       delta[w]=+healAmt;
     }
-    return {winner, loser:l, action, delta, blocked, rawDmg, healAmt,
+    return {winner, loser:l, action, delta, blocked, shieldShown, rawDmg, healAmt,
             maskId:evalW.maskId, loserMaskId:evalL.maskId,
             atkVal:stW.atk, defVal:stW.cur, loserDef:stL.cur};
   }
@@ -1040,14 +1043,28 @@ const GameState = (() => {
     // Le maschere fisse (Meneghino/Capitan) non si invertono.
     // Con l'inversione una maschera scambia ATK<->DEF: es. Brighella 10/5 -> 5/10.
     if(diff==='hard'){
-      // STRATEGIA "prime tre invertite" (la build che regge meglio nel gioco reale):
-      // le tre Maschere piu deboli — Pantalone, Brighella, Balanzone — vengono
-      // invertite, cosi le loro mani (frequentissime: coppia/doppia coppia/tris)
-      // diventano forti in CURA. Con una mano scarsa l'IA difende e cura bene;
-      // con una mano servita (doppia coppia in su non invertita, o le Maschere
-      // alte) rischia e attacca. Colombina/Arlecchino restano in attacco pieno.
-      return { pantalone:true, brighella:true, balanzone:true,
-               pulcinella:false, arlecchino:false, colombina:false };
+      // HARD varia strategia: sceglie a caso, a inizio partita, uno di TRE
+      // archetipi di build strutturalmente diversi. Il motore a valore atteso si
+      // adatta da solo a ciascuno (calcola danni/cure attese sulle stat reali).
+      const roll=Math.random();
+      if(roll<0.45){
+        // (1) CURA-DIFENSIVA — "prime tre invertite": le tre Maschere piu deboli
+        // diventano curatrici. Difende/cura bene sulle mani frequenti (coppia,
+        // doppia coppia, tris) e attacca con le mani alte. E' la piu solida.
+        return { pantalone:true, brighella:true, balanzone:true,
+                 pulcinella:false, arlecchino:false, colombina:false };
+      } else if(roll<0.80){
+        // (2) AGGRESSIVA PURA — nessuna inversione: ogni Maschera colpisce col suo
+        // ATK pieno. Punta a chiudere in fretta, usa la cura solo come rimbalzo.
+        return { pantalone:false, brighella:false, balanzone:false,
+                 pulcinella:false, arlecchino:false, colombina:false };
+      } else {
+        // (3) FULL-CURA — inverte le Maschere ad alto danno (Pulcinella, Arlecchino,
+        // Colombina): sulle mani forti cura tantissimo invece di colpire. Gioca di
+        // rimessa, logora e vince ai punti o con cure enormi. Piu rara e insidiosa.
+        return { pantalone:false, brighella:false, balanzone:false,
+                 pulcinella:true, arlecchino:true, colombina:true };
+      }
     }
     if(diff==='medium'){
       return { pantalone:false, brighella:false, balanzone:true,
@@ -1651,7 +1668,7 @@ const Sfx=(()=>{
     const archi=[[146.83,220.00,293.66],[174.61,261.63,349.23],
                  [130.81,196.00,261.63],[146.83,220.00,293.66]];
 
-    musica.timer=setInterval(()=>{
+    musica.timer=setInterval(musica.tick=function(){
       if(musicMuted||!musica) return;
       const t=now(), i=musica.step%16;
       // melodia principale (liuto)
@@ -1667,6 +1684,17 @@ const Sfx=(()=>{
       else if(i%4===2) drum(t, 0.14, musica.gain);
       musica.step++;
     }, 430);
+    musica.tempoMs=430;
+  }
+
+  // ULTIMO GIRO: accelera il tema di gioco per dare urgenza. Ricrea il timer con
+  // un passo piu breve, riusando la stessa funzione tick e lo stesso step.
+  function speedUpGameMusic(tempoMs){
+    if(!musica || musica.tipo!=='gioco' || !musica.tick) return;
+    if(musica.tempoMs===tempoMs) return;      // gia' accelerata
+    clearInterval(musica.timer);
+    musica.tempoMs=tempoMs;
+    musica.timer=setInterval(musica.tick, tempoMs);
   }
 
   // corda pizzicata (liuto)
@@ -1755,7 +1783,7 @@ const Sfx=(()=>{
     return {campioni:stato, ultimi:_log.slice(-40)};
   }
   return {_diag,unlock,setMuted,isMuted,setMusicMuted,isMusicMuted,
-          startMenuMusic,startGameMusic,stopMusic,
+          startMenuMusic,startGameMusic,speedUpGameMusic,stopMusic,
           card,deal,swap,click,summon,
           hitWood,hitMetal,hitSharp,block,tear,
           pour,bell,win,lose,maskAttack,maskHeal,
@@ -1968,6 +1996,7 @@ const I18N = {
     dealDmg:(n)=>`Danno inflitto: ${n}.`, blocked:(n)=>`Parata: −${n} danni.`,
     blockedMath:(who,n,isYou)=>isYou?`<b>${who}</b> pari ${n} danni con la Difesa.`:`<b>${who}</b> para ${n} danni con la Difesa.`,
     dmgMath:(raw,blk,fin)=>`Danno: ${raw} − ${blk} = <b>${fin}</b>.`,
+    dmgNullified:(raw,def)=>`Attacco ${raw} contro Difesa ${def}: colpo <b>annullato</b>.`,
     dmgFlat:(n)=>`Danno pieno: <b>${n}</b> (nessuna parata).`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> ti curi di <b>+${n}</b> PV.`:`<b>${who}</b> si cura di <b>+${n}</b> PV.`,
     healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>. Attacca per azzerare.`,
@@ -1975,10 +2004,10 @@ const I18N = {
     win:"HAI VINTO!", lose:"HAI PERSO", p1win:"VINCE GIOCATORE 1", p2win:"VINCE GIOCATORE 2",
     lastCallTitle:"ULTIMI DIECI GIRI", lastCallBoard:"Ultimo giro", lastCallIntro:(n)=>`Restano ${n} mani: poi vince chi ha più vino.`,
     lastCallLeft:(n)=>`ultime ${n} mani`,
-    wonOnPointsYou:"Allo scadere avevi più vino nella damigiana.",
-    wonOnPointsFoe:"Allo scadere l'avversario aveva più vino nella damigiana.",
-    wonOnPointsP1:"Allo scadere il Giocatore 1 aveva più vino.",
-    wonOnPointsP2:"Allo scadere il Giocatore 2 aveva più vino.",
+    wonOnPointsYou:"Allo scadere dei turni avevi più vino nella damigiana.",
+    wonOnPointsFoe:"Allo scadere dei turni l'avversario aveva più vino nella damigiana.",
+    wonOnPointsP1:"Allo scadere dei turni il Giocatore 1 aveva più vino.",
+    wonOnPointsP2:"Allo scadere dei turni il Giocatore 2 aveva più vino.",
     youEmptiedFoe:"Hai svuotato la damigiana avversaria.", youFilledYours:"Hai riempito la damigiana.",
     foeEmptiedYou:"L'avversario ti ha svuotato la damigiana.", foeFilledTheirs:"L'avversario ha riempito la damigiana.",
     dmgEmpty:"Damigiana a secco.", dmgFull:"Damigiana piena.",
@@ -2025,6 +2054,7 @@ const I18N = {
     dealDmg:(n)=>`Damage dealt: ${n}.`, blocked:(n)=>`Parry: −${n} damage.`,
     blockedMath:(who,n,isYou)=>isYou?`<b>${who}</b> parry ${n} damage with Defense.`:`<b>${who}</b> parries ${n} damage with Defense.`,
     dmgMath:(raw,blk,fin)=>`Damage: ${raw} − ${blk} = <b>${fin}</b>.`,
+    dmgNullified:(raw,def)=>`Attack ${raw} against Defense ${def}: blow <b>nullified</b>.`,
     dmgFlat:(n)=>`Full damage: <b>${n}</b> (no parry).`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> heal <b>+${n}</b> HP.`:`<b>${who}</b> heals <b>+${n}</b> HP.`,
     healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>. Attack to reset.`,
@@ -2052,46 +2082,28 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.0";
+const APP_VERSION="1.3.0";
 const CHANGELOG=[
-  {v:"1.4.0", it:[
-    "Le difficolta ora rispettano le REGOLE ESATTE: l avversario infligge danni e cure secondo le stesse regole del giocatore, senza nessun moltiplicatore nascosto. Cosi i numeri a schermo corrispondono sempre, al 100%, ai Punti Vino persi o recuperati.",
-    "Il vantaggio di difficolta e' ora onesto e visibile: l avversario parte con piu o meno vino nella damigiana. In Facile parte in svantaggio (70 PV), in Media alla pari (100 PV), in Difficile in vantaggio (130 PV). Le regole del duello restano identiche per tutti.",
-    "L avversario Difficile ora sceglie le inversioni Attacco/Difesa come parte della strategia: inverte le tre Maschere piu deboli per curare bene con le mani frequenti, e valuta ogni turno se conviene attaccare o difendere invece di attaccare quasi sempre. Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.",
-    "Facile e Media restano piu incerte e commettono piu errori. Nessun imbroglio sulle carte: cambia la bravura nelle scelte e il vino di partenza."],
-    en:[
-    "Difficulties now follow the EXACT RULES: the opponent deals damage and heals by the same rules as the player, with no hidden multiplier. So the on-screen numbers always match, 100%, the Wine Points lost or recovered.",
-    "The difficulty advantage is now honest and visible: the opponent starts with more or less wine in its demijohn. On Easy it starts behind (70 HP), on Medium even (100 HP), on Hard ahead (130 HP). The duel rules stay identical for everyone.",
-    "The Hard opponent now chooses its Attack/Defense inversions as part of its strategy: it inverts the three weakest Masks to heal well on frequent hands, and weighs each turn whether to attack or defend instead of attacking almost always. It reads your intentions more often so it won't strike into a parry.",
-    "Easy and Medium stay more uncertain and make more mistakes. No cheating on the cards: what changes is the quality of choices and the starting wine."]},
-  {v:"1.3.2", it:[
-    "Corretto: con una parata parziale (il danno viene ridotto ma non azzerato) la Maschera sconfitta ora si strappa come deve. Si salva solo quando la parata annulla del tutto il colpo.",
-    "Corretto: i numeri di danno e cura mostrati ora coincidono sempre con i Punti Vino davvero persi o recuperati. Prima, per via del vantaggio di difficolta, il numero a schermo poteva non tornare con quello versato nella damigiana.",
-    "Rifinito l equilibrio delle tre difficolta dopo la correzione: Facile ~75% di vittorie per te, Media equilibrata, Difficile ~25%."],
-    en:[
-    "Fixed: with a partial parry (damage reduced but not fully cancelled) the defeated Mask now tears as it should. It only survives when the parry cancels the blow entirely.",
-    "Fixed: the damage and heal numbers shown now always match the Wine Points actually lost or recovered. Before, because of the difficulty advantage, the on-screen number could disagree with what was poured into the demijohn.",
-    "Re-tuned the balance of the three difficulties after the fix: Easy ~75% wins for you, Medium even, Hard ~25%."]},
-  {v:"1.3.1", it:[
-    "Dopo una parata la Maschera si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore di strappo.",
-    "Il contatore dell Ultimo Giro inciso nel tavolo ora dice \"Ultimo giro -X\" nel carattere Scar maiuscolo; negli ultimi tre giri il numero e' rosso.",
-    "La scritta grande a schermo che avverte dell Ultimo Giro ora recita \"Ultimi Dieci Giri\" con un bordo nero piu netto, cosi si legge bene su qualsiasi sfondo."],
-    en:[
-    "After a parry the Mask is torn only if the blow lands: if the parry fully cancels the damage the Mask holds, with no tear and no tearing sound.",
-    "The Last Call counter carved into the table now reads \"Last call -X\" in the uppercase Scar typeface; in the last three rounds the number turns red.",
-    "The big on-screen Last Call warning now reads \"The Last Ten Rounds\" with a crisper black outline, so it reads clearly on any background."]},
   {v:"1.3.0", it:[
-    "Avversario rifatto da capo: ora ragiona sul valore atteso del turno invece di seguire regole fisse. Para davvero quando conviene (mano debole e rischio di subire), non solo per curarsi, e attacca con le mani forti invece di sprecarle in cura.",
-    "Le tre difficolta ora sono davvero diverse: in Facile vinci circa 3 volte su 4, in Media e' equilibrata, in Difficile e' l avversario a vincere circa 3 volte su 4. La difficile e' pensata per essere una vera sfida.",
-    "In Difficile l avversario e' un giocatore esperto: legge le tue intenzioni e sceglie al meglio; in Facile e' incerto e commette errori. Nessun imbroglio sulle carte, cambia solo quanto e' bravo a scegliere.",
-    "Musica di sottofondo piu presente sia nel menu sia durante la partita.",
-    "Le quattro carte iniziali ora fanno sempre sentire tutti e quattro gli scatti, anche il primissimo appena avviato il gioco."],
+    "Avversario rifatto: ora ragiona sul valore atteso di ogni turno invece di seguire regole rigide, e rispetta le REGOLE ESATTE del gioco — infligge danni e cura come il giocatore, senza moltiplicatori nascosti. I numeri a schermo corrispondono sempre ai Punti Vino persi o recuperati.",
+    "Le tre difficolta si distinguono in modo onesto: l avversario parte con piu o meno vino nella damigiana (Facile 70, Media 100, Difficile 130 PV) e gioca con piu o meno bravura. Nessun imbroglio sulle carte.",
+    "In Difficile l avversario cambia strategia a ogni partita, scegliendo tra tre build di Maschere diverse: Cura-difensiva (inverte le tre piu deboli, gioca di rimessa), Aggressiva pura (tutte in attacco) e Full-cura (inverte le Maschere ad alto danno per cure enormi). Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.",
+    "Parata: lo scudo mostra il valore PIENO della Difesa. Se l attacco fa 6 e la Difesa vale 10, sullo scudo compare 10 (il colpo resta annullato).",
+    "Dopo una parata la Maschera sconfitta si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore.",
+    "Il contatore dell Ultimo Giro inciso nel tavolo dice \"Ultimo giro -X\" nel carattere Scar maiuscolo; negli ultimi tre giri il numero e' rosso. La scritta grande a schermo recita \"Ultimi Dieci Giri\" con un bordo nero piu netto.",
+    "Dopo l avviso dell Ultimo Giro la musica di sottofondo accelera per dare il senso della corsa finale; in generale la musica e' piu presente nel menu e in partita.",
+    "Vittoria ai punti: il messaggio dice \"Allo scadere dei turni avevi piu vino nella damigiana\".",
+    "Le quattro carte iniziali fanno sempre sentire tutti e quattro gli scatti."],
     en:[
-    "Opponent rebuilt from scratch: it now reasons on the expected value of the turn instead of following fixed rules. It really parries when it's worth it (weak hand and risk of taking damage), not just to heal, and attacks with strong hands instead of wasting them on healing.",
-    "The three difficulties are now genuinely different: on Easy you win about 3 times out of 4, Medium is balanced, on Hard the opponent wins about 3 times out of 4. Hard is meant to be a real challenge.",
-    "On Hard the opponent plays like an expert: it reads your intentions and chooses optimally; on Easy it's unsure and makes mistakes. No cheating on the cards, only how well it chooses changes.",
-    "Background music is more present both in the menu and during the match.",
-    "The four opening cards now always play all four snaps, including the very first one right after starting the game."]},
+    "Opponent reworked: it now reasons on each turn's expected value instead of rigid rules, and follows the EXACT game RULES — it deals damage and heals like the player, with no hidden multipliers. On-screen numbers always match the Wine Points lost or recovered.",
+    "The three difficulties differ honestly: the opponent starts with more or less wine in its demijohn (Easy 70, Medium 100, Hard 130 HP) and plays with more or less skill. No cheating on the cards.",
+    "On Hard the opponent switches strategy each game, picking among three different Mask builds: Defensive-heal (inverts the three weakest, plays the counter), Pure aggressive (all on attack) and Full-heal (inverts the high-damage Masks for huge heals). It reads your intentions more often so it won't strike into a parry.",
+    "Parry: the shield shows the FULL Defense value. If the attack deals 6 and Defense is worth 10, the shield shows 10 (the blow is still nullified).",
+    "After a parry the defeated Mask tears only if the blow lands: if the parry fully cancels the damage the Mask holds, with no tear and no sound.",
+    "The Last Call counter carved into the table reads \"Last call -X\" in the uppercase Scar typeface; in the last three rounds the number turns red. The big on-screen warning reads \"The Last Ten Rounds\" with a crisper black outline.",
+    "After the Last Call warning the background music speeds up to convey the final rush; overall the music is more present in the menu and in play.",
+    "Win on points: the message reads \"When the turns ran out you had more wine in your demijohn\".",
+    "The four opening cards now always play all four clicks."]},
   {v:"1.2.12", it:[
     "Il contatore dell Ultimo Giro ora e scritto in un carattere inciso, in beige chiaro con contorno nero: si legge su qualsiasi sfondo del tavolo.",
     "Nelle ultime 3 mani il numero rimasto diventa rosso con bordo rosso piu chiaro, cosi lo urgenza si vede a colpo d occhio."],
@@ -2822,6 +2834,8 @@ const UI = (() => {
     $('scaler').appendChild(el);
     setTimeout(()=>el.classList.add('out'),2200);
     setTimeout(()=>el.remove(),2900);
+    // Ultimo Giro: la musica accelera per dare urgenza (430ms -> 330ms per passo).
+    Sfx.speedUpGameMusic(330);
   }
   // contatore sempre visibile al tavolo durante l'Ultimo Giro
   function updateLastCallBadge(){
@@ -2901,12 +2915,19 @@ const UI = (() => {
       setTimeout(()=>{
         playHit(state[w].eval.maskId);   // legno / metallo / taglio secondo l'arma
         throwWeapon(w, state[w].eval.maskId, ()=>{
-          // PARATA: lo scudo appare sulla MASCHERA che para, col valore assorbito
-          if(out.blocked>0){
-            shieldOnMask(loseCard, out.blocked);
+          // PARATA: lo scudo mostra il valore PIENO della Difesa (shieldShown),
+          // anche quando supera il danno dell'attacco. Il danno finale resta
+          // clampato a 0: la Difesa non "rimbalza", assorbe soltanto.
+          if(out.shieldShown>0){
+            shieldOnMask(loseCard, out.shieldShown);
             Sfx.block();
-            log(`<span class="sys">${T().blockedMath(lName, out.blocked, l==='me' && mode!=='pvp_local')}</span>`,'sys');
-            log(`<span class="${cls}">${T().dmgMath(out.rawDmg, out.blocked, finalDmg)}</span>`,cls);
+            log(`<span class="sys">${T().blockedMath(lName, out.shieldShown, l==='me' && mode!=='pvp_local')}</span>`,'sys');
+            if(finalDmg>0){
+              log(`<span class="${cls}">${T().dmgMath(out.rawDmg, out.shieldShown, finalDmg)}</span>`,cls);
+            } else {
+              // Difesa >= Attacco: colpo del tutto assorbito.
+              log(`<span class="${cls}">${T().dmgNullified(out.rawDmg, out.shieldShown)}</span>`,cls);
+            }
           } else {
             log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls);
           }
