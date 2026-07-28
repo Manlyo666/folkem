@@ -1,9 +1,15 @@
 # Changelog — Folk 'Em
 
+## 1.3.1
+
+- Difficulties rebalanced: the Hard opponent is tougher (starts with 140 HP instead of 130) and Easy is more accessible (60 HP instead of 70). Medium stays at 100.
+- In the Last Ten Rounds the music speeds up more (+50%) to raise the tension of the finish.
+- The red end-game counter on the table now has a crisp black outline, so it reads well even on light wood.
+
 ## 1.3.0
 
 - Opponent reworked: it now reasons on each turn's expected value instead of rigid rules, and follows the EXACT game RULES — it deals damage and heals like the player, with no hidden multipliers. On-screen numbers always match the Wine Points lost or recovered.
-- The three difficulties differ honestly: the opponent starts with more or less wine in its demijohn (Easy 70, Medium 100, Hard 130 HP) and plays with more or less skill. No cheating on the cards.
+- The three difficulties differ honestly: the opponent starts with more or less wine in its demijohn (Easy 60, Medium 100, Hard 140 HP) and plays with more or less skill. No cheating on the cards.
 - On Hard the opponent switches strategy each game, picking among three different Mask builds: Defensive-heal (inverts the three weakest, plays the counter), Pure aggressive (all on attack) and Full-heal (inverts the high-damage Masks for huge heals). It reads your intentions more often so it won't strike into a parry.
 - Parry: the shield shows the FULL Defense value. If the attack deals 6 and Defense is worth 10, the shield shows 10 (the blow is still nullified).
 - After a parry the defeated Mask tears only if the blow lands: if the parry fully cancels the damage the Mask holds, with no tear and no sound.

@@ -1,9 +1,15 @@
 # Changelog — Folk 'Em
 
+## 1.3.1
+
+- Difficolta ribilanciate: l avversario Difficile e' piu tosto (parte con 140 PV invece di 130) e il Facile piu accessibile (60 PV invece di 70). Media resta a 100.
+- Negli Ultimi Dieci Giri la musica accelera di piu (+50%) per aumentare la tensione del finale.
+- Il contatore rosso degli ultimi giri sul tavolo ora ha un bordo nero netto, cosi si legge bene anche sul legno chiaro.
+
 ## 1.3.0
 
 - Avversario rifatto: ora ragiona sul valore atteso di ogni turno invece di seguire regole rigide, e rispetta le REGOLE ESATTE del gioco — infligge danni e cura come il giocatore, senza moltiplicatori nascosti. I numeri a schermo corrispondono sempre ai Punti Vino persi o recuperati.
-- Le tre difficolta si distinguono in modo onesto: l avversario parte con piu o meno vino nella damigiana (Facile 70, Media 100, Difficile 130 PV) e gioca con piu o meno bravura. Nessun imbroglio sulle carte.
+- Le tre difficolta si distinguono in modo onesto: l avversario parte con piu o meno vino nella damigiana (Facile 60, Media 100, Difficile 140 PV) e gioca con piu o meno bravura. Nessun imbroglio sulle carte.
 - In Difficile l avversario cambia strategia a ogni partita, scegliendo tra tre build di Maschere diverse: Cura-difensiva (inverte le tre piu deboli, gioca di rimessa), Aggressiva pura (tutte in attacco) e Full-cura (inverte le Maschere ad alto danno per cure enormi). Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.
 - Parata: lo scudo mostra il valore PIENO della Difesa. Se l attacco fa 6 e la Difesa vale 10, sullo scudo compare 10 (il colpo resta annullato).
 - Dopo una parata la Maschera sconfitta si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore.
