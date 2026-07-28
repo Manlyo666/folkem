@@ -337,10 +337,10 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
 .board-label.lastcall-inline .lcb-t{font-size:16px}
 .board-label.lastcall-inline .lcb-n{font-size:22px;font-weight:bold;
   color:#e8d3a6;-webkit-text-stroke:1.2px #1a1109;paint-order:stroke fill}
-/* ultime 3 mani: i NUMERI diventano rossi con bordo rosso più chiaro */
-.board-label.lastcall-inline.urgent .lcb-n{color:#c0272e;
-  -webkit-text-stroke:1.2px #e8636a;paint-order:stroke fill;
-  text-shadow:0 0 8px rgba(200,40,50,.35);
+/* ultime 3 mani: i NUMERI diventano rossi, con BORDO NERO per leggerli bene */
+.board-label.lastcall-inline.urgent .lcb-n{color:#e83a40;
+  -webkit-text-stroke:2px #120a05;paint-order:stroke fill;
+  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(200,40,50,.35);
   animation:lcCarve 1.4s ease-in-out infinite}
 body[data-portrait="1"] .board-label.lastcall-inline .lcb-t{font-size:3.4vw}
 body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
@@ -1016,10 +1016,10 @@ const GameState = (() => {
   // HANDICAP DI DIFFICOLTÀ (onesto, trasparente): l'IA parte con PV diversi.
   // Le regole di danno/cura restano IDENTICHE per tutti, così i numeri a schermo
   // corrispondono sempre ai PV persi/curati. Il giocatore parte sempre a 100.
-  //   easy  70  -> il giocatore vince piu' spesso
+  //   easy  60  -> il giocatore vince piu' spesso
   //   medium 100 -> pari PV
-  //   hard  130 -> l'IA parte avvantaggiata
-  const AI_START_HP={easy:70, medium:100, hard:130};
+  //   hard  140 -> l'IA parte avvantaggiata
+  const AI_START_HP={easy:60, medium:100, hard:140};
   function aiStartHp(difficulty){ return AI_START_HP[difficulty] || 100; }
   // ULTIMO GIRO: dopo LAST_CALL_AT round parte un conto alla rovescia di LAST_CALL_LEN mani.
   // Allo scadere vince chi ha più PV (nessun modificatore ai danni o alla cura).
@@ -2082,11 +2082,19 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.0";
+const APP_VERSION="1.3.1";
 const CHANGELOG=[
+  {v:"1.3.1", it:[
+    "Difficolta ribilanciate: l avversario Difficile e' piu tosto (parte con 140 PV invece di 130) e il Facile piu accessibile (60 PV invece di 70). Media resta a 100.",
+    "Negli Ultimi Dieci Giri la musica accelera di piu (+50%) per aumentare la tensione del finale.",
+    "Il contatore rosso degli ultimi giri sul tavolo ora ha un bordo nero netto, cosi si legge bene anche sul legno chiaro."],
+    en:[
+    "Difficulties rebalanced: the Hard opponent is tougher (starts with 140 HP instead of 130) and Easy is more accessible (60 HP instead of 70). Medium stays at 100.",
+    "In the Last Ten Rounds the music speeds up more (+50%) to raise the tension of the finish.",
+    "The red end-game counter on the table now has a crisp black outline, so it reads well even on light wood."]},
   {v:"1.3.0", it:[
     "Avversario rifatto: ora ragiona sul valore atteso di ogni turno invece di seguire regole rigide, e rispetta le REGOLE ESATTE del gioco — infligge danni e cura come il giocatore, senza moltiplicatori nascosti. I numeri a schermo corrispondono sempre ai Punti Vino persi o recuperati.",
-    "Le tre difficolta si distinguono in modo onesto: l avversario parte con piu o meno vino nella damigiana (Facile 70, Media 100, Difficile 130 PV) e gioca con piu o meno bravura. Nessun imbroglio sulle carte.",
+    "Le tre difficolta si distinguono in modo onesto: l avversario parte con piu o meno vino nella damigiana (Facile 60, Media 100, Difficile 140 PV) e gioca con piu o meno bravura. Nessun imbroglio sulle carte.",
     "In Difficile l avversario cambia strategia a ogni partita, scegliendo tra tre build di Maschere diverse: Cura-difensiva (inverte le tre piu deboli, gioca di rimessa), Aggressiva pura (tutte in attacco) e Full-cura (inverte le Maschere ad alto danno per cure enormi). Legge piu spesso le tue intenzioni per non colpire a vuoto contro una parata.",
     "Parata: lo scudo mostra il valore PIENO della Difesa. Se l attacco fa 6 e la Difesa vale 10, sullo scudo compare 10 (il colpo resta annullato).",
     "Dopo una parata la Maschera sconfitta si strappa solo se il colpo passa: se la parata azzera del tutto il danno la Maschera regge, senza strappo ne rumore.",
@@ -2096,7 +2104,7 @@ const CHANGELOG=[
     "Le quattro carte iniziali fanno sempre sentire tutti e quattro gli scatti."],
     en:[
     "Opponent reworked: it now reasons on each turn's expected value instead of rigid rules, and follows the EXACT game RULES — it deals damage and heals like the player, with no hidden multipliers. On-screen numbers always match the Wine Points lost or recovered.",
-    "The three difficulties differ honestly: the opponent starts with more or less wine in its demijohn (Easy 70, Medium 100, Hard 130 HP) and plays with more or less skill. No cheating on the cards.",
+    "The three difficulties differ honestly: the opponent starts with more or less wine in its demijohn (Easy 60, Medium 100, Hard 140 HP) and plays with more or less skill. No cheating on the cards.",
     "On Hard the opponent switches strategy each game, picking among three different Mask builds: Defensive-heal (inverts the three weakest, plays the counter), Pure aggressive (all on attack) and Full-heal (inverts the high-damage Masks for huge heals). It reads your intentions more often so it won't strike into a parry.",
     "Parry: the shield shows the FULL Defense value. If the attack deals 6 and Defense is worth 10, the shield shows 10 (the blow is still nullified).",
     "After a parry the defeated Mask tears only if the blow lands: if the parry fully cancels the damage the Mask holds, with no tear and no sound.",
@@ -2834,8 +2842,8 @@ const UI = (() => {
     $('scaler').appendChild(el);
     setTimeout(()=>el.classList.add('out'),2200);
     setTimeout(()=>el.remove(),2900);
-    // Ultimo Giro: la musica accelera per dare urgenza (430ms -> 330ms per passo).
-    Sfx.speedUpGameMusic(330);
+    // Ultimo Giro: la musica accelera del 50% per dare urgenza (430ms -> 287ms per passo).
+    Sfx.speedUpGameMusic(287);
   }
   // contatore sempre visibile al tavolo durante l'Ultimo Giro
   function updateLastCallBadge(){
