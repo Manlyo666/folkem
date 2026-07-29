@@ -1,5 +1,16 @@
 # Changelog — Folk 'Em
 
+## 1.3.3
+
+- Animation timings are now adaptive: each turn's length stretches or shrinks based on what actually happens — attack, parry, tear, heal or a stand-off. Every phase starts when the previous one ends, so animations and sounds no longer overlap.
+
+## 1.3.2
+
+- Fixed a Hard-opponent mistake: when it could win on points by healing (reaching 200 HP) it sometimes attacked instead of healing. Now, if a heal closes the game and attacking doesn't, it heals to win.
+- The Mask that parries and loses the clash now always tears if damage gets through, even after a partial parry: before, in some cases, the tear didn't fire due to an animation-timing issue.
+- Removed the demijohn "spilling wine" animation above 150 HP: the level stays full with no dripping.
+- If you restart the match during the Last Rounds the music returns to normal speed (before it stayed sped up).
+
 ## 1.3.1
 
 - Difficulties rebalanced: the Hard opponent is tougher (starts with 140 HP instead of 130) and Easy is more accessible (60 HP instead of 70). Medium stays at 100.

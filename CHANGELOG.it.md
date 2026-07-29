@@ -1,5 +1,16 @@
 # Changelog — Folk 'Em
 
+## 1.3.3
+
+- Tempi delle animazioni ora adattivi: la durata di ogni turno si allunga o accorcia in base a cosa succede davvero — attacco, parata, strappo, cura o nulla di fatto. Ogni fase parte quando la precedente e' finita, cosi animazioni e suoni non si accavallano piu.
+
+## 1.3.2
+
+- Corretto un errore dell avversario Difficile: quando poteva vincere ai punti curandosi (arrivando a 200 PV) a volte attaccava invece di curare. Ora, se una cura chiude la partita e l attacco non fa altrettanto, cura per vincere.
+- La Maschera che para e perde lo scontro ora si strappa sempre se il danno passa, anche dopo una parata parziale: prima, in certi casi, lo strappo non partiva per un problema di tempi dell animazione.
+- Rimossa l animazione della damigiana che "perde vino" oltre i 150 PV: il livello resta pieno senza gocce che colano.
+- Se riavvii la partita durante gli Ultimi Giri la musica torna alla velocita normale (prima restava accelerata).
+
 ## 1.3.1
 
 - Difficolta ribilanciate: l avversario Difficile e' piu tosto (parte con 140 PV invece di 130) e il Facile piu accessibile (60 PV invece di 70). Media resta a 100.

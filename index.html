@@ -972,7 +972,14 @@ const GameLogic = (() => {
     let va=_expected('attack',myDist,foeEvs,ctx);
     let vd=_expected('defend',myDist,foeEvs,ctx);
     const bestAtk=Math.max.apply(null, myDist.map(m=>m.st.atk));
-    if(bestAtk>=foe.hp) va+=1000;                    // posso chiudere: priorità assoluta
+    // CHIUSURA PER KO: se posso ridurre a 0 i PV avversario attaccando, lo faccio.
+    if(bestAtk>=foe.hp) va+=1000;
+    // CHIUSURA AI PUNTI: se curando arrivo a 200 PV (WIN_HP) vinco all'istante. La
+    // cura effettiva tiene conto della striscia decrescente. Vale se attaccare NON
+    // chiude gia' il KO: in tal caso difendere-per-curare e' la mossa vincente.
+    const WIN_HP=200;
+    const bestCur=Math.max.apply(null, myDist.map(m=>effectiveHeal(ai.hp, m.st.cur, ai.healStreak||0)));
+    if(bestAtk<foe.hp && ai.hp + bestCur >= WIN_HP) vd+=1000;
     if(P.noise>0){ va+=(Math.random()-0.5)*2*P.noise; vd+=(Math.random()-0.5)*2*P.noise; }
     return va>=vd?'attack':'defend';
   }
@@ -1650,7 +1657,16 @@ const Sfx=(()=>{
   // --- tema del GIOCO: orchestrato ---
   function startGameMusic(){
     if(musicMuted||!init()) return;
-    if(musica && musica.tipo==='gioco') return;
+    if(musica && musica.tipo==='gioco'){
+      // gia' in riproduzione (es. riavvio partita durante gli Ultimi Giri):
+      // riporto il tempo a quello normale, altrimenti resterebbe accelerato.
+      if(musica.tempoMs!==430 && musica.tick){
+        clearInterval(musica.timer);
+        musica.tempoMs=430;
+        musica.timer=setInterval(musica.tick, 430);
+      }
+      return;
+    }
     stopMusic();
     const g=ctx.createGain(); g.gain.value=0.26; g.connect(musicBus);
     // riverbero corto: da' spazio, fa sembrare un ambiente e non voci isolate
@@ -2082,8 +2098,22 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.1";
+const APP_VERSION="1.3.3";
 const CHANGELOG=[
+  {v:"1.3.3", it:[
+    "Tempi delle animazioni ora adattivi: la durata di ogni turno si allunga o accorcia in base a cosa succede davvero — attacco, parata, strappo, cura o nulla di fatto. Ogni fase parte quando la precedente e' finita, cosi animazioni e suoni non si accavallano piu."],
+    en:[
+    "Animation timings are now adaptive: each turn's length stretches or shrinks based on what actually happens — attack, parry, tear, heal or a stand-off. Every phase starts when the previous one ends, so animations and sounds no longer overlap."]},
+  {v:"1.3.2", it:[
+    "Corretto un errore dell avversario Difficile: quando poteva vincere ai punti curandosi (arrivando a 200 PV) a volte attaccava invece di curare. Ora, se una cura chiude la partita e l attacco non fa altrettanto, cura per vincere.",
+    "La Maschera che para e perde lo scontro ora si strappa sempre se il danno passa, anche dopo una parata parziale: prima, in certi casi, lo strappo non partiva per un problema di tempi dell animazione.",
+    "Rimossa l animazione della damigiana che \"perde vino\" oltre i 150 PV: il livello resta pieno senza gocce che colano.",
+    "Se riavvii la partita durante gli Ultimi Giri la musica torna alla velocita normale (prima restava accelerata)."],
+    en:[
+    "Fixed a Hard-opponent mistake: when it could win on points by healing (reaching 200 HP) it sometimes attacked instead of healing. Now, if a heal closes the game and attacking doesn't, it heals to win.",
+    "The Mask that parries and loses the clash now always tears if damage gets through, even after a partial parry: before, in some cases, the tear didn't fire due to an animation-timing issue.",
+    "Removed the demijohn \"spilling wine\" animation above 150 HP: the level stays full with no dripping.",
+    "If you restart the match during the Last Rounds the music returns to normal speed (before it stayed sped up)."]},
   {v:"1.3.1", it:[
     "Difficolta ribilanciate: l avversario Difficile e' piu tosto (parte con 140 PV invece di 130) e il Facile piu accessibile (60 PV invece di 70). Media resta a 100.",
     "Negli Ultimi Dieci Giri la musica accelera di piu (+50%) per aumentare la tensione del finale.",
@@ -2449,8 +2479,9 @@ const UI = (() => {
     const fillPct=Math.min(hp/200,1)*100;   // 0..100% del contenitore sagomato
     const otre=$(side==='me'?'otre-me':'otre-ai');
     otre.querySelector('.fill').style.height=fillPct+'%';
-    // oltre 150 PV (75% di 200) la damigiana è troppo piena: il vino trabocca
-    otre.classList.toggle('overflowing', hp>150);
+    // (rimosso il traboccamento: la damigiana non "perde vino" oltre i 150 PV.
+    // Il livello resta pieno senza gocce che colano.)
+    otre.classList.remove('overflowing');
     const num=$(side==='me'?'hp-me':'hp-ai');
     num.innerHTML=hp+`<span class="hp-unit">${T().hpUnit}</span>`;
     num.classList.toggle('over',st.hp>100);
@@ -2915,67 +2946,113 @@ const UI = (() => {
     winCard.classList.add('win'); loseCard.classList.add('lose');
     log(`<span class="${cls}">${T().winClash(wName, w==='me' && mode!=='pvp_local')}</span>`,cls);
 
+    // ============================================================
+    // ORCHESTRAZIONE TEMPORALE ADATTIVA
+    // I tempi NON sono fissi: ogni fase parte quando la precedente e' finita, e
+    // dura in base a cosa succede davvero (affondo, lancio arma, parata, strappo,
+    // cura, nulla di fatto). Cosi niente animazioni o suoni si accavallano: il
+    // turno si allunga o accorcia da solo secondo l'esito.
+    //
+    // Durate delle singole fasi (ms). Ognuna e' il tempo che quella animazione
+    // ha bisogno per completarsi prima di passare alla successiva.
+    const T_LUNGE   = 900;   // affondo della maschera che attacca
+    const T_THROW   = 0;     // il lancio arma chiama il suo callback da solo (throwWeapon)
+    const T_SHIELD  = 700;   // comparsa e lettura dello scudo di parata
+    const T_TEAR    = 950;   // strappo della maschera (le due meta' volano via)
+    const T_NODMG   = 500;   // colpo del tutto assorbito: breve pausa di lettura
+    const T_FLATHIT = 550;   // colpo pieno senza parata: pausa di lettura
+    const T_HEAL    = 1300;  // cura: bagliore + annuncio
+    const T_POUR    = 1750;  // versamento/rovesciamento del vino nella damigiana
+    const T_CLOSE   = 650;   // le maschere lasciano il centro (dissolvenza)
+    const T_GAP     = 300;   // piccola pausa di respiro tra una fase e l'altra
+
+    // esegue le fasi in sequenza: ogni elemento e' [durataPrima, azione].
+    // L'azione parte dopo 'durataPrima' ms dalla fine della fase precedente.
+    function runPhases(phases, done){
+      let i=0;
+      (function next(){
+        if(i>=phases.length){ if(done) done(); return; }
+        const [wait, act]=phases[i++];
+        setTimeout(()=>{ if(act) act(); next(); }, wait);
+      })();
+    }
+
+    const cambiaQualcosa = (gained.me!==0 || gained.ai!==0);
+    const finalDmg = out.action==='attack' ? Math.max(0, out.rawDmg-out.blocked) : 0;
+
     if(out.action==='attack'){
-      Sfx.maskAttack();                       // la maschera prende vita
+      Sfx.maskAttack();
       announceWeapon(state[w].eval.maskId);
-      const finalDmg=Math.max(0, out.rawDmg-out.blocked);
       winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
+
+      // Fase 1: affondo, poi lancio arma. throwWeapon richiama il suo callback
+      // quando l'arma ha colpito: da li' parte la catena parata/strappo.
       setTimeout(()=>{
-        playHit(state[w].eval.maskId);   // legno / metallo / taglio secondo l'arma
+        playHit(state[w].eval.maskId);
         throwWeapon(w, state[w].eval.maskId, ()=>{
-          // PARATA: lo scudo mostra il valore PIENO della Difesa (shieldShown),
-          // anche quando supera il danno dell'attacco. Il danno finale resta
-          // clampato a 0: la Difesa non "rimbalza", assorbe soltanto.
+          // costruisco la sequenza in base all'esito reale del colpo
+          const phases=[];
           if(out.shieldShown>0){
-            shieldOnMask(loseCard, out.shieldShown);
-            Sfx.block();
-            log(`<span class="sys">${T().blockedMath(lName, out.shieldShown, l==='me' && mode!=='pvp_local')}</span>`,'sys');
+            // c'e' stata una parata: mostro lo scudo e leggo il risultato
+            phases.push([0, ()=>{
+              shieldOnMask(loseCard, out.shieldShown);
+              Sfx.block();
+              log(`<span class="sys">${T().blockedMath(lName, out.shieldShown, l==='me' && mode!=='pvp_local')}</span>`,'sys');
+              if(finalDmg>0) log(`<span class="${cls}">${T().dmgMath(out.rawDmg, out.shieldShown, finalDmg)}</span>`,cls);
+              else           log(`<span class="${cls}">${T().dmgNullified(out.rawDmg, out.shieldShown)}</span>`,cls);
+            }]);
             if(finalDmg>0){
-              log(`<span class="${cls}">${T().dmgMath(out.rawDmg, out.shieldShown, finalDmg)}</span>`,cls);
+              // il danno passa nonostante la parata: dopo lo scudo, lo strappo
+              phases.push([T_SHIELD, ()=>{ loseCard.classList.add('destroyed'); tearMask(loseCard); Sfx.tear(); }]);
+              phases.push([T_TEAR, null]);           // attendo la fine dello strappo
             } else {
-              // Difesa >= Attacco: colpo del tutto assorbito.
-              log(`<span class="${cls}">${T().dmgNullified(out.rawDmg, out.shieldShown)}</span>`,cls);
+              phases.push([T_NODMG, null]);          // colpo assorbito: breve pausa
             }
           } else {
-            log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls);
+            // nessuna parata: colpo pieno, poi strappo
+            phases.push([0, ()=>{ log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls); }]);
+            if(finalDmg>0){
+              phases.push([T_FLATHIT, ()=>{ loseCard.classList.add('destroyed'); tearMask(loseCard); Sfx.tear(); }]);
+              phases.push([T_TEAR, null]);
+            } else {
+              phases.push([T_NODMG, null]);
+            }
           }
-          // La carta sconfitta si strappa se il colpo va a segno (danno finale>0).
-          // Se la parata azzera del tutto il danno, la maschera regge: nessuno
-          // strappo né rumore. rawDmg, blocked, finalDmg e delta sono per
-          // costruzione coerenti (finalDmg = rawDmg-blocked = -delta del perdente).
-          if(finalDmg>0){
-            setTimeout(()=>{
-              loseCard.classList.add('destroyed');
-              tearMask(loseCard);
-              Sfx.tear();
-            }, out.blocked>0 ? 750 : 0);
-          }
+          // dopo la sequenza del colpo, chiudo il duello e verso il vino
+          runPhases(phases, ()=> endTurnSequence());
         });
-      },900);
-    }else{
-      winCard.classList.add('glow-heal');
-      Sfx.maskHeal();                          // la maschera si desta per curare
-      announceHeal(state[w].eval.maskId);       // annuncio verde a centro schermo
-      // se la cura è stata ridotta dalla striscia, lo dico chiaramente
-      const streakBefore=(state[w].healStreak||1)-1;   // applyDelta l'ha già incrementata
-      const pct=[100,75,50,25,0][Math.min(4,streakBefore)];
-      setTimeout(()=>{
-        if(pct<100) log(`<span class="sys">${T().healReduced(pct)}</span>`,'sys');
-        log(`<span class="${cls}">${T().healedBy(wName, gained[w], w==='me' && mode!=='pvp_local')}</span>`,cls);
-      },700);
-    }
-    // FINE TURNO, in ordine: prima spariscono le maschere dal centro,
-    // POI si versa o si rovescia il vino nelle damigiane.
-    const attesaDuello = out.action==='attack' ? 2600 : 1500;
-    setTimeout(()=>{ closeMaskDuel(); }, attesaDuello);
-    // Se il danno e' stato completamente parato (o non c'e' nulla da versare),
-    // non ha senso aspettare l'animazione della damigiana: si va avanti subito.
-    const cambiaQualcosa = (gained.me!==0 || gained.ai!==0);
-    if(cambiaQualcosa){
-      setTimeout(()=>{ pourIntoDemijohns(gained); }, attesaDuello+650);
-      setTimeout(afterResolve, attesaDuello+2600);
+      }, T_LUNGE);
     } else {
-      setTimeout(afterResolve, attesaDuello+500);
+      // RAMO CURA
+      winCard.classList.add('glow-heal');
+      Sfx.maskHeal();
+      announceHeal(state[w].eval.maskId);
+      const streakBefore=(state[w].healStreak||1)-1;
+      const pct=[100,75,50,25,0][Math.min(4,streakBefore)];
+      const phases=[
+        [700, ()=>{
+          if(pct<100) log(`<span class="sys">${T().healReduced(pct)}</span>`,'sys');
+          log(`<span class="${cls}">${T().healedBy(wName, gained[w], w==='me' && mode!=='pvp_local')}</span>`,cls);
+        }],
+        [T_HEAL, null]
+      ];
+      runPhases(phases, ()=> endTurnSequence());
+    }
+
+    // Coda comune: maschere via dal centro -> (eventuale) versamento vino -> avanti.
+    // Anche qui le fasi si concatenano: il versamento parte solo se qualcosa
+    // cambia, e afterResolve solo quando tutto e' finito.
+    function endTurnSequence(){
+      const tail=[
+        [T_GAP, ()=>{ closeMaskDuel(); }],
+      ];
+      if(cambiaQualcosa){
+        tail.push([T_CLOSE, ()=>{ pourIntoDemijohns(gained); }]);
+        tail.push([T_POUR, null]);
+      } else {
+        tail.push([T_CLOSE, null]);
+      }
+      runPhases(tail, ()=> afterResolve());
     }
   }
 
