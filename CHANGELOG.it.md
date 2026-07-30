@@ -1,5 +1,10 @@
 # Changelog — Folk 'Em
 
+## 1.3.4
+
+- Corretto: se allo scadere degli Ultimi Dieci Giri i Punti Vino sono in parita', la partita non si chiude piu' con una vittoria arbitraria. Si va allo SPAREGGIO — si continua a oltranza, un giro alla volta, finche' qualcuno non passa in vantaggio.
+- Damigiana: il vino ora resta sempre dentro i contorni del vetro, anche quando e' quasi colma. Prima, oltre una certa soglia, il rosso sforava i bordi.
+
 ## 1.3.3
 
 - Tempi delle animazioni ora adattivi: la durata di ogni turno si allunga o accorcia in base a cosa succede davvero — attacco, parata, strappo, cura o nulla di fatto. Ogni fase parte quando la precedente e' finita, cosi animazioni e suoni non si accavallano piu.

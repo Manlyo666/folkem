@@ -198,9 +198,12 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .otre{position:relative;width:72px;height:92px;display:flex;align-items:flex-end;justify-content:center}
 .otre img{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;z-index:2;
   filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
-/* il vino sta in un contenitore sagomato come il corpo della damigiana (non fuoriesce) */
-.otre .fill-clip{position:absolute;left:21%;right:21%;top:22%;bottom:5%;z-index:1;overflow:hidden;
-  border-radius:44% 44% 46% 46%/22% 22% 40% 40%}
+/* Il vino e' ritagliato ESATTAMENTE sulla sagoma della damigiana tramite un
+   clip-path che replica il profilo del vetro (stesse coordinate dell'SVG otre,
+   viewBox 120x150, normalizzate 0..1). Cosi, anche colmo, il vino non esce mai
+   dai contorni: segue collo stretto, pancia larga e base rientrante. */
+.otre .fill-clip{position:absolute;inset:0;z-index:1;overflow:hidden;
+  clip-path:url(#otreClip)}
 .otre .fill{position:absolute;left:0;right:0;bottom:0;
   background:linear-gradient(180deg,#c8283c,#7a0e18);
   transition:height .6s ease;opacity:.9}
@@ -574,6 +577,25 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
 <body>
 <div class="candle-glow"></div>
 
+<!-- Sagoma di ritaglio del vino: replica il profilo della damigiana (SVG otre,
+     viewBox 120x150) in coordinate normalizzate 0..1, cosi il riempimento resta
+     sempre dentro i contorni del vetro anche quando e' colmo. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="otreClip" clipPathUnits="objectBoundingBox">
+      <path d="M0.5,0.133
+               C0.475,0.133 0.458,0.147 0.458,0.173 L0.458,0.227
+               C0.35,0.267 0.25,0.333 0.217,0.453
+               C0.183,0.573 0.2,0.747 0.25,0.827
+               C0.3,0.907 0.4,0.947 0.5,0.947
+               C0.6,0.947 0.7,0.907 0.75,0.827
+               C0.8,0.747 0.817,0.573 0.783,0.453
+               C0.75,0.333 0.65,0.267 0.542,0.227 L0.542,0.173
+               C0.542,0.147 0.525,0.133 0.5,0.133 Z"/>
+    </clipPath>
+  </defs>
+</svg>
+
 <div id="stage"><div id="scaler">
 
   <!-- ============ MENU MODALITÀ ============ -->
@@ -623,7 +645,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
       </div>
       <div class="player-strip foe">
         <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div>
-          <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""><div class="spill"><span class="drip d1"></span><span class="drip d2"></span><span class="drip d3"></span><span class="puddle"></span></div></div>
+          <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-ai">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="foe-hand"></div>
       </div>
@@ -645,7 +667,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
     <div class="table-bottom">
       <div class="player-strip">
         <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div>
-          <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""><div class="spill"><span class="drip d1"></span><span class="drip d2"></span><span class="drip d3"></span><span class="puddle"></span></div></div>
+          <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-me">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="my-hand"></div>
       </div>
@@ -1152,10 +1174,12 @@ const GameState = (() => {
   // Restituisce {active, remaining, justStarted} per far avvisare l'interfaccia.
   function lastCallStatus(s){
     const active = s.round > LAST_CALL_AT;
-    if(!active) return {active:false, remaining:null, justStarted:false};
+    if(!active) return {active:false, remaining:null, justStarted:false, overtime:false};
     const used = s.round - LAST_CALL_AT;          // 1 = prima mano dell'Ultimo Giro
     const remaining = Math.max(0, LAST_CALL_LEN - used + 1);
-    return {active:true, remaining, justStarted: used===1};
+    // supplementari: l'Ultimo Giro e' scaduto ma si continua per rompere la parita'
+    const overtime = used > LAST_CALL_LEN;
+    return {active:true, remaining, justStarted: used===1, overtime};
   }
 
   // Da chiamare a FINE round: se l'Ultimo Giro è scaduto, assegna la vittoria ai punti.
@@ -1163,8 +1187,14 @@ const GameState = (() => {
     if(s.winner) return s.winner;
     const used = s.round - LAST_CALL_AT;
     if(used >= LAST_CALL_LEN){
-      // vince chi ha più PV; a parità è pareggio deciso a favore di chi ha più PV (o 'me' se identici)
-      s.winner = s.me.hp>s.ai.hp ? 'me' : (s.ai.hp>s.me.hp ? 'ai' : 'me');
+      if(s.me.hp === s.ai.hp){
+        // PARITÀ allo scadere: nessuno vince. Si va ai SUPPLEMENTARI — la partita
+        // prosegue a oltranza, un round alla volta, finché il pareggio si rompe.
+        // Non tocco winner né phase: il gioco continua normalmente.
+        s.overtime = true;
+        return null;
+      }
+      s.winner = s.me.hp > s.ai.hp ? 'me' : 'ai';
       s.wonOnPoints = true;                        // per il messaggio di fine partita
       s.phase='over';
     }
@@ -2018,7 +2048,7 @@ const I18N = {
     healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>. Attacca per azzerare.`,
     healed:(n)=>`Cura: +${n} PV.`, tie:"Pareggio: nessun colpo.",
     win:"HAI VINTO!", lose:"HAI PERSO", p1win:"VINCE GIOCATORE 1", p2win:"VINCE GIOCATORE 2",
-    lastCallTitle:"ULTIMI DIECI GIRI", lastCallBoard:"Ultimo giro", lastCallIntro:(n)=>`Restano ${n} mani: poi vince chi ha più vino.`,
+    lastCallTitle:"ULTIMI DIECI GIRI", lastCallBoard:"Ultimo giro", overtimeBoard:"Spareggio", lastCallIntro:(n)=>`Restano ${n} mani: poi vince chi ha più vino.`,
     lastCallLeft:(n)=>`ultime ${n} mani`,
     wonOnPointsYou:"Allo scadere dei turni avevi più vino nella damigiana.",
     wonOnPointsFoe:"Allo scadere dei turni l'avversario aveva più vino nella damigiana.",
@@ -2076,7 +2106,7 @@ const I18N = {
     healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>. Attack to reset.`,
     healed:(n)=>`Heal: +${n} HP.`, tie:"Tie: no blow lands.",
     win:"YOU WIN!", lose:"YOU LOSE", p1win:"PLAYER 1 WINS", p2win:"PLAYER 2 WINS",
-    lastCallTitle:"THE LAST TEN ROUNDS", lastCallBoard:"Last call", lastCallIntro:(n)=>`${n} hands left: then the most wine wins.`,
+    lastCallTitle:"THE LAST TEN ROUNDS", lastCallBoard:"Last call", overtimeBoard:"Sudden death", lastCallIntro:(n)=>`${n} hands left: then the most wine wins.`,
     lastCallLeft:(n)=>`${n} hands left`,
     wonOnPointsYou:"When time ran out you had more wine in your demijohn.",
     wonOnPointsFoe:"When time ran out the opponent had more wine.",
@@ -2098,8 +2128,14 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.3";
+const APP_VERSION="1.3.4";
 const CHANGELOG=[
+  {v:"1.3.4", it:[
+    "Corretto: se allo scadere degli Ultimi Dieci Giri i Punti Vino sono in parita', la partita non si chiude piu' con una vittoria arbitraria. Si va allo SPAREGGIO — si continua a oltranza, un giro alla volta, finche' qualcuno non passa in vantaggio.",
+    "Damigiana: il vino ora resta sempre dentro i contorni del vetro, anche quando e' quasi colma. Prima, oltre una certa soglia, il rosso sforava i bordi."],
+    en:[
+    "Fixed: if the Wine Points are tied when the Last Ten Rounds run out, the match no longer ends with an arbitrary win. It goes to SUDDEN DEATH — play continues one round at a time until someone pulls ahead.",
+    "Demijohn: the wine now always stays within the glass outline, even when nearly full. Before, past a certain level, the red spilled outside the edges."]},
   {v:"1.3.3", it:[
     "Tempi delle animazioni ora adattivi: la durata di ogni turno si allunga o accorcia in base a cosa succede davvero — attacco, parata, strappo, cura o nulla di fatto. Ogni fase parte quando la precedente e' finita, cosi animazioni e suoni non si accavallano piu."],
     en:[
@@ -2476,12 +2512,14 @@ const UI = (() => {
   /* ================= OTRE (HP) ================= */
   function renderOtre(side){
     const st=state[side], hp=Math.max(0,st.hp);
-    const fillPct=Math.min(hp/200,1)*100;   // 0..100% del contenitore sagomato
+    // Il clip ora e' l'intera sagoma (collo compreso). Il vino "pieno" (200 PV)
+    // deve arrivare alla base del collo, non oltre: la pancia va da terra (0%)
+    // fino a ~78% dell'altezza. Mappo quindi 0..200 PV su 0..78% di altezza,
+    // cosi il vetro resta con un filo di aria sul collo anche colmo.
+    const FILL_MAX=78;
+    const fillPct=Math.min(hp/200,1)*FILL_MAX;
     const otre=$(side==='me'?'otre-me':'otre-ai');
     otre.querySelector('.fill').style.height=fillPct+'%';
-    // (rimosso il traboccamento: la damigiana non "perde vino" oltre i 150 PV.
-    // Il livello resta pieno senza gocce che colano.)
-    otre.classList.remove('overflowing');
     const num=$(side==='me'?'hp-me':'hp-ai');
     num.innerHTML=hp+`<span class="hp-unit">${T().hpUnit}</span>`;
     num.classList.toggle('over',st.hp>100);
@@ -2646,7 +2684,11 @@ const UI = (() => {
         showLastCallBanner();
         Sfx.bell();   // campana: l'oste chiama l'ultimo giro
       }
-      log(`— <b>Round ${state.round}</b> · <span class="lastcall-count">${T().lastCallLeft(lc.remaining)}</span> —`,'sys');
+      if(lc.overtime){
+        log(`— <b>Round ${state.round}</b> · <span class="lastcall-count">${T().overtimeBoard}</span> —`,'sys');
+      } else {
+        log(`— <b>Round ${state.round}</b> · <span class="lastcall-count">${T().lastCallLeft(lc.remaining)}</span> —`,'sys');
+      }
     } else {
       log(`— <b>Round ${state.round}</b> —`,'sys');
     }
@@ -2882,6 +2924,12 @@ const UI = (() => {
     const b=$('boardLabel'); if(!b) return;
     const lc=state?GameState.lastCallStatus(state):{active:false};
     if(!lc.active){ b.innerHTML=''; b.className='board-label'; return; }
+    if(lc.overtime){
+      // supplementari a oltranza: si gioca finche' il pareggio non si rompe
+      b.className='board-label lastcall-inline urgent';
+      b.innerHTML=`<span class="lcb-t">${T().overtimeBoard}</span>`;
+      return;
+    }
     b.className='board-label lastcall-inline'+(lc.remaining<=3?' urgent':'');
     b.innerHTML=`<span class="lcb-t">${T().lastCallBoard}</span> <span class="lcb-n">-${lc.remaining}</span>`;
   }

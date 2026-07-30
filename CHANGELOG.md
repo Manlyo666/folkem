@@ -1,5 +1,10 @@
 # Changelog — Folk 'Em
 
+## 1.3.4
+
+- Fixed: if the Wine Points are tied when the Last Ten Rounds run out, the match no longer ends with an arbitrary win. It goes to SUDDEN DEATH — play continues one round at a time until someone pulls ahead.
+- Demijohn: the wine now always stays within the glass outline, even when nearly full. Before, past a certain level, the red spilled outside the edges.
+
 ## 1.3.3
 
 - Animation timings are now adaptive: each turn's length stretches or shrinks based on what actually happens — attack, parry, tear, heal or a stand-off. Every phase starts when the previous one ends, so animations and sounds no longer overlap.
