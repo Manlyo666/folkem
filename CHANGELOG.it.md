@@ -1,5 +1,14 @@
 # Changelog — Folk 'Em
 
+## 1.3.6
+
+- Regole riordinate per leggersi meglio: Il round (con la scelta alla cieca), poi Gerarchia delle mani, Build, Cura a rendimenti decrescenti e infine Ultimo Giro. Tolta la sezione Audio (il suono resta regolabile dalle impostazioni).
+
+## 1.3.5
+
+- Il consiglio "Attacca per azzerare" (sulle cure consecutive) ora compare solo in PvP offline, dove serve a entrambi i giocatori umani. In partita contro il computer non appare piu quando a curarsi e' l avversario.
+- Corretto il messaggio della cura a rendimento esaurito: quando la striscia arriva allo 0% non scrive piu "si cura di +0 PV", ma spiega che la cura non ha avuto effetto.
+
 ## 1.3.4
 
 - Corretto: se allo scadere degli Ultimi Dieci Giri i Punti Vino sono in parita', la partita non si chiude piu' con una vittoria arbitraria. Si va allo SPAREGGIO — si continua a oltranza, un giro alla volta, finche' qualcuno non passa in vantaggio.

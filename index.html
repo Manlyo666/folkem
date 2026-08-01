@@ -2045,7 +2045,9 @@ const I18N = {
     dmgNullified:(raw,def)=>`Attacco ${raw} contro Difesa ${def}: colpo <b>annullato</b>.`,
     dmgFlat:(n)=>`Danno pieno: <b>${n}</b> (nessuna parata).`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> ti curi di <b>+${n}</b> PV.`:`<b>${who}</b> si cura di <b>+${n}</b> PV.`,
-    healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>. Attacca per azzerare.`,
+    healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>.`,
+    healResetTip:`Attacca per azzerare.`,
+    healNone:`Cure consecutive esaurite: la cura non ha effetto (0%). Attacca per azzerare.`,
     healed:(n)=>`Cura: +${n} PV.`, tie:"Pareggio: nessun colpo.",
     win:"HAI VINTO!", lose:"HAI PERSO", p1win:"VINCE GIOCATORE 1", p2win:"VINCE GIOCATORE 2",
     lastCallTitle:"ULTIMI DIECI GIRI", lastCallBoard:"Ultimo giro", overtimeBoard:"Spareggio", lastCallIntro:(n)=>`Restano ${n} mani: poi vince chi ha più vino.`,
@@ -2103,7 +2105,9 @@ const I18N = {
     dmgNullified:(raw,def)=>`Attack ${raw} against Defense ${def}: blow <b>nullified</b>.`,
     dmgFlat:(n)=>`Full damage: <b>${n}</b> (no parry).`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> heal <b>+${n}</b> HP.`:`<b>${who}</b> heals <b>+${n}</b> HP.`,
-    healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>. Attack to reset.`,
+    healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>.`,
+    healResetTip:`Attack to reset.`,
+    healNone:`Consecutive heals exhausted: the heal has no effect (0%). Attack to reset.`,
     healed:(n)=>`Heal: +${n} HP.`, tie:"Tie: no blow lands.",
     win:"YOU WIN!", lose:"YOU LOSE", p1win:"PLAYER 1 WINS", p2win:"PLAYER 2 WINS",
     lastCallTitle:"THE LAST TEN ROUNDS", lastCallBoard:"Last call", overtimeBoard:"Sudden death", lastCallIntro:(n)=>`${n} hands left: then the most wine wins.`,
@@ -2128,8 +2132,18 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.4";
+const APP_VERSION="1.3.6";
 const CHANGELOG=[
+  {v:"1.3.6", it:[
+    "Regole riordinate per leggersi meglio: Il round (con la scelta alla cieca), poi Gerarchia delle mani, Build, Cura a rendimenti decrescenti e infine Ultimo Giro. Tolta la sezione Audio (il suono resta regolabile dalle impostazioni)."],
+    en:[
+    "Rules reordered for clarity: The round (with the blind choice), then Hand hierarchy, Builds, Diminishing healing and finally Last Call. Removed the Sound section (audio is still adjustable from settings)."]},
+  {v:"1.3.5", it:[
+    "Il consiglio \"Attacca per azzerare\" (sulle cure consecutive) ora compare solo in PvP offline, dove serve a entrambi i giocatori umani. In partita contro il computer non appare piu quando a curarsi e' l avversario.",
+    "Corretto il messaggio della cura a rendimento esaurito: quando la striscia arriva allo 0% non scrive piu \"si cura di +0 PV\", ma spiega che la cura non ha avuto effetto."],
+    en:[
+    "The \"Attack to reset\" tip (on consecutive heals) now appears only in offline PvP, where it's useful to both human players. In matches against the computer it no longer shows when the opponent heals.",
+    "Fixed the exhausted-heal message: when the streak reaches 0% it no longer says \"heals for +0 HP\", but explains the heal had no effect."]},
   {v:"1.3.4", it:[
     "Corretto: se allo scadere degli Ultimi Dieci Giri i Punti Vino sono in parita', la partita non si chiude piu' con una vittoria arbitraria. Si va allo SPAREGGIO — si continua a oltranza, un giro alla volta, finche' qualcuno non passa in vantaggio.",
     "Damigiana: il vino ora resta sempre dentro i contorni del vetro, anche quando e' quasi colma. Prima, oltre una certa soglia, il rosso sforava i bordi."],
@@ -3077,10 +3091,22 @@ const UI = (() => {
       announceHeal(state[w].eval.maskId);
       const streakBefore=(state[w].healStreak||1)-1;
       const pct=[100,75,50,25,0][Math.min(4,streakBefore)];
+      const healedNow = gained[w];                 // PV realmente recuperati (0 se 0%)
+      const showTip = (mode==='pvp_local');         // il consiglio "Attacca per azzerare"
+                                                    // ha senso solo in PvP offline
       const phases=[
         [700, ()=>{
-          if(pct<100) log(`<span class="sys">${T().healReduced(pct)}</span>`,'sys');
-          log(`<span class="${cls}">${T().healedBy(wName, gained[w], w==='me' && mode!=='pvp_local')}</span>`,cls);
+          if(healedNow<=0){
+            // cura del tutto azzerata dalla striscia: NON scrivo "+0 PV", spiego
+            // che la cura non ha avuto effetto.
+            log(`<span class="sys">${T().healNone}</span>`,'sys');
+          } else {
+            if(pct<100){
+              const tip = showTip ? ' '+T().healResetTip : '';
+              log(`<span class="sys">${T().healReduced(pct)}${tip}</span>`,'sys');
+            }
+            log(`<span class="${cls}">${T().healedBy(wName, healedNow, w==='me' && mode!=='pvp_local')}</span>`,cls);
+          }
         }],
         [T_HEAL, null]
       ];
@@ -3345,19 +3371,17 @@ const UI = (() => {
       <li>Premi <b>Rivela il Destino</b> e scegli <b>Attacco</b> o <b>Difesa</b> <b>alla cieca</b>, vedendo solo le 4 carte a terra.</li>
       <li><b>Solo dopo la scelta</b> cala la <b>5ª carta</b>: può ribaltare tutto. La osservi con calma.</li>
       <li>Premi <b>Evoca Maschera</b>: le mani definitive di 5 su 7 evocano le Maschere che si sfidano.</li>
-      <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata).</li></ul>
-      <h3>Audio</h3>
-      <p>Il gioco ha suoni per carte, attacchi, evocazioni e altro. Puoi silenziarlo con il pulsante 🔊 nel menu o dalle impostazioni in partita.</p>
-      <h3>Ultimo Giro</h3>
-      <p>Se dopo <b>30 round</b> nessuno ha chiuso, parte l'<b>Ultimo Giro</b>: un annuncio ti avvisa e un contatore mostra le <b>10 mani</b> rimaste. Allo scadere <b>vince chi ha più vino</b> nella damigiana. Nient'altro cambia: danni e cura restano normali.</p>
-      <h3>Cura a rendimenti decrescenti</h3>
-      <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>75%</b>, 3ª <b>50%</b>, 4ª <b>25%</b>, poi <b>0%</b>.<br>
-      <b>Attaccare azzera il contatore</b> e la cura torna piena. La <b>parata non è influenzata</b>: riduce sempre il danno per intero.</p>
-      <p style="color:var(--parch-dim);font-size:12px">La scelta alla cieca è il cuore del gioco: la 5ª carta è il rischio. Puoi puntare tutto su un colore… e scoprire che l'ha completato anche l'avversario.</p>
+      <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata).</li>
+      <li>La scelta alla cieca è il cuore del gioco: la 5ª carta è il rischio. Puoi puntare tutto su un colore… e scoprire che l'ha completato anche l'avversario. Anche a mani vuote la <b>Difesa</b> può convenire, per limitare il danno se temi di perdere lo scontro.</li></ul>
       <h3>⚠️ Gerarchia diversa dal poker</h3>
       <p>Con sole <b>40 carte</b> (niente 8-9-10), le probabilità cambiano: il <b>Colore è più raro del Full</b> (quindi Colore batte Full) e il <b>Tris è più raro della Scala</b> (quindi Tris batte Scala). Dal più forte al più debole:<br>
       Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
       <h3>Build</h3><p>Prima della partita puoi invertire Attacco/Difesa di ogni Maschera (tranne Meneghino e Capitan Spaventa).</p>
+      <h3>Cura a rendimenti decrescenti</h3>
+      <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>75%</b>, 3ª <b>50%</b>, 4ª <b>25%</b>, poi <b>0%</b>.<br>
+      <b>Attaccare azzera il contatore</b> e la cura torna piena. La <b>parata non è influenzata</b>: riduce sempre il danno per intero.</p>
+      <h3>Ultimo Giro</h3>
+      <p>Se dopo <b>30 round</b> nessuno ha chiuso, parte l'<b>Ultimo Giro</b>: un annuncio ti avvisa e un contatore mostra le <b>10 mani</b> rimaste. Allo scadere <b>vince chi ha più vino</b> nella damigiana; in caso di parità si va allo <b>spareggio</b> finché uno non passa in vantaggio. Nient'altro cambia: danni e cura restano normali.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
     return `<h2>${r.rulesTitle}</h2>
       <div class="lang-switch"><button data-lang="it">IT</button><button class="on" data-lang="en">EN</button></div>
@@ -3367,18 +3391,17 @@ const UI = (() => {
       <li>Choose <b>Attack</b> or <b>Defend</b> <b>blind</b>, seeing only the 4 table cards.</li>
       <li><b>Only after the choice</b> the <b>5th card</b> is dealt: it can turn everything around.</li>
       <li>Press <b>Summon Mask</b>: the final 5-of-7 hands summon the Masks that clash.</li>
-      <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry).</li></ul>
-      <h3>Sound</h3>
-      <p>The game has sounds for cards, attacks, summons and more. You can mute it with the 🔊 button in the menu or from the in-game settings.</p>
-      <h3>Last Call</h3>
-      <p>If nobody has closed after <b>30 rounds</b>, <b>Last Call</b> begins: an announcement warns you and a counter shows the <b>10 hands</b> left. When time runs out, <b>the most wine wins</b>. Nothing else changes: damage and healing stay normal.</p>
-      <h3>Diminishing healing</h3>
-      <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>75%</b>, 3rd <b>50%</b>, 4th <b>25%</b>, then <b>0%</b>.<br>
-      <b>Attacking resets the counter</b> and healing returns to full. The <b>parry is not affected</b>: it always reduces damage in full.</p>
+      <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry).</li>
+      <li>The blind choice is the heart of the game: the 5th card is the risk. You can bet everything on a flush… and find the opponent completed one too. Even empty-handed, <b>Defend</b> can be worth it, to limit damage if you fear losing the clash.</li></ul>
       <h3>⚠️ Hierarchy differs from poker</h3>
       <p>With only <b>40 cards</b> (no 8-9-10), the odds change: a <b>Flush is rarer than a Full House</b> (so Flush beats Full House) and <b>Three of a Kind is rarer than a Straight</b> (so Trips beats Straight). Strongest to weakest:<br>
       Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.</p>
       <h3>Builds</h3><p>Before the match you can swap each Mask's Attack/Defense (except Meneghino and Capitan Spaventa).</p>
+      <h3>Diminishing healing</h3>
+      <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>75%</b>, 3rd <b>50%</b>, 4th <b>25%</b>, then <b>0%</b>.<br>
+      <b>Attacking resets the counter</b> and healing returns to full. The <b>parry is not affected</b>: it always reduces damage in full.</p>
+      <h3>Last Call</h3>
+      <p>If nobody has closed after <b>30 rounds</b>, <b>Last Call</b> begins: an announcement warns you and a counter shows the <b>10 hands</b> left. When time runs out, <b>the most wine wins</b>; on a tie it goes to <b>sudden death</b> until someone pulls ahead. Nothing else changes: damage and healing stay normal.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
   }
   function optionsHTML(){

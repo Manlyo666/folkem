@@ -1,5 +1,14 @@
 # Changelog — Folk 'Em
 
+## 1.3.6
+
+- Rules reordered for clarity: The round (with the blind choice), then Hand hierarchy, Builds, Diminishing healing and finally Last Call. Removed the Sound section (audio is still adjustable from settings).
+
+## 1.3.5
+
+- The "Attack to reset" tip (on consecutive heals) now appears only in offline PvP, where it's useful to both human players. In matches against the computer it no longer shows when the opponent heals.
+- Fixed the exhausted-heal message: when the streak reaches 0% it no longer says "heals for +0 HP", but explains the heal had no effect.
+
 ## 1.3.4
 
 - Fixed: if the Wine Points are tied when the Last Ten Rounds run out, the match no longer ends with an arbitrary win. It goes to SUDDEN DEATH — play continues one round at a time until someone pulls ahead.
