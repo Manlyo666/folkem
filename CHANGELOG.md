@@ -1,5 +1,9 @@
 # Changelog — Folk 'Em
 
+## 1.3.7
+
+- TEST: new "Alternating turns" option (in settings, off by default). When on, in matches against the computer one side declares its move FIRST each round and the other sees it and responds; who starts alternates every round. When the opponent declares, its move shows on the table (⚔ or 🛡) before your choice. You can turn it off anytime from settings.
+
 ## 1.3.6
 
 - Rules reordered for clarity: The round (with the blind choice), then Hand hierarchy, Builds, Diminishing healing and finally Last Call. Removed the Sound section (audio is still adjustable from settings).

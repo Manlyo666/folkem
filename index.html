@@ -330,6 +330,8 @@ body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
   font-size:13px;font-family:var(--px);font-weight:bold;color:#dceaff;text-shadow:0 1px 2px #000}
 
 .board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center;min-height:16px}
+.seq-badge{font-size:26px;text-align:center;min-height:30px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));animation:seqPulse 1.2s ease-in-out infinite}
+@keyframes seqPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.15);opacity:1}}
 /* ULTIMO GIRO al posto della scritta "Carte a terra": inciso nel tavolo.
    Font Scar in maiuscolo, beige chiaro con contorno nero → si legge ovunque. */
 .board-label.lastcall-inline{font-family:"Scar",var(--font-title);letter-spacing:.1em;
@@ -654,6 +656,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
     <!-- centro -->
     <div class="table-mid">
       <div class="board-label" id="boardLabel"></div>
+      <div class="seq-badge" id="seqBadge" style="display:none"></div>
       <div class="community-row" id="community"></div>
       <!-- overlay maschere -->
       <div class="mask-overlay" id="maskOverlay">
@@ -2033,6 +2036,8 @@ const I18N = {
     fifthCard:"Cala la 5ª carta a terra.", tableLabel:"Tavolo", yourCardsLabel:"Tu", p2CardsLabel:"Giocatore 2", foeCardsLabel:"Avversario",
     fifthCardIs:(c)=>`Cala la 5ª carta: ${c}.`,
     youChose:(c)=>`Scegli ${c}.`,
+    foeDeclares:(c)=>`L'avversario dichiara: <b>${c}</b>. Ora tocca a te.`,
+    foeChose:(c)=>`L'avversario risponde: <b>${c}</b>.`,
     p2Turn:"Giocatore 2: tocca a te scegliere.",
     tableCardsAre:(list)=>`Carte a terra: ${list}.`,
     yourCardsAre:(list)=>`Le tue carte: ${list}.`,
@@ -2063,7 +2068,7 @@ const I18N = {
     rulesTitle:"Regole", optsTitle:"Opzioni",
     optRestart:"Riavvia partita", optMenu:"Torna alle modalità", optRules:"Regole", optClose:"Chiudi",
     soundOn:"Audio", soundOff:"Muto", hpUnit:"PV", healWord:"Cura",
-    sfxLabel:"Effetti", musicLabel:"Musica", onWord:"Sì", offWord:"No",
+    sfxLabel:"Effetti", musicLabel:"Musica", seqLabel:"Turni alternati (prova)", onWord:"Sì", offWord:"No",
     sureRestart:"Riavviare la partita? I progressi andranno persi.",
     sureMenu:"Tornare al menu? La partita in corso andrà persa.",
     yes:"Sì, procedi", no:"Annulla",
@@ -2093,6 +2098,8 @@ const I18N = {
     fifthCard:"The 5th table card is dealt.", tableLabel:"Table", yourCardsLabel:"You", p2CardsLabel:"Player 2", foeCardsLabel:"Opponent",
     fifthCardIs:(c)=>`5th card dealt: ${c}.`,
     youChose:(c)=>`You chose ${c}.`,
+    foeDeclares:(c)=>`The opponent declares: <b>${c}</b>. Your turn now.`,
+    foeChose:(c)=>`The opponent responds: <b>${c}</b>.`,
     p2Turn:"Player 2: your turn to choose.",
     tableCardsAre:(list)=>`Table cards: ${list}.`,
     yourCardsAre:(list)=>`Your cards: ${list}.`,
@@ -2123,7 +2130,7 @@ const I18N = {
     rulesTitle:"Rules", optsTitle:"Options",
     optRestart:"Restart match", optMenu:"Back to modes", optRules:"Rules", optClose:"Close",
     soundOn:"Sound", soundOff:"Mute", hpUnit:"HP", healWord:"Heal",
-    sfxLabel:"Sound FX", musicLabel:"Music", onWord:"On", offWord:"Off",
+    sfxLabel:"Sound FX", musicLabel:"Music", seqLabel:"Alternating turns (test)", onWord:"On", offWord:"Off",
     sureRestart:"Restart the match? Progress will be lost.",
     sureMenu:"Back to menu? The current match will be lost.",
     yes:"Yes, proceed", no:"Cancel",
@@ -2132,8 +2139,12 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.6";
+const APP_VERSION="1.3.7";
 const CHANGELOG=[
+  {v:"1.3.7", it:[
+    "PROVA: nuova opzione \"Turni alternati\" (nelle impostazioni, spenta di default). Se attiva, in partita contro il computer ogni round uno dei due dichiara la mossa PRIMA e l altro la vede e risponde; chi inizia si alterna a ogni round. Quando dichiara l avversario, la sua mossa appare sul tavolo (⚔ o 🛡) prima della tua scelta. Si puo disattivare quando vuoi dalle impostazioni."],
+    en:[
+    "TEST: new \"Alternating turns\" option (in settings, off by default). When on, in matches against the computer one side declares its move FIRST each round and the other sees it and responds; who starts alternates every round. When the opponent declares, its move shows on the table (⚔ or 🛡) before your choice. You can turn it off anytime from settings."]},
   {v:"1.3.6", it:[
     "Regole riordinate per leggersi meglio: Il round (con la scelta alla cieca), poi Gerarchia delle mani, Build, Cura a rendimenti decrescenti e infine Ultimo Giro. Tolta la sezione Audio (il suono resta regolabile dalle impostazioni)."],
     en:[
@@ -2400,6 +2411,11 @@ const UI = (() => {
   let state=null, lang='it', playerInv={}, swapArmed=false;
   let mode='ai', difficulty='medium';
   let pvpTurn='me';         // in pvp locale: chi sta agendo ('me'=P1 bottom, 'ai'=P2 top)
+  // PROVA: dinamica sequenziale in PvE. Se attiva, ogni round uno dei due dichiara
+  // la mossa PRIMA e l'altro la vede e risponde; chi inizia si ALTERNA a ogni round.
+  // Per annullare la prova basta rimettere seqMode=false.
+  let seqMode = (localStorageSafe('folkem_seq')==='1');
+  let aiChoiceShown=null;   // in seqMode, quando l'IA gioca PRIMA: la sua scelta rivelata
   const T=()=>I18N[lang];
   const rankLabel=k=>lang==='it'?GameLogic.RANK_LABEL[k]:GameLogic.RANK_LABEL_EN[k];
 
@@ -2677,6 +2693,7 @@ const UI = (() => {
 
   function newRound(){
     swapArmed=false; pvpTurn='me';
+    const _sb=$('seqBadge'); if(_sb) _sb.style.display='none';   // reset badge seq
     GameState.dealRound(state);
     $('maskOverlay').classList.remove('show');
     $('btn-summon').style.display='none';$('btn-summon').classList.remove('confirm-pulse');
@@ -2730,6 +2747,25 @@ const UI = (() => {
         }, 700);   // piccola pausa dopo la distribuzione, così si nota
       } else {
         state.ai.swapPlanned=true;
+      }
+      // DINAMICA SEQUENZIALE: decido chi dichiara per primo (alternanza per round).
+      // Round pari -> giocatore primo (l'IA vedra' e rispondera' in choose()).
+      // Round dispari -> IA prima: calcolo e RIVELO ora la sua scelta, poi il
+      // giocatore sceglie vedendola.
+      aiChoiceShown=null;
+      if(seqMode && (state.round % 2 === 1)){
+        // l'IA gioca senza vedere la scelta del giocatore (non ancora fatta)
+        const aic=GameLogic.aiChooseBlind(state,difficulty,null);
+        aiChoiceShown=aic;
+        setTimeout(()=>{
+          log(`<span class="ai">${T().foeDeclares(aic==='attack'?T().attack:T().defend)}</span>`,'ai');
+          // indicatore visivo sulla mossa dichiarata dall'IA
+          const badge=$('seqBadge');
+          if(badge){ badge.textContent = (aic==='attack'?'⚔':'🛡'); badge.style.display=''; }
+        }, plan.swapIndex>=0 ? 1400 : 700);
+      } else if(seqMode){
+        // il giocatore gioca primo: nessuna dichiarazione IA anticipata
+        const badge=$('seqBadge'); if(badge) badge.style.display='none';
       }
     }
   }
@@ -2798,9 +2834,31 @@ const UI = (() => {
         return;
       }
     } else {
-      // PvE: l'IA ha già cambiato carta a inizio round; qui sceglie solo atk/dif.
-      // La scelta del giocatore (c) è già bloccata: l'IA difficile può "leggerla"
-      // con probabilità readProb (vantaggio da avversario esperto, non da imbroglio).
+      // PvE.
+      if(seqMode){
+        // DINAMICA SEQUENZIALE (prova). Chi inizia si alterna a ogni round.
+        // Se l'IA gioca PRIMA, la sua scelta e' gia' stata rivelata (aiChoiceShown)
+        // e il giocatore la vede scegliendo; l'IA quindi NON ricalcola.
+        // Se il giocatore gioca PRIMO, l'IA vede la scelta 'c' e risponde ora.
+        state.me.choice=c;
+        log(`<span class="me">${T().youChose(c==='attack'?T().attack:T().defend)}</span>`,'me');
+        if(aiChoiceShown){
+          // l'IA aveva gia' dichiarato: uso quella scelta
+          state.ai.choice=aiChoiceShown;
+        } else {
+          // il giocatore ha giocato primo: l'IA vede 'c' e risponde (readProb=1)
+          state.ai.choice=GameLogic.aiChooseBlind(state,difficulty,c);
+          log(`<span class="ai">${T().foeChose(state.ai.choice==='attack'?T().attack:T().defend)}</span>`,'ai');
+        }
+        aiChoiceShown=null;
+        $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
+        $('btn-swap').style.display='none';$('btn-attack').style.display='none';$('btn-defend').style.display='none';
+        proceedToFifth();
+        return;
+      }
+      // PvE classico (simultaneo cieco): l'IA ha già cambiato carta a inizio round;
+      // qui sceglie solo atk/dif. La scelta del giocatore (c) è già bloccata: l'IA
+      // difficile può "leggerla" con probabilità readProb.
       state.me.choice=c;
       state.ai.choice=GameLogic.aiChooseBlind(state,difficulty,c);
       log(`<span class="me">${T().youChose(c==='attack'?T().attack:T().defend)}</span>`,'me');
@@ -3413,6 +3471,8 @@ const UI = (() => {
           <div class="lang-switch"><button class="${!Sfx.isMuted()?'on':''}" data-optsound="1">${r.onWord}</button><button class="${Sfx.isMuted()?'on':''}" data-optsound="0">${r.offWord}</button></div></div>
         <div class="opt-row"><span class="opt-lbl">${r.musicLabel}</span>
           <div class="lang-switch"><button class="${!Sfx.isMusicMuted()?'on':''}" data-optmusic="1">${r.onWord}</button><button class="${Sfx.isMusicMuted()?'on':''}" data-optmusic="0">${r.offWord}</button></div></div>
+        <div class="opt-row"><span class="opt-lbl">${r.seqLabel}</span>
+          <div class="lang-switch"><button class="${seqMode?'on':''}" data-optseq="1">${r.onWord}</button><button class="${!seqMode?'on':''}" data-optseq="0">${r.offWord}</button></div></div>
         <button class="btn" id="opt-rules">${r.optRules}</button>
         <button class="btn" id="opt-restart">${r.optRestart}</button>
         <button class="btn" id="opt-menu">${r.optMenu}</button>
@@ -3439,6 +3499,7 @@ const UI = (() => {
       if(e.target.dataset&&e.target.dataset.optlang){ setLang(e.target.dataset.optlang); openModal(optionsHTML()); }
       if(e.target.dataset&&e.target.dataset.optsound){ setSound(e.target.dataset.optsound==='1'); openModal(optionsHTML()); }
       if(e.target.dataset&&e.target.dataset.optmusic){ setMusic(e.target.dataset.optmusic==='1'); openModal(optionsHTML()); }
+      if(e.target.dataset&&e.target.dataset.optseq){ seqMode=(e.target.dataset.optseq==='1'); localStorageSafe('folkem_seq', seqMode?'1':'0'); openModal(optionsHTML()); }
       if(e.target.id==='opt-rules') openModal(rulesHTML());
       if(e.target.id==='opt-restart'){ const c=confirmHTML(T().sureRestart); openModal(c.html);
         $('cf-yes').onclick=()=>{closeModal(); startGame();}; }

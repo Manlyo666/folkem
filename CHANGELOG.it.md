@@ -1,5 +1,9 @@
 # Changelog — Folk 'Em
 
+## 1.3.7
+
+- PROVA: nuova opzione "Turni alternati" (nelle impostazioni, spenta di default). Se attiva, in partita contro il computer ogni round uno dei due dichiara la mossa PRIMA e l altro la vede e risponde; chi inizia si alterna a ogni round. Quando dichiara l avversario, la sua mossa appare sul tavolo (⚔ o 🛡) prima della tua scelta. Si puo disattivare quando vuoi dalle impostazioni.
+
 ## 1.3.6
 
 - Regole riordinate per leggersi meglio: Il round (con la scelta alla cieca), poi Gerarchia delle mani, Build, Cura a rendimenti decrescenti e infine Ultimo Giro. Tolta la sezione Audio (il suono resta regolabile dalle impostazioni).
