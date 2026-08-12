@@ -666,6 +666,8 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
           <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-ai">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="foe-hand"></div>
+        <div class="heal-meter" id="foeHealMeter" style="display:none"></div>
+        <div class="atk-meter" id="foeAtkMeter" style="display:none"></div>
       </div>
     </div>
 
@@ -2184,6 +2186,7 @@ const CHANGELOG=[
     "TURNI ALTERNATI: ora ogni round uno dei due dichiara Attacco o Difesa per primo e l altro vede e risponde; chi inizia si alterna a ogni round. La mossa dichiarata dall avversario appare al centro del tavolo (⚔ o 🛡). Non è più una prova opzionale: è la dinamica standard del gioco.",
     "FURIA OFFENSIVA: attaccare più volte di fila dà un bonus danno crescente (+10/20/30/40%, conta il premere Attacco, non il danno). Premia le build schierate all attacco. Difendere azzera la furia.",
     "Nuovo promemoria FURIA accanto alle tue carte: mostra il bonus danno del prossimo attacco secondo la striscia (+0/10/20/30/40%), affiancato al promemoria della cura. Difendere azzera la striscia e nasconde l indicatore.",
+    "Gli indicatori di FURIA e CURA sono visibili anche per l avversario, accanto alle sue carte.",
     "Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).",
     "Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.",
     "Regole aggiornate con le nuove meccaniche."],
@@ -2191,6 +2194,7 @@ const CHANGELOG=[
     "ALTERNATING TURNS: each round one side now declares Attack or Defend first and the other sees it and responds; who starts alternates every round. The opponent's declared move appears at the centre of the table (⚔ or 🛡). No longer an optional test: it's the standard game dynamic.",
     "OFFENSIVE FURY: attacking several times in a row gives a growing damage bonus (+10/20/30/40%, pressing Attack counts, not the damage dealt). Rewards attack-oriented builds. Defending resets the fury.",
     "New FURY reminder next to your cards: shows the next attack's damage bonus by streak (+0/10/20/30/40%), alongside the heal reminder. Defending resets the streak and hides the indicator.",
+    "FURY and HEAL indicators are now also shown for the opponent, next to their cards.",
     "When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).",
     "Heal reminder next to your cards: shows how much the next heal is worth (100/75/50/25/0%) while the streak is active.",
     "Rules updated with the new mechanics."]},
@@ -2613,30 +2617,39 @@ const UI = (() => {
 
   // Promemoria del livello di cura corrente accanto alle carte: mostra a quanto
   // rende la PROSSIMA cura secondo la striscia (100/75/50/25/0%). Compare solo se
-  // la striscia è già avviata (almeno una cura consecutiva fatta).
-  function updateHealMeter(){
-    const el=$('healMeter'); if(!el) return;
-    const streak=(state&&state.me)?(state.me.healStreak||0):0;
+  // la striscia è già avviata (almeno una cura consecutiva fatta). Vale per
+  // entrambi i lati: side='me' (giocatore, con etichetta) o 'ai' (avversario).
+  function updateHealMeter(side){
+    side = side || 'me';
+    const el=$(side==='me'?'healMeter':'foeHealMeter'); if(!el) return;
+    const who=(state&&state[side])?state[side]:null;
+    const streak=who?(who.healStreak||0):0;
     if(streak<=0){ el.style.display='none'; return; }
     const pct=[100,75,50,25,0][Math.min(4,streak)];
     el.style.display='';
     el.className='heal-meter'+(pct===0?' depleted':(pct<=50?' low':''));
-    el.innerHTML=`<span class="hm-ico">🍷</span><span class="hm-txt">${T().healMeterLabel}</span><span class="hm-pct">${pct}%</span>`;
+    const label = side==='me' ? `<span class="hm-txt">${T().healMeterLabel}</span>` : '';
+    el.innerHTML=`<span class="hm-ico">🍷</span>${label}<span class="hm-pct">${pct}%</span>`;
   }
 
   // Promemoria della FURIA offensiva accanto alle carte: mostra il bonus danno
   // che avrà il PROSSIMO attacco secondo la striscia di attacchi consecutivi
-  // (+0/+2/+4/+6/+8%). Compare solo se la striscia è già avviata (almeno un
-  // attacco consecutivo). Difendere azzera la striscia e nasconde l'indicatore.
-  function updateAtkMeter(){
-    const el=$('atkMeter'); if(!el) return;
-    const streak=(state&&state.me)?(state.me.atkStreak||0):0;
+  // (+0/10/20/30/40%). Compare solo se la striscia è avviata. Difendere azzera.
+  // Vale per entrambi i lati: side='me' (con etichetta) o 'ai' (solo icona).
+  function updateAtkMeter(side){
+    side = side || 'me';
+    const el=$(side==='me'?'atkMeter':'foeAtkMeter'); if(!el) return;
+    const who=(state&&state[side])?state[side]:null;
+    const streak=who?(who.atkStreak||0):0;
     if(streak<=0){ el.style.display='none'; return; }
     const pct=[0,10,20,30,40][Math.min(4,streak)];
     el.style.display='';
-    el.className='atk-meter'+(pct>=6?' hot':'');
-    el.innerHTML=`<span class="am-ico">⚔</span><span class="am-txt">${T().atkMeterLabel}</span><span class="am-pct">+${pct}%</span>`;
+    el.className='atk-meter'+(pct>=30?' hot':'');
+    const label = side==='me' ? `<span class="am-txt">${T().atkMeterLabel}</span>` : '';
+    el.innerHTML=`<span class="am-ico">⚔</span>${label}<span class="am-pct">+${pct}%</span>`;
   }
+  // aggiorna entrambi i lati in un colpo
+  function updateMeters(){ updateHealMeter('me'); updateAtkMeter('me'); updateHealMeter('ai'); updateAtkMeter('ai'); }
 
   /* ================= CARTE ================= */
   function cardEl(card,{cls='',back=false,mine=false,inverted=false,deal=false}={}){
@@ -2689,8 +2702,7 @@ const UI = (() => {
   }
   function renderMyHand(){
     const hand=$('my-hand'); hand.innerHTML='';
-    updateHealMeter();
-    updateAtkMeter();
+    updateMeters();
     const active = mode==='pvp_local' ? pvpTurn==='me' : true;
     const choosing = state.phase==='choose'||state.phase==='draw';
     state.me.hand.forEach((c,i)=>{
@@ -3453,6 +3465,7 @@ const UI = (() => {
 
   function afterResolve(){
     renderOtri();
+    updateMeters();
     if(state.winner){ endGame(); return; }
     // ULTIMO GIRO scaduto? vince chi ha più PV
     if(GameState.checkTimeout(state)){ renderOtri(); endGame(); return; }
