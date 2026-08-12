@@ -367,6 +367,22 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 @keyframes maskDuelOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.92)}}
 .mask-slot{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 .mask-slot .rank-tag{font-family:var(--font-title);font-size:16px;color:var(--brass-hi);min-height:18px;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+.choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.choice-badge.cb-atk{color:#ff6a4d}
+.choice-badge.cb-def{color:#6ac6ff}
+.heal-meter{display:flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;border-radius:12px;
+  background:rgba(30,12,8,.72);border:1px solid rgba(180,120,60,.4);
+  font-family:var(--font-fairy);font-size:12px;color:var(--parch);white-space:nowrap;align-self:center}
+.heal-meter .hm-ico{font-size:13px}
+.heal-meter .hm-pct{font-weight:bold;color:#7ee08a}
+.heal-meter.low .hm-pct{color:#e8c15a}
+.heal-meter.depleted .hm-pct{color:#e0655a}
+.atk-meter{display:flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;border-radius:12px;
+  background:rgba(40,14,8,.72);border:1px solid rgba(200,90,60,.4);
+  font-family:var(--font-fairy);font-size:12px;color:var(--parch);white-space:nowrap;align-self:center}
+.atk-meter .am-ico{font-size:13px;color:#ff8a5a}
+.atk-meter .am-pct{font-weight:bold;color:#ff8a5a}
+.atk-meter.hot .am-pct{color:#ff5a3c}
 .mask-slot .weapon-tag{font-size:11px;color:var(--parch-dim);font-style:italic;min-height:14px}
 .mask-card{width:150px;height:210px;border-radius:12px;overflow:hidden;position:relative;
   border:3px solid var(--brass);background:#160d07;box-shadow:0 8px 30px rgba(0,0,0,.7)}
@@ -673,6 +689,8 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
           <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-me">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="my-hand"></div>
+        <div class="heal-meter" id="healMeter" style="display:none"></div>
+        <div class="atk-meter" id="atkMeter" style="display:none"></div>
       </div>
       <div class="action-bar" id="my-actions">
         <button class="btn ghost compact" id="btn-swap" data-i18n="swap">Cambia carta (−10 PV)</button>
@@ -856,15 +874,21 @@ const GameLogic = (() => {
     return {atk:m.atk, cur:m.cur};
   }
 
+  // FURIA OFFENSIVA (bonus attacco). Attaccare più volte di FILA dà un piccolo
+  //  bonus danno crescente. Tarato senza contrappeso (vulnerabilità) per restare
+  //  il meno sbilanciato possibile: l'attaccante è solo lievemente favorito.
+  //  Indice = numero di attacchi CONSECUTIVI già fatti (il premere Attacco conta,
+  //  non il danno). Attaccare/difendere aggiorna la striscia in applyDelta.
+  //  NB: la vulnerabilità dell'aggressore è stata rimossa dal gameplay (potrà
+  //  tornare in futuro); ATK_VULN resta a zero come segnaposto neutro.
+  const ATK_BONUS=[0, 0.10, 0.20, 0.30, 0.40];
+  const ATK_VULN =[0, 0,    0,    0,    0];
+  function _streakMult(steps, streak){ return 1 + steps[Math.min(streak|0, steps.length-1)]; }
+
   // Risoluzione con PARATA.
-  //  - Vince la mano di grado più alto (winner). L'altro è loser.
-  //  - Se winner ha scelto ATTACCO:
-  //      danno = atk(winner)
-  //      se loser ha scelto DIFESA: danno ridotto di def(loser) (parata), min 0.
-  //      il danno colpisce i PV del loser.
-  //  - Se winner ha scelto DIFESA: winner recupera cur(winner). Loser subisce nulla.
-  //  Nota: "def" = valore di cura/difesa della maschera (stat 'cur').
-  function resolveShowdown(evalMe, evalAi, choiceMe, choiceAi, inv){
+  //  streakMe/streakAi (opzionali): atkStreak di ciascun lato PRIMA di questo
+  //  turno; abilitano il bonus attacco. Se assenti (es. PvP puro o test), 0.
+  function resolveShowdown(evalMe, evalAi, choiceMe, choiceAi, inv, streakMe, streakAi){
     const cmp=compare(evalMe, evalAi);
     let winner = cmp>0?'me' : cmp<0?'ai' : 'tie';
     const delta={me:0, ai:0};
@@ -875,24 +899,32 @@ const GameLogic = (() => {
     const choiceW=w==='me'?choiceMe:choiceAi, choiceL=w==='me'?choiceAi:choiceMe;
     const stW=maskStats(evalW.maskId, inv[w]);
     const stL=maskStats(evalL.maskId, inv[l]);
+    const streaks={me:streakMe|0, ai:streakAi|0};
+    const wStreak = streaks[w], lStreak = streaks[l];
 
-    let action, blocked=0, rawDmg=0, healAmt=0, shieldShown=0;
+    let action, blocked=0, rawDmg=0, healAmt=0, shieldShown=0, atkBonusPct=0;
     if(choiceW==='attack'){
       action='attack';
       rawDmg=stW.atk;
       // parata: la DIFESA del perdente riduce il danno (nessun malus, piena).
       if(choiceL==='defend'){
-        blocked=Math.min(stL.cur, rawDmg);   // assorbito REALE (per il calcolo del danno)
-        shieldShown=stL.cur;                 // valore PIENO della difesa (per lo scudo a schermo)
+        blocked=Math.min(stL.cur, rawDmg);
+        shieldShown=stL.cur;
       }
-      const dmg=Math.max(0, rawDmg-blocked);
+      let dmg=Math.max(0, rawDmg-blocked);
+      // FURIA: bonus di chi attacca in serie. Il secondo fattore (vulnerabilità del
+      // perdente) è neutro finché ATK_VULN=0; la struttura resta pronta per riattivarla.
+      const mult = _streakMult(ATK_BONUS, wStreak) * _streakMult(ATK_VULN, lStreak);
+      const dmgBoosted = Math.round(dmg * mult);
+      atkBonusPct = dmg>0 ? Math.round((dmgBoosted/dmg - 1)*100) : 0;
+      dmg = dmgBoosted;
       delta[l]=-dmg;
     }else{
       action='defend';
-      healAmt=stW.cur;   // difesa vincente = cura (la striscia decrescente è applicata in applyDelta)
+      healAmt=stW.cur;
       delta[w]=+healAmt;
     }
-    return {winner, loser:l, action, delta, blocked, shieldShown, rawDmg, healAmt,
+    return {winner, loser:l, action, delta, blocked, shieldShown, rawDmg, healAmt, atkBonusPct,
             maskId:evalW.maskId, loserMaskId:evalL.maskId,
             atkVal:stW.atk, defVal:stW.cur, loserDef:stL.cur};
   }
@@ -1062,8 +1094,8 @@ const GameState = (() => {
       mode: opts.mode||'ai',          // 'ai' | 'pvp_local'
       difficulty: opts.difficulty||'medium',
       inv:{me:{...inversions}, ai: opts.mode==='pvp_local' ? {} : buildAiBuild(opts.difficulty)},
-      me:{hp:100,hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0},
-      ai:{hp: opts.mode==='pvp_local' ? 100 : aiStartHp(opts.difficulty), hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0},
+      me:{hp:100,hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0,atkStreak:0},
+      ai:{hp: opts.mode==='pvp_local' ? 100 : aiStartHp(opts.difficulty), hand:[],swappedThisRound:false,choice:null,eval:null,healStreak:0,atkStreak:0},
       community:[], deck:[], phase:'draw', round:0, winner:null,
       _foeHist:{atk:0,def:0},
       fifthRevealed:false,
@@ -1159,6 +1191,13 @@ const GameState = (() => {
       }
       // se ha difeso ma non ha curato nulla (parata, sconfitta, o cura già a 0):
       // la striscia resta com'è, non sale a vuoto.
+    }
+    // STRISCIA DI ATTACCO (per il triangolo): sale a ogni ATTACCO scelto (conta la
+    // scelta, non il danno), si azzera appena si DIFENDE.
+    for(const side of ['me','ai']){
+      if(s[side].atkStreak===undefined) s[side].atkStreak=0;
+      if(s[side].choice==='attack') s[side].atkStreak=(s[side].atkStreak||0)+1;
+      else if(s[side].choice==='defend') s[side].atkStreak=0;
     }
     checkWin(s); return s;
   }
@@ -2050,7 +2089,7 @@ const I18N = {
     dmgNullified:(raw,def)=>`Attacco ${raw} contro Difesa ${def}: colpo <b>annullato</b>.`,
     dmgFlat:(n)=>`Danno pieno: <b>${n}</b> (nessuna parata).`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> ti curi di <b>+${n}</b> PV.`:`<b>${who}</b> si cura di <b>+${n}</b> PV.`,
-    healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>.`,
+    healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>.`, healMeterLabel:"Prossima cura", atkMeterLabel:"Prossimo attacco",
     healResetTip:`Attacca per azzerare.`,
     healNone:`Cure consecutive esaurite: la cura non ha effetto (0%). Attacca per azzerare.`,
     healed:(n)=>`Cura: +${n} PV.`, tie:"Pareggio: nessun colpo.",
@@ -2112,7 +2151,7 @@ const I18N = {
     dmgNullified:(raw,def)=>`Attack ${raw} against Defense ${def}: blow <b>nullified</b>.`,
     dmgFlat:(n)=>`Full damage: <b>${n}</b> (no parry).`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> heal <b>+${n}</b> HP.`:`<b>${who}</b> heals <b>+${n}</b> HP.`,
-    healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>.`,
+    healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>.`, healMeterLabel:"Next heal", atkMeterLabel:"Next attack",
     healResetTip:`Attack to reset.`,
     healNone:`Consecutive heals exhausted: the heal has no effect (0%). Attack to reset.`,
     healed:(n)=>`Heal: +${n} HP.`, tie:"Tie: no blow lands.",
@@ -2139,8 +2178,22 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.3.7";
+const APP_VERSION="1.4.0";
 const CHANGELOG=[
+  {v:"1.4.0", it:[
+    "TURNI ALTERNATI: ora ogni round uno dei due dichiara Attacco o Difesa per primo e l altro vede e risponde; chi inizia si alterna a ogni round. La mossa dichiarata dall avversario appare al centro del tavolo (⚔ o 🛡). Non è più una prova opzionale: è la dinamica standard del gioco.",
+    "FURIA OFFENSIVA: attaccare più volte di fila dà un bonus danno crescente (+10/20/30/40%, conta il premere Attacco, non il danno). Premia le build schierate all attacco. Difendere azzera la furia.",
+    "Nuovo promemoria FURIA accanto alle tue carte: mostra il bonus danno del prossimo attacco secondo la striscia (+0/10/20/30/40%), affiancato al promemoria della cura. Difendere azzera la striscia e nasconde l indicatore.",
+    "Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).",
+    "Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.",
+    "Regole aggiornate con le nuove meccaniche."],
+    en:[
+    "ALTERNATING TURNS: each round one side now declares Attack or Defend first and the other sees it and responds; who starts alternates every round. The opponent's declared move appears at the centre of the table (⚔ or 🛡). No longer an optional test: it's the standard game dynamic.",
+    "OFFENSIVE FURY: attacking several times in a row gives a growing damage bonus (+10/20/30/40%, pressing Attack counts, not the damage dealt). Rewards attack-oriented builds. Defending resets the fury.",
+    "New FURY reminder next to your cards: shows the next attack's damage bonus by streak (+0/10/20/30/40%), alongside the heal reminder. Defending resets the streak and hides the indicator.",
+    "When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).",
+    "Heal reminder next to your cards: shows how much the next heal is worth (100/75/50/25/0%) while the streak is active.",
+    "Rules updated with the new mechanics."]},
   {v:"1.3.7", it:[
     "PROVA: nuova opzione \"Turni alternati\" (nelle impostazioni, spenta di default). Se attiva, in partita contro il computer ogni round uno dei due dichiara la mossa PRIMA e l altro la vede e risponde; chi inizia si alterna a ogni round. Quando dichiara l avversario, la sua mossa appare sul tavolo (⚔ o 🛡) prima della tua scelta. Si puo disattivare quando vuoi dalle impostazioni."],
     en:[
@@ -2413,9 +2466,11 @@ const UI = (() => {
   let pvpTurn='me';         // in pvp locale: chi sta agendo ('me'=P1 bottom, 'ai'=P2 top)
   // PROVA: dinamica sequenziale in PvE. Se attiva, ogni round uno dei due dichiara
   // la mossa PRIMA e l'altro la vede e risponde; chi inizia si ALTERNA a ogni round.
-  // Per annullare la prova basta rimettere seqMode=false.
-  let seqMode = (localStorageSafe('folkem_seq')==='1');
-  let aiChoiceShown=null;   // in seqMode, quando l'IA gioca PRIMA: la sua scelta rivelata
+  // Turni alternati: ora è la dinamica STANDARD del gioco (non più opzionale).
+  // Ogni round uno dei due dichiara la mossa prima e l'altro la vede e risponde;
+  // chi inizia si alterna a ogni round.
+  let seqMode = true;
+  let aiChoiceShown=null;   // quando l'IA gioca PRIMA: la sua scelta rivelata
   const T=()=>I18N[lang];
   const rankLabel=k=>lang==='it'?GameLogic.RANK_LABEL[k]:GameLogic.RANK_LABEL_EN[k];
 
@@ -2556,6 +2611,33 @@ const UI = (() => {
   }
   function renderOtri(){ renderOtre('me'); renderOtre('ai'); }
 
+  // Promemoria del livello di cura corrente accanto alle carte: mostra a quanto
+  // rende la PROSSIMA cura secondo la striscia (100/75/50/25/0%). Compare solo se
+  // la striscia è già avviata (almeno una cura consecutiva fatta).
+  function updateHealMeter(){
+    const el=$('healMeter'); if(!el) return;
+    const streak=(state&&state.me)?(state.me.healStreak||0):0;
+    if(streak<=0){ el.style.display='none'; return; }
+    const pct=[100,75,50,25,0][Math.min(4,streak)];
+    el.style.display='';
+    el.className='heal-meter'+(pct===0?' depleted':(pct<=50?' low':''));
+    el.innerHTML=`<span class="hm-ico">🍷</span><span class="hm-txt">${T().healMeterLabel}</span><span class="hm-pct">${pct}%</span>`;
+  }
+
+  // Promemoria della FURIA offensiva accanto alle carte: mostra il bonus danno
+  // che avrà il PROSSIMO attacco secondo la striscia di attacchi consecutivi
+  // (+0/+2/+4/+6/+8%). Compare solo se la striscia è già avviata (almeno un
+  // attacco consecutivo). Difendere azzera la striscia e nasconde l'indicatore.
+  function updateAtkMeter(){
+    const el=$('atkMeter'); if(!el) return;
+    const streak=(state&&state.me)?(state.me.atkStreak||0):0;
+    if(streak<=0){ el.style.display='none'; return; }
+    const pct=[0,10,20,30,40][Math.min(4,streak)];
+    el.style.display='';
+    el.className='atk-meter'+(pct>=6?' hot':'');
+    el.innerHTML=`<span class="am-ico">⚔</span><span class="am-txt">${T().atkMeterLabel}</span><span class="am-pct">+${pct}%</span>`;
+  }
+
   /* ================= CARTE ================= */
   function cardEl(card,{cls='',back=false,mine=false,inverted=false,deal=false}={}){
     const el=document.createElement('div');
@@ -2607,6 +2689,8 @@ const UI = (() => {
   }
   function renderMyHand(){
     const hand=$('my-hand'); hand.innerHTML='';
+    updateHealMeter();
+    updateAtkMeter();
     const active = mode==='pvp_local' ? pvpTurn==='me' : true;
     const choosing = state.phase==='choose'||state.phase==='draw';
     state.me.hand.forEach((c,i)=>{
@@ -2627,9 +2711,16 @@ const UI = (() => {
         <div class="mc-s def"><span>${T().defS}</span><b>${stt.cur}</b></div>
       </div></div>`;
   }
+  // piccolo distintivo della scelta (attacco/difesa) mostrato sulla maschera schierata
+  function choiceBadge(choice){
+    if(!choice) return '';
+    const icon = choice==='attack' ? '⚔' : '🛡';
+    const cls  = choice==='attack' ? 'cb-atk' : 'cb-def';
+    return `<span class="choice-badge ${cls}">${icon}</span>`;
+  }
   function renderMyMaskSlot(){
     const ev=state.me.eval,m=GameLogic.MASKS[ev.maskId],tone=toneFor(ev.maskId);
-    $('myMaskSlot').innerHTML=`<div class="rank-tag">${rankLabel(ev.key)}</div>
+    $('myMaskSlot').innerHTML=`<div class="rank-tag">${choiceBadge(state.me.choice)}${rankLabel(ev.key)}</div>
       ${maskCardHTML(ev.maskId,state.inv.me,tone,'','myMaskCard')}`;
   }
   function renderFoeMaskHidden(){
@@ -2637,7 +2728,8 @@ const UI = (() => {
   }
   function renderFoeMaskRevealed(){
     const ev=state.ai.eval,m=GameLogic.MASKS[ev.maskId],tone=toneFor(ev.maskId);
-    $('foeMaskSlot').innerHTML=`<div class="rank-tag">${rankLabel(ev.key)}</div>
+    // l'indicatore palesa se l'avversario ha ATTACCATO o DIFESO in questo scontro
+    $('foeMaskSlot').innerHTML=`<div class="rank-tag">${choiceBadge(state.ai.choice)}${rankLabel(ev.key)}</div>
       ${maskCardHTML(ev.maskId,state.inv.ai,tone,'foe','foeMaskCard')}`;
   }
   // annuncio dell'arma a centro schermo (stile anime: la maschera dichiara l'attacco)
@@ -3036,7 +3128,11 @@ const UI = (() => {
   function resolve(){
     // L'IA rispetta le REGOLE ESATTE: nessun moltiplicatore su danni o cure.
     // Le difficoltà cambiano solo COME l'IA sceglie (rumore, campioni, lettura).
-    const out=GameLogic.resolveShowdown(state.me.eval,state.ai.eval,state.me.choice,state.ai.choice,state.inv);
+    // TRIANGOLO: passo le atkStreak CORRENTI (prima che applyDelta le aggiorni),
+    // così il bonus attacco e la vulnerabilità dell'aggressore usano lo stato
+    // con cui i due sono arrivati a questo scontro.
+    const out=GameLogic.resolveShowdown(state.me.eval,state.ai.eval,state.me.choice,state.ai.choice,state.inv,
+                                        state.me.atkStreak||0, state.ai.atkStreak||0);
     // in PvE registro la scelta del giocatore umano (me) così l'IA può adattarsi
     if(mode!=='pvp_local'){
       if(!state._foeHist) state._foeHist={atk:0,def:0};
@@ -3424,42 +3520,44 @@ const UI = (() => {
     if(lang==='it') return `<h2>${r.rulesTitle}</h2>
       <div class="lang-switch"><button class="on" data-lang="it">IT</button><button data-lang="en">EN</button></div>
       <p><b>Obiettivo.</b> Porta l'avversario a <b>0 PV</b> oppure te stesso a <b>200 PV</b> (la damigiana di vino è la tua vita).</p>
-      <h3>Il round (Texas Hold'em)</h3>
+      <h3>Il round (Texas Hold'em) — a turni</h3>
       <ul><li>2 carte in mano + 4 a terra. Puoi cambiare 1 carta per −10 PV.</li>
-      <li>Premi <b>Rivela il Destino</b> e scegli <b>Attacco</b> o <b>Difesa</b> <b>alla cieca</b>, vedendo solo le 4 carte a terra.</li>
-      <li><b>Solo dopo la scelta</b> cala la <b>5ª carta</b>: può ribaltare tutto. La osservi con calma.</li>
-      <li>Premi <b>Evoca Maschera</b>: le mani definitive di 5 su 7 evocano le Maschere che si sfidano.</li>
-      <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata).</li>
-      <li>La scelta alla cieca è il cuore del gioco: la 5ª carta è il rischio. Puoi puntare tutto su un colore… e scoprire che l'ha completato anche l'avversario. Anche a mani vuote la <b>Difesa</b> può convenire, per limitare il danno se temi di perdere lo scontro.</li></ul>
+      <li><b>Uno alla volta:</b> ogni round uno dei due dichiara <b>Attacco</b> o <b>Difesa</b> per primo, l'altro <b>vede</b> la scelta e risponde. Chi inizia si <b>alterna</b> a ogni round. La mossa dichiarata dall'avversario appare al centro del tavolo (⚔ o 🛡).</li>
+      <li><b>Solo dopo le due scelte</b> cala la <b>5ª carta</b>: può ribaltare tutto.</li>
+      <li>Premi <b>Evoca Maschera</b>: le mani definitive di 5 su 7 evocano le Maschere che si sfidano. Sopra ogni maschera vedi se ha <b>attaccato</b> (⚔) o <b>difeso</b> (🛡).</li>
+      <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata). Anche a mani vuote la Difesa può convenire, per limitare il danno.</li></ul>
       <h3>⚠️ Gerarchia diversa dal poker</h3>
       <p>Con sole <b>40 carte</b> (niente 8-9-10), le probabilità cambiano: il <b>Colore è più raro del Full</b> (quindi Colore batte Full) e il <b>Tris è più raro della Scala</b> (quindi Tris batte Scala). Dal più forte al più debole:<br>
       Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
       <h3>Build</h3><p>Prima della partita puoi invertire Attacco/Difesa di ogni Maschera (tranne Meneghino e Capitan Spaventa).</p>
       <h3>Cura a rendimenti decrescenti</h3>
       <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>75%</b>, 3ª <b>50%</b>, 4ª <b>25%</b>, poi <b>0%</b>.<br>
-      <b>Attaccare azzera il contatore</b> e la cura torna piena. La <b>parata non è influenzata</b>: riduce sempre il danno per intero.</p>
+      <b>Attaccare azzera il contatore</b> e la cura torna piena. La <b>parata non è influenzata</b>: riduce sempre il danno per intero. Un <b>promemoria</b> accanto alle tue carte ti ricorda a quanto rende la prossima cura.</p>
+      <h3>⚔ Furia offensiva</h3>
+      <p>Attaccare più volte di <b>fila</b> ti dà un <b>bonus danno</b> crescente (conta il premere Attacco, non il danno): +10%, +20%, +30%, fino a +40%. <b>Difendere azzera</b> la furia e il bonus riparte da zero. Un <b>promemoria</b> accanto alle tue carte mostra il bonus del prossimo attacco.</p>
       <h3>Ultimo Giro</h3>
-      <p>Se dopo <b>30 round</b> nessuno ha chiuso, parte l'<b>Ultimo Giro</b>: un annuncio ti avvisa e un contatore mostra le <b>10 mani</b> rimaste. Allo scadere <b>vince chi ha più vino</b> nella damigiana; in caso di parità si va allo <b>spareggio</b> finché uno non passa in vantaggio. Nient'altro cambia: danni e cura restano normali.</p>
+      <p>Se dopo <b>30 round</b> nessuno ha chiuso, parte l'<b>Ultimo Giro</b>: un annuncio ti avvisa e un contatore mostra le <b>10 mani</b> rimaste. Allo scadere <b>vince chi ha più vino</b> nella damigiana; in caso di parità si va allo <b>spareggio</b> finché uno non passa in vantaggio.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
     return `<h2>${r.rulesTitle}</h2>
       <div class="lang-switch"><button data-lang="it">IT</button><button class="on" data-lang="en">EN</button></div>
       <p><b>Goal.</b> Bring the opponent to <b>0 HP</b> or yourself to <b>200 HP</b> (the wine demijohn is your life).</p>
-      <h3>The round (Texas Hold'em)</h3>
+      <h3>The round (Texas Hold'em) — turn by turn</h3>
       <ul><li>2 cards in hand + 4 on the table. You may swap 1 card for −10 HP.</li>
-      <li>Choose <b>Attack</b> or <b>Defend</b> <b>blind</b>, seeing only the 4 table cards.</li>
-      <li><b>Only after the choice</b> the <b>5th card</b> is dealt: it can turn everything around.</li>
-      <li>Press <b>Summon Mask</b>: the final 5-of-7 hands summon the Masks that clash.</li>
-      <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry).</li>
-      <li>The blind choice is the heart of the game: the 5th card is the risk. You can bet everything on a flush… and find the opponent completed one too. Even empty-handed, <b>Defend</b> can be worth it, to limit damage if you fear losing the clash.</li></ul>
+      <li><b>One at a time:</b> each round one side declares <b>Attack</b> or <b>Defend</b> first, the other <b>sees</b> the choice and responds. Who starts <b>alternates</b> every round. The opponent's declared move appears at the centre of the table (⚔ or 🛡).</li>
+      <li><b>Only after both choices</b> the <b>5th card</b> is dealt: it can turn everything around.</li>
+      <li>Press <b>Summon Mask</b>: the final 5-of-7 hands summon the Masks. Above each mask you can see if it <b>attacked</b> (⚔) or <b>defended</b> (🛡).</li>
+      <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry). Even empty-handed, Defend can be worth it to limit damage.</li></ul>
       <h3>⚠️ Hierarchy differs from poker</h3>
       <p>With only <b>40 cards</b> (no 8-9-10), the odds change: a <b>Flush is rarer than a Full House</b> (so Flush beats Full House) and <b>Three of a Kind is rarer than a Straight</b> (so Trips beats Straight). Strongest to weakest:<br>
       Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.</p>
       <h3>Builds</h3><p>Before the match you can swap each Mask's Attack/Defense (except Meneghino and Capitan Spaventa).</p>
       <h3>Diminishing healing</h3>
       <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>75%</b>, 3rd <b>50%</b>, 4th <b>25%</b>, then <b>0%</b>.<br>
-      <b>Attacking resets the counter</b> and healing returns to full. The <b>parry is not affected</b>: it always reduces damage in full.</p>
+      <b>Attacking resets the counter</b> and healing returns to full. The <b>parry is not affected</b>: it always reduces damage in full. A <b>reminder</b> next to your cards shows how much the next heal is worth.</p>
+      <h3>⚔ Offensive fury</h3>
+      <p>Attacking several times <b>in a row</b> gives a growing <b>damage bonus</b> (pressing Attack counts, not the damage dealt): +10%, +20%, +30%, up to +40%. <b>Defending resets</b> the fury and the bonus starts over. A <b>reminder</b> next to your cards shows the next attack's bonus.</p>
       <h3>Last Call</h3>
-      <p>If nobody has closed after <b>30 rounds</b>, <b>Last Call</b> begins: an announcement warns you and a counter shows the <b>10 hands</b> left. When time runs out, <b>the most wine wins</b>; on a tie it goes to <b>sudden death</b> until someone pulls ahead. Nothing else changes: damage and healing stay normal.</p>
+      <p>If nobody has closed after <b>30 rounds</b>, <b>Last Call</b> begins: an announcement warns you and a counter shows the <b>10 hands</b> left. When time runs out, <b>the most wine wins</b>; on a tie it goes to <b>sudden death</b> until someone pulls ahead.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
   }
   function optionsHTML(){
@@ -3471,8 +3569,6 @@ const UI = (() => {
           <div class="lang-switch"><button class="${!Sfx.isMuted()?'on':''}" data-optsound="1">${r.onWord}</button><button class="${Sfx.isMuted()?'on':''}" data-optsound="0">${r.offWord}</button></div></div>
         <div class="opt-row"><span class="opt-lbl">${r.musicLabel}</span>
           <div class="lang-switch"><button class="${!Sfx.isMusicMuted()?'on':''}" data-optmusic="1">${r.onWord}</button><button class="${Sfx.isMusicMuted()?'on':''}" data-optmusic="0">${r.offWord}</button></div></div>
-        <div class="opt-row"><span class="opt-lbl">${r.seqLabel}</span>
-          <div class="lang-switch"><button class="${seqMode?'on':''}" data-optseq="1">${r.onWord}</button><button class="${!seqMode?'on':''}" data-optseq="0">${r.offWord}</button></div></div>
         <button class="btn" id="opt-rules">${r.optRules}</button>
         <button class="btn" id="opt-restart">${r.optRestart}</button>
         <button class="btn" id="opt-menu">${r.optMenu}</button>
@@ -3499,7 +3595,6 @@ const UI = (() => {
       if(e.target.dataset&&e.target.dataset.optlang){ setLang(e.target.dataset.optlang); openModal(optionsHTML()); }
       if(e.target.dataset&&e.target.dataset.optsound){ setSound(e.target.dataset.optsound==='1'); openModal(optionsHTML()); }
       if(e.target.dataset&&e.target.dataset.optmusic){ setMusic(e.target.dataset.optmusic==='1'); openModal(optionsHTML()); }
-      if(e.target.dataset&&e.target.dataset.optseq){ seqMode=(e.target.dataset.optseq==='1'); localStorageSafe('folkem_seq', seqMode?'1':'0'); openModal(optionsHTML()); }
       if(e.target.id==='opt-rules') openModal(rulesHTML());
       if(e.target.id==='opt-restart'){ const c=confirmHTML(T().sureRestart); openModal(c.html);
         $('cf-yes').onclick=()=>{closeModal(); startGame();}; }
