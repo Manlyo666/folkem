@@ -904,29 +904,29 @@ const GameLogic = (() => {
     const streaks={me:streakMe|0, ai:streakAi|0};
     const wStreak = streaks[w], lStreak = streaks[l];
 
-    let action, blocked=0, rawDmg=0, healAmt=0, shieldShown=0, atkBonusPct=0;
+    let action, blocked=0, rawDmg=0, healAmt=0, shieldShown=0, atkBonusPct=0, grossDmg=0;
     if(choiceW==='attack'){
       action='attack';
       rawDmg=stW.atk;
-      // parata: la DIFESA del perdente riduce il danno (nessun malus, piena).
+      // FURIA: il bonus si applica al danno LORDO (prima della parata). Così il
+      // danno extra "sfonda" lo scudo invece di essere ridotto dopo. Il secondo
+      // fattore (vulnerabilità del perdente) è neutro finché ATK_VULN=0.
+      const mult = _streakMult(ATK_BONUS, wStreak) * _streakMult(ATK_VULN, lStreak);
+      grossDmg = Math.round(rawDmg * mult);
+      atkBonusPct = rawDmg>0 ? Math.round((grossDmg/rawDmg - 1)*100) : 0;
+      // parata: la DIFESA del perdente riduce il danno GIÀ potenziato (piena, nessun malus).
       if(choiceL==='defend'){
-        blocked=Math.min(stL.cur, rawDmg);
+        blocked=Math.min(stL.cur, grossDmg);
         shieldShown=stL.cur;
       }
-      let dmg=Math.max(0, rawDmg-blocked);
-      // FURIA: bonus di chi attacca in serie. Il secondo fattore (vulnerabilità del
-      // perdente) è neutro finché ATK_VULN=0; la struttura resta pronta per riattivarla.
-      const mult = _streakMult(ATK_BONUS, wStreak) * _streakMult(ATK_VULN, lStreak);
-      const dmgBoosted = Math.round(dmg * mult);
-      atkBonusPct = dmg>0 ? Math.round((dmgBoosted/dmg - 1)*100) : 0;
-      dmg = dmgBoosted;
+      const dmg=Math.max(0, grossDmg-blocked);
       delta[l]=-dmg;
     }else{
       action='defend';
       healAmt=stW.cur;
       delta[w]=+healAmt;
     }
-    return {winner, loser:l, action, delta, blocked, shieldShown, rawDmg, healAmt, atkBonusPct,
+    return {winner, loser:l, action, delta, blocked, shieldShown, rawDmg, grossDmg, healAmt, atkBonusPct,
             maskId:evalW.maskId, loserMaskId:evalL.maskId,
             atkVal:stW.atk, defVal:stW.cur, loserDef:stL.cur};
   }
@@ -2090,6 +2090,7 @@ const I18N = {
     dmgMath:(raw,blk,fin)=>`Danno: ${raw} − ${blk} = <b>${fin}</b>.`,
     dmgNullified:(raw,def)=>`Attacco ${raw} contro Difesa ${def}: colpo <b>annullato</b>.`,
     dmgFlat:(n)=>`Danno pieno: <b>${n}</b> (nessuna parata).`,
+    furyLog:(pct,base,gross)=>`⚔ Furia offensiva <b>+${pct}%</b>: danno ${base} → <b>${gross}</b>.`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> ti curi di <b>+${n}</b> PV.`:`<b>${who}</b> si cura di <b>+${n}</b> PV.`,
     healReduced:(p)=>`Cure consecutive: cura al <b>${p}%</b>.`, healMeterLabel:"Prossima cura", atkMeterLabel:"Prossimo attacco",
     healResetTip:`Attacca per azzerare.`,
@@ -2152,6 +2153,7 @@ const I18N = {
     dmgMath:(raw,blk,fin)=>`Damage: ${raw} − ${blk} = <b>${fin}</b>.`,
     dmgNullified:(raw,def)=>`Attack ${raw} against Defense ${def}: blow <b>nullified</b>.`,
     dmgFlat:(n)=>`Full damage: <b>${n}</b> (no parry).`,
+    furyLog:(pct,base,gross)=>`⚔ Offensive fury <b>+${pct}%</b>: damage ${base} → <b>${gross}</b>.`,
     healedBy:(who,n,isYou)=>isYou?`<b>${who}</b> heal <b>+${n}</b> HP.`:`<b>${who}</b> heals <b>+${n}</b> HP.`,
     healReduced:(p)=>`Consecutive heals: healing at <b>${p}%</b>.`, healMeterLabel:"Next heal", atkMeterLabel:"Next attack",
     healResetTip:`Attack to reset.`,
@@ -2187,6 +2189,8 @@ const CHANGELOG=[
     "FURIA OFFENSIVA: attaccare più volte di fila dà un bonus danno crescente (+10/20/30/40%, conta il premere Attacco, non il danno). Premia le build schierate all attacco. Difendere azzera la furia.",
     "Nuovo promemoria FURIA accanto alle tue carte: mostra il bonus danno del prossimo attacco secondo la striscia (+0/10/20/30/40%), affiancato al promemoria della cura. Difendere azzera la striscia e nasconde l indicatore.",
     "Gli indicatori di FURIA e CURA sono visibili anche per l avversario, accanto alle sue carte.",
+    "Il bonus di furia ora si applica al danno PRIMA della parata: il danno extra sfonda lo scudo avversario (più efficace contro chi para molto).",
+    "Nel riepilogo dello scontro ora è indicata la percentuale applicata: furia offensiva (+X% e danno risultante) e rendimento della cura consecutiva (X%).",
     "Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).",
     "Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.",
     "Regole aggiornate con le nuove meccaniche."],
@@ -2195,6 +2199,8 @@ const CHANGELOG=[
     "OFFENSIVE FURY: attacking several times in a row gives a growing damage bonus (+10/20/30/40%, pressing Attack counts, not the damage dealt). Rewards attack-oriented builds. Defending resets the fury.",
     "New FURY reminder next to your cards: shows the next attack's damage bonus by streak (+0/10/20/30/40%), alongside the heal reminder. Defending resets the streak and hides the indicator.",
     "FURY and HEAL indicators are now also shown for the opponent, next to their cards.",
+    "The fury bonus now applies to damage BEFORE the parry: the extra damage breaks through the opponent's shield (more effective against heavy parriers).",
+    "The clash recap now shows the applied percentage: offensive fury (+X% and resulting damage) and consecutive-heal yield (X%).",
     "When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).",
     "Heal reminder next to your cards: shows how much the next heal is worth (100/75/50/25/0%) while the streak is active.",
     "Rules updated with the new mechanics."]},
@@ -3206,10 +3212,14 @@ const UI = (() => {
     }
 
     const cambiaQualcosa = (gained.me!==0 || gained.ai!==0);
-    const finalDmg = out.action==='attack' ? Math.max(0, out.rawDmg-out.blocked) : 0;
+    const finalDmg = out.action==='attack' ? Math.max(0, (out.grossDmg||out.rawDmg)-out.blocked) : 0;
 
     if(out.action==='attack'){
       Sfx.maskAttack();
+      // Se la furia offensiva ha potenziato il colpo, lo dichiaro nel log.
+      if(out.atkBonusPct>0){
+        log(`<span class="sys">${T().furyLog(out.atkBonusPct, out.rawDmg, out.grossDmg)}</span>`,'sys');
+      }
       announceWeapon(state[w].eval.maskId);
       winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
 
@@ -3226,8 +3236,8 @@ const UI = (() => {
               shieldOnMask(loseCard, out.shieldShown);
               Sfx.block();
               log(`<span class="sys">${T().blockedMath(lName, out.shieldShown, l==='me' && mode!=='pvp_local')}</span>`,'sys');
-              if(finalDmg>0) log(`<span class="${cls}">${T().dmgMath(out.rawDmg, out.shieldShown, finalDmg)}</span>`,cls);
-              else           log(`<span class="${cls}">${T().dmgNullified(out.rawDmg, out.shieldShown)}</span>`,cls);
+              if(finalDmg>0) log(`<span class="${cls}">${T().dmgMath(out.grossDmg||out.rawDmg, out.shieldShown, finalDmg)}</span>`,cls);
+              else           log(`<span class="${cls}">${T().dmgNullified(out.grossDmg||out.rawDmg, out.shieldShown)}</span>`,cls);
             }]);
             if(finalDmg>0){
               // il danno passa nonostante la parata: dopo lo scudo, lo strappo
@@ -3238,7 +3248,7 @@ const UI = (() => {
             }
           } else {
             // nessuna parata: colpo pieno, poi strappo
-            phases.push([0, ()=>{ log(`<span class="${cls}">${T().dmgFlat(out.rawDmg)}</span>`,cls); }]);
+            phases.push([0, ()=>{ log(`<span class="${cls}">${T().dmgFlat(out.grossDmg||out.rawDmg)}</span>`,cls); }]);
             if(finalDmg>0){
               phases.push([T_FLATHIT, ()=>{ loseCard.classList.add('destroyed'); tearMask(loseCard); Sfx.tear(); }]);
               phases.push([T_TEAR, null]);
@@ -3269,7 +3279,7 @@ const UI = (() => {
           } else {
             if(pct<100){
               const tip = showTip ? ' '+T().healResetTip : '';
-              log(`<span class="sys">${T().healReduced(pct)}${tip}</span>`,'sys');
+              log(`<span class="sys">🍷 ${T().healReduced(pct)}${tip}</span>`,'sys');
             }
             log(`<span class="${cls}">${T().healedBy(wName, healedNow, w==='me' && mode!=='pvp_local')}</span>`,cls);
           }
@@ -3547,7 +3557,7 @@ const UI = (() => {
       <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>75%</b>, 3ª <b>50%</b>, 4ª <b>25%</b>, poi <b>0%</b>.<br>
       <b>Attaccare azzera il contatore</b> e la cura torna piena. La <b>parata non è influenzata</b>: riduce sempre il danno per intero. Un <b>promemoria</b> accanto alle tue carte ti ricorda a quanto rende la prossima cura.</p>
       <h3>⚔ Furia offensiva</h3>
-      <p>Attaccare più volte di <b>fila</b> ti dà un <b>bonus danno</b> crescente (conta il premere Attacco, non il danno): +10%, +20%, +30%, fino a +40%. <b>Difendere azzera</b> la furia e il bonus riparte da zero. Un <b>promemoria</b> accanto alle tue carte mostra il bonus del prossimo attacco.</p>
+      <p>Attaccare più volte di <b>fila</b> ti dà un <b>bonus danno</b> crescente (conta il premere Attacco, non il danno): +10%, +20%, +30%, fino a +40%. Il bonus si applica al danno <b>prima della parata</b>, quindi il danno extra <b>sfonda</b> lo scudo avversario. <b>Difendere azzera</b> la furia e il bonus riparte da zero. Un <b>promemoria</b> accanto alle tue carte mostra il bonus del prossimo attacco.</p>
       <h3>Ultimo Giro</h3>
       <p>Se dopo <b>30 round</b> nessuno ha chiuso, parte l'<b>Ultimo Giro</b>: un annuncio ti avvisa e un contatore mostra le <b>10 mani</b> rimaste. Allo scadere <b>vince chi ha più vino</b> nella damigiana; in caso di parità si va allo <b>spareggio</b> finché uno non passa in vantaggio.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;
@@ -3568,7 +3578,7 @@ const UI = (() => {
       <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>75%</b>, 3rd <b>50%</b>, 4th <b>25%</b>, then <b>0%</b>.<br>
       <b>Attacking resets the counter</b> and healing returns to full. The <b>parry is not affected</b>: it always reduces damage in full. A <b>reminder</b> next to your cards shows how much the next heal is worth.</p>
       <h3>⚔ Offensive fury</h3>
-      <p>Attacking several times <b>in a row</b> gives a growing <b>damage bonus</b> (pressing Attack counts, not the damage dealt): +10%, +20%, +30%, up to +40%. <b>Defending resets</b> the fury and the bonus starts over. A <b>reminder</b> next to your cards shows the next attack's bonus.</p>
+      <p>Attacking several times <b>in a row</b> gives a growing <b>damage bonus</b> (pressing Attack counts, not the damage dealt): +10%, +20%, +30%, up to +40%. The bonus applies to the damage <b>before the parry</b>, so the extra damage <b>breaks through</b> the opponent's shield. <b>Defending resets</b> the fury and the bonus starts over. A <b>reminder</b> next to your cards shows the next attack's bonus.</p>
       <h3>Last Call</h3>
       <p>If nobody has closed after <b>30 rounds</b>, <b>Last Call</b> begins: an announcement warns you and a counter shows the <b>10 hands</b> left. When time runs out, <b>the most wine wins</b>; on a tie it goes to <b>sudden death</b> until someone pulls ahead.</p>
       <div class="modal-btns"><button class="btn primary" id="modal-close">${r.optClose}</button></div>`;

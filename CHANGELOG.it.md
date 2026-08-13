@@ -6,6 +6,8 @@
 - FURIA OFFENSIVA: attaccare più volte di fila dà un bonus danno crescente (+10/20/30/40%, conta il premere Attacco, non il danno). Premia le build schierate all attacco. Difendere azzera la furia.
 - Nuovo promemoria FURIA accanto alle tue carte: mostra il bonus danno del prossimo attacco secondo la striscia (+0/10/20/30/40%), affiancato al promemoria della cura. Difendere azzera la striscia e nasconde l indicatore.
 - Gli indicatori di FURIA e CURA sono visibili anche per l avversario, accanto alle sue carte.
+- Il bonus di furia ora si applica al danno PRIMA della parata: il danno extra sfonda lo scudo avversario (più efficace contro chi para molto).
+- Nel riepilogo dello scontro ora è indicata la percentuale applicata: furia offensiva (+X% e danno risultante) e rendimento della cura consecutiva (X%).
 - Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).
 - Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.
 - Regole aggiornate con le nuove meccaniche.

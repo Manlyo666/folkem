@@ -6,6 +6,8 @@
 - OFFENSIVE FURY: attacking several times in a row gives a growing damage bonus (+10/20/30/40%, pressing Attack counts, not the damage dealt). Rewards attack-oriented builds. Defending resets the fury.
 - New FURY reminder next to your cards: shows the next attack's damage bonus by streak (+0/10/20/30/40%), alongside the heal reminder. Defending resets the streak and hides the indicator.
 - FURY and HEAL indicators are now also shown for the opponent, next to their cards.
+- The fury bonus now applies to damage BEFORE the parry: the extra damage breaks through the opponent's shield (more effective against heavy parriers).
+- The clash recap now shows the applied percentage: offensive fury (+X% and resulting damage) and consecutive-heal yield (X%).
 - When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).
 - Heal reminder next to your cards: shows how much the next heal is worth (100/75/50/25/0%) while the streak is active.
 - Rules updated with the new mechanics.
