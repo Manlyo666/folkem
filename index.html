@@ -4417,9 +4417,9 @@ const I18N = {
     modeOnline:"PvP online", modeOnlined:"Gioca in rete, 1v1",
     onlineTitle:"PvP online", onlineIntro:"Stessa WiFi consigliata. Un giocatore invita, l'altro si unisce.",
     onlineHost:"🎪 Invita (crea partita)", onlineJoin:"🔗 Unisciti a una partita",
-    onlineHostStep1:"1) Passa questo codice (o QR) all'altro giocatore:",
-    onlineHostStep2:"2) Incolla qui la risposta, o scansionala:",
-    onlineGuestStep1:"1) Incolla il codice dell'host, o scansionalo:",
+    onlineHostStep1:"1) Mostra questo QR (o passa il codice) all'altro giocatore:",
+    onlineHostStep2:"2) Scansiona o incolla la sua risposta:",
+    onlineGuestStep1:"1) Scansiona il QR dell'host o incolla il codice:",
     onlineGuestStep2:"2) Rimanda questa risposta all'host:",
     onlineCopy:"📋 Copia codice", onlineScan:"📷 Scansiona", onlineConnect:"Connetti",
     onlineGenAnswer:"Genera risposta", onlineCancel:"Annulla",
@@ -4430,7 +4430,7 @@ const I18N = {
     onlinePasteAnswer:"Incolla prima la risposta.", onlinePasteOffer:"Incolla prima il codice dell'host.",
     onlineFailed:"Connessione fallita (probabile rete diversa senza relay).",
     onlineClosed:"Connessione interrotta.", onlineCopied:"Copiato!", onlineNoCam:"Fotocamera non disponibile.",
-    onlineJoinStep1:"1) Incolla il codice dell'host, o scansionalo:",
+    onlineJoinStep1:"1) Scansiona il QR dell'host o incolla il codice:",
     onlineJoinStep2:"2) Rimanda questa risposta all'host e attendi:",
     onlineNext:"Genera risposta", onlineWaiting:"In attesa che l'host completi la connessione…",
     onlineConnecting:"Connessione…", onlineLost:"Connessione persa con l'avversario.",
@@ -4440,6 +4440,10 @@ const I18N = {
     onlineQrFail:"QR non generabile: usa il codice testuale.",
     onlineNoScan:"Scansione non disponibile su questo dispositivo: incolla il codice.",
     onlineRematchReq:"L'avversario vuole la rivincita.",
+    onlineWaitBuild:"In attesa che l'avversario schieri le sue Maschere…",
+    onlineYourTurnFirst:"Tocca a te dichiarare per primo.",
+    onlineFoeTurnFirst:"L'avversario dichiara per primo: attendi…",
+    onlineRematchSent:"Richiesta di rivincita inviata.",
     diffEasy:"Facile", diffMedium:"Media", diffHard:"Difficile",
     setupTitle:"Forgia la tua build",
     setupIntro:"Per ogni Maschera puoi <b>invertire Attacco e Difesa</b>. Meneghino e Capitan Spaventa restano fissi.",
@@ -4505,9 +4509,9 @@ const I18N = {
     modeOnline:"Online PvP", modeOnlined:"Play over the network, 1v1",
     onlineTitle:"Online PvP", onlineIntro:"Same WiFi recommended. One player invites, the other joins.",
     onlineHost:"🎪 Invite (create game)", onlineJoin:"🔗 Join a game",
-    onlineHostStep1:"1) Give this code (or QR) to the other player:",
-    onlineHostStep2:"2) Paste their reply here, or scan it:",
-    onlineJoinStep1:"1) Paste the host's code, or scan it:",
+    onlineHostStep1:"1) Show this QR (or share the code) to the other player:",
+    onlineHostStep2:"2) Scan or paste their reply:",
+    onlineJoinStep1:"1) Scan the host QR or paste the code:",
     onlineJoinStep2:"2) Send this reply back to the host and wait:",
     onlineCopy:"📋 Copy code", onlineScan:"📷 Scan", onlineConnect:"Connect",
     onlineNext:"Generate reply", onlineWaiting:"Waiting for the host to complete the connection…",
@@ -4520,6 +4524,10 @@ const I18N = {
     onlineQrFail:"Can't generate QR: use the text code.",
     onlineNoScan:"Scanning not available on this device: paste the code.",
     onlineRematchReq:"The opponent wants a rematch.",
+    onlineWaitBuild:"Waiting for the opponent to set up their Masks…",
+    onlineYourTurnFirst:"It's your turn to declare first.",
+    onlineFoeTurnFirst:"The opponent declares first: wait…",
+    onlineRematchSent:"Rematch request sent.",
     diffEasy:"Easy", diffMedium:"Medium", diffHard:"Hard",
     setupTitle:"Forge your build",
     setupIntro:"For each Mask you may <b>swap Attack and Defense</b>. Meneghino and Capitan Spaventa stay fixed.",
@@ -5564,6 +5572,13 @@ const UI = (() => {
     GameState.applyDelta(state,out.delta,out);
     const gained={me:state.me.hp-before.me,ai:state.ai.hp-before.ai};
 
+    // WATCHDOG: garantisco che afterResolve venga eseguito anche se un'animazione
+    // (es. il callback di throwWeapon o uno strappo) non completa su certi browser
+    // — era la causa della "schermata bloccata" del vincitore in PvP online.
+    _afterResolveDone=false;
+    if(_resolveWatchdog) clearTimeout(_resolveWatchdog);
+    _resolveWatchdog=setTimeout(()=>{ afterResolve(); }, 9000);
+
     // nomi dei due lati (in base alla modalità)
     const nameOf=(s)=> mode==='pvp_local' ? (s==='me'?T().p1:T().p2) : (s==='me'?T().you:T().foe);
     // dichiaro SEMPRE le scelte di entrambi (attacco/difesa)
@@ -5922,7 +5937,13 @@ const UI = (() => {
     setTimeout(()=>{ try{ Net.close(); }catch(_){} }, 800);
   }
 
+  let _afterResolveDone=false;    // guard: afterResolve una sola volta per turno
+  let _resolveWatchdog=null;
   function afterResolve(){
+    // idempotente: se un watchdog o una doppia catena la richiama, esce.
+    if(_afterResolveDone) return;
+    _afterResolveDone=true;
+    if(_resolveWatchdog){ clearTimeout(_resolveWatchdog); _resolveWatchdog=null; }
     renderOtri();
     updateMeters();
     if(state.winner){ endGame(); return; }
@@ -6115,7 +6136,8 @@ const UI = (() => {
       else showScreen('screen-menu');
     });
     $('setup-start').addEventListener('click',()=>{
-      if(mode==='pvp_local'&&setupTarget==='me'){ setupTarget='ai'; renderSetup(); }   // passa a setup P2
+      if(mode==='pvp_online'){ GameOnline.finishSetup(); }              // online: invia build, attende avversario
+      else if(mode==='pvp_local'&&setupTarget==='me'){ setupTarget='ai'; renderSetup(); }   // passa a setup P2
       else startGame();
     });
     // tavolo P1
@@ -6131,8 +6153,11 @@ const UI = (() => {
     // opzioni
     $('table-opts').addEventListener('click',()=>openModal(optionsHTML()));
     // fine
-    $('btn-again').addEventListener('click',()=>{ $('overlay').className='overlay'; playerInv={}; pvpP2Inv={}; setupTarget='me'; renderSetup(); showScreen('screen-setup'); });
-    $('btn-menu').addEventListener('click',()=>{ $('overlay').className='overlay'; showScreen('screen-menu'); });
+    $('btn-again').addEventListener('click',()=>{
+      if(mode==='pvp_online'){ GameOnline.requestRematch(); return; }   // online: proponi rivincita all'avversario
+      $('overlay').className='overlay'; playerInv={}; pvpP2Inv={}; setupTarget='me'; renderSetup(); showScreen('screen-setup');
+    });
+    $('btn-menu').addEventListener('click',()=>{ if(mode==='pvp_online') Online.reset(); $('overlay').className='overlay'; showScreen('screen-menu'); });
     wireModal();
   }
 
@@ -6149,8 +6174,45 @@ const UI = (() => {
     let scanStream=null, scanTimer=null;
     const ICE = { iceServers:[{urls:'stun:stun.l.google.com:19302'}] };
 
-    function pack(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
-    function unpack(str){ try{ return JSON.parse(decodeURIComponent(escape(atob(str.trim())))); }catch(e){ return null; } }
+    // ---- CODEC SDP COMPATTO ----
+    // Un SDP WebRTC (datachannel) è per il ~75% boilerplate ricostruibile. Estraggo
+    // solo i campi variabili (ufrag, pwd, setup, fingerprint, candidati host LAN) e
+    // li reimpacchetto in una stringa cortissima → QR scansionabile. Dall'altro lato
+    // ricostruisco un SDP completo da template. Verificato byte-compatibile.
+    function packSdp(kind, seedStr, sdp){
+      const g=(re)=>{ const m=sdp.match(re); return m?m[1]:''; };
+      const fpHex=g(/a=fingerprint:sha-256 ([0-9A-Fa-f:]+)/).replace(/:/g,'');
+      const fpB64=fpHex ? btoa(fpHex.match(/../g).map(h=>String.fromCharCode(parseInt(h,16))).join('')) : '';
+      const setup=(g(/a=setup:(\S+)/)||'actpass')[0];   // 'a'|'p'|'a(ctive)'
+      // candidati host: solo ip:porta (il resto è ricostruibile)
+      const cands=[...sdp.matchAll(/a=candidate:\S+ \d+ udp \d+ (\S+) (\d+) typ host/gi)].map(m=>m[1]+':'+m[2]);
+      const o={ k:kind[0], u:g(/a=ice-ufrag:(\S+)/), p:g(/a=ice-pwd:(\S+)/), s:setup, f:fpB64, c:cands };
+      if(seedStr) o.d=seedStr;
+      // base64url compatto del JSON minimale
+      return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    }
+    function unpackSdp(code){
+      try{
+        let b=code.trim().replace(/-/g,'+').replace(/_/g,'/');
+        while(b.length%4) b+='=';
+        const o=JSON.parse(decodeURIComponent(escape(atob(b))));
+        // ricostruisco fingerprint hex con i due punti
+        const fpHex=atob(o.f).split('').map(c=>('0'+c.charCodeAt(0).toString(16)).slice(-2)).join('').toUpperCase();
+        const fp=fpHex.match(/../g).join(':');
+        const setup= o.s==='a' ? 'actpass' : (o.s==='p' ? 'passive' : 'active');
+        const cands=(o.c||[]).map((cp,i)=>{ const idx=cp.lastIndexOf(':'); const ip=cp.slice(0,idx), port=cp.slice(idx+1);
+          return 'a=candidate:'+(i+1)+' 1 udp 2130706431 '+ip+' '+port+' typ host'; }).join('\r\n');
+        const sdp=[
+          'v=0','o=- 4611731400430051336 2 IN IP4 127.0.0.1','s=-','t=0 0',
+          'a=group:BUNDLE 0','a=extmap-allow-mixed','a=msid-semantic: WMS',
+          'm=application 9 UDP/DTLS/SCTP webrtc-datachannel','c=IN IP4 0.0.0.0',
+          'a=ice-ufrag:'+o.u,'a=ice-pwd:'+o.p,'a=ice-options:trickle',
+          'a=fingerprint:sha-256 '+fp,'a=setup:'+setup,
+          'a=mid:0','a=sctp-port:5000','a=max-message-size:262144'
+        ].concat(cands?[cands]:[]).join('\r\n')+'\r\n';
+        return { t: o.k==='o'?'offer':'answer', sdp, seed:o.d };
+      }catch(e){ return null; }
+    }
 
     function resetConn(){
       try{ if(dc) dc.close(); }catch(e){}
@@ -6174,17 +6236,17 @@ const UI = (() => {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await waitIce();
-      showHostUI(pack({t:'offer', seed, sdp:pc.localDescription.sdp}));
+      showHostUI(packSdp('offer', seed, pc.localDescription.sdp));
     }
     async function hostAccept(answerCode){
-      const data = unpack(answerCode);
+      const data = unpackSdp(answerCode);
       if(!data || data.t!=='answer'){ toast(T().onlineBadCode); return; }
       try{ await pc.setRemoteDescription({type:'answer', sdp:data.sdp}); toast(T().onlineConnecting); }
       catch(e){ toast(T().onlineBadCode); }
     }
     async function guestAccept(offerCode){
       resetConn(); role='guest';
-      const data = unpack(offerCode);
+      const data = unpackSdp(offerCode);
       if(!data || data.t!=='offer'){ toast(T().onlineBadCode); return; }
       seed = data.seed;
       pc = new RTCPeerConnection(ICE);
@@ -6193,7 +6255,7 @@ const UI = (() => {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       await waitIce();
-      showGuestAnswerUI(pack({t:'answer', sdp:pc.localDescription.sdp}));
+      showGuestAnswerUI(packSdp('answer', null, pc.localDescription.sdp));
     }
     function wireChannel(ch){
       ch.onopen = ()=>{ connected=true; onConnected(); };
@@ -6201,7 +6263,7 @@ const UI = (() => {
       ch.onmessage = (ev)=>{ if(onMsg){ try{ onMsg(JSON.parse(ev.data)); }catch(e){} } };
     }
     function send(obj){ if(dc && dc.readyState==='open'){ dc.send(JSON.stringify(obj)); return true; } return false; }
-    function onConnected(){ closeOnlineModal(); GameOnline.begin(role, seed); }
+    function onConnected(){ closeOnlineModal(); GameOnline.beginSetup(role, seed); }
     function onDisconnected(){ if(mode==='pvp_online'){ toast(T().onlineLost); } }
 
     function open(){
@@ -6311,42 +6373,100 @@ const UI = (() => {
   //   - Chi inizia il round è dato dal parity del round (uguale sui due lati).
   // ============================================================
   const GameOnline = (() => {
-    let myRole=null, pendingMine=null, pendingTheirs=null, localReady=false;
+    let myRole=null, seed=null;
+    let pendingMine=null, pendingTheirs=null, localReady=false;
+    let myBuild=null, foeBuild=null, foeBuildReady=false;
+    let firstMover=null;          // 'me' | 'ai' per il round corrente (lancio moneta)
+    let iDeclaredFirst=false;     // ho già dichiarato in un round dove tocco per primo
+    let rematchMe=false, rematchFoe=false;
 
-    function begin(role, seed){
-      myRole=role; mode='pvp_online'; onlineRole=role;
+    // 1) Alla connessione: mostro il setup delle maschere (build indipendenti).
+    function beginSetup(role, seedIn){
+      myRole=role; seed=seedIn; mode='pvp_online'; onlineRole=role;
       Online.setMsgHandler(onNet);
-      playerInv={};
-      state=GameState.createInitial(playerInv,{mode:'pvp_online', seed, role});
-      document.body.dataset.pvp='1';
+      foeBuild=null; foeBuildReady=false;
+      // uso il setup esistente: il giocatore inverte le maschere che vuole
+      playerInv={}; setupTarget='me';
+      renderSetup();
+      showScreen('screen-setup');
+      log(`<span class="sys">🌐 ${T().onlineStarted(role==='host'?T().onlineYouHost:T().onlineYouGuest)}</span>`,'sys');
+    }
+    // 2) Confermato il setup: invio la mia build e attendo quella dell'avversario.
+    function finishSetup(){
+      myBuild={...playerInv};
+      Online.send({k:'build', inv:myBuild});
+      // schermata d'attesa finché non arriva la build avversaria
+      openModal(`<h2>${T().onlineTitle}</h2><p class="online-hint">${T().onlineWaitBuild}</p>`);
+      tryStart();
+    }
+    function tryStart(){
+      if(myBuild==null || !foeBuildReady) return;
+      closeModal();
+      begin();
+    }
+    // 3) Entrambe le build pronte: avvio la partita.
+    function begin(){
+      state=GameState.createInitial(myBuild,{mode:'pvp_online', seed, role:myRole});
+      state.inv.ai={...foeBuild};       // build reale dell'avversario (per i suoi danni)
+      document.body.dataset.pvp='0';
       $('foe-name').textContent=T().foe;
       $('log').innerHTML='';
+      rematchMe=false; rematchFoe=false;
       showScreen('screen-table');
       Sfx.startGameMusic();
-      log(`<span class="sys">🌐 ${T().onlineStarted(role==='host'?T().onlineYouHost:T().onlineYouGuest)}</span>`,'sys');
       onlineNewRound();
     }
+
+    // lancio di moneta DETERMINISTICO dal seed+round: entrambi calcolano lo stesso
+    // esito senza scambiarsi nulla. Chi tocca per primo dichiara; l'altro vede e
+    // risponde. "Nascosto": non sai in anticipo se toccherà a te.
+    function coinFirst(){
+      // uso l'RNG dello stato ma in modo isolato per round (così non consuma il
+      // mazzo): derivo dal seed e dal numero di round.
+      const h = GameLogic.seedFromString(String(state.seed)+':'+state.round);
+      // host e guest devono concordare: 'me' su un lato = 'ai' sull'altro.
+      // Definisco: se h pari -> l'HOST inizia; se dispari -> il GUEST inizia.
+      const hostStarts = (h % 2)===0;
+      const iAmHost = (myRole==='host');
+      const iStart = (hostStarts===iAmHost);
+      return iStart ? 'me' : 'ai';
+    }
+
     function onlineNewRound(){
       swapArmed=false;
       GameState.dealRound(state);
-      pendingMine=null; pendingTheirs=null; localReady=false;
+      pendingMine=null; pendingTheirs=null; localReady=false; iDeclaredFirst=false;
+      firstMover=coinFirst();
       $('maskOverlay').classList.remove('show');
       $('btn-summon').style.display='none';
-      $('btn-swap').style.display='';$('btn-swap').disabled=false;
-      $('btn-attack').style.display='';$('btn-attack').disabled=false;
-      $('btn-defend').style.display='';$('btn-defend').disabled=false;
       $('foe-actions').style.display='none';
       renderOtri(); renderFoeHand(false); renderMyHand();
       dealCommunityOneByOne();
       log(`— <b>Round ${state.round}</b> —`,'sys');
       log(`<span class="sys">${T().tableLabel}: ${cardsSymbols(state.community.slice(0,4))}</span>`,'sys');
       log(`<span class="me">${T().yourCardsLabel}: ${cardsSymbols(state.me.hand)}</span>`,'me');
+      // TURNI ALTERNATI: se tocca a me per primo, abilito i pulsanti; se tocca
+      // all'avversario, attendo la sua dichiarazione (arriva via rete).
+      if(firstMover==='me'){
+        enableChoiceButtons(true);
+        log(`<span class="sys">🎲 ${T().onlineYourTurnFirst}</span>`,'sys');
+      } else {
+        enableChoiceButtons(false);
+        log(`<span class="sys">🎲 ${T().onlineFoeTurnFirst}</span>`,'sys');
+      }
     }
+    function enableChoiceButtons(on){
+      $('btn-swap').style.display=on?'':'none'; $('btn-swap').disabled=!on;
+      $('btn-attack').style.display=on?'':'none'; $('btn-attack').disabled=!on;
+      $('btn-defend').style.display=on?'':'none'; $('btn-defend').disabled=!on;
+    }
+
     function onlineChoose(c){
       if(localReady) return;
+      // se tocca all'avversario per primo e lui non ha ancora dichiarato, blocco.
+      if(firstMover==='ai' && pendingTheirs==null){ return; }
       localReady=true; pendingMine=c; state.me.choice=c;
-      $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
-      $('btn-attack').style.display='none';$('btn-defend').style.display='none';$('btn-swap').style.display='none';
+      enableChoiceButtons(false);
       log(`<span class="me">${T().youChose(c==='attack'?T().attack:T().defend)}</span>`,'me');
       Online.send({k:'choice', c});
       tryResolve();
@@ -6357,12 +6477,18 @@ const UI = (() => {
     }
     function onNet(msg){
       if(!msg || !msg.k) return;
-      if(msg.k==='choice'){
+      if(msg.k==='build'){
+        foeBuild=msg.inv||{}; foeBuildReady=true; tryStart();
+      } else if(msg.k==='choice'){
         pendingTheirs=msg.c; state.ai.choice=msg.c;
         log(`<span class="ai">${T().foeChose(msg.c==='attack'?T().attack:T().defend)}</span>`,'ai');
+        // se l'avversario toccava per primo, ora abilito la MIA scelta (lo vedo e rispondo)
+        if(firstMover==='ai' && !localReady){ enableChoiceButtons(true); }
         tryResolve();
       } else if(msg.k==='swap'){
         GameState.swapCard(state,'ai',msg.index); renderFoeHand(false);
+      } else if(msg.k==='rematch'){
+        rematchFoe=true; maybeRematch();
       }
     }
     function tryResolve(){
@@ -6370,7 +6496,29 @@ const UI = (() => {
       proceedToFifth();
     }
     function nextRound(){ onlineNewRound(); }
-    return { begin, onlineChoose, onlineSwap, nextRound };
+
+    // ---- RIVINCITA ----
+    function requestRematch(){
+      rematchMe=true; Online.send({k:'rematch'});
+      log(`<span class="sys">🌐 ${T().onlineRematchSent}</span>`,'sys');
+      maybeRematch();
+    }
+    function maybeRematch(){
+      if(rematchMe && rematchFoe){
+        // nuovo seed: lo propone l'host, così entrambi ripartono allineati.
+        // per semplicità riuso il seed originale + un contatore round azzerato:
+        // ricreo lo stato con lo stesso seed (nuova partita deterministica).
+        $('overlay').className='overlay';
+        rematchMe=false; rematchFoe=false;
+        begin();
+      } else if(rematchFoe){
+        toast(T().onlineRematchReq);
+      }
+    }
+    function toast(msg){ log(`<span class="sys">🌐 ${msg}</span>`,'sys'); }
+
+    return { beginSetup, finishSetup, begin, onlineChoose, onlineSwap, nextRound,
+             requestRematch, get inRematch(){return rematchMe;} };
   })();
 
   function init(){
