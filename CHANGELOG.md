@@ -2,6 +2,7 @@
 
 ## 1.4.0
 
+- Faster diminishing HEALING: consecutive heals now give 100%, 50%, 25%, then 0% (was 100/75/50/25/0). Makes the all-heal build less dominant: turtling runs out of healing sooner and becomes more attackable. PvE difficulty gradient unchanged.
 - ALTERNATING TURNS: each round one side now declares Attack or Defend first and the other sees it and responds; who starts alternates every round. The opponent's declared move appears at the centre of the table (⚔ or 🛡). No longer an optional test: it's the standard game dynamic.
 - OFFENSIVE FURY: attacking several times in a row gives a growing damage bonus (+10/20/30/40%, pressing Attack counts, not the damage dealt). Rewards attack-oriented builds. Defending resets the fury.
 - New FURY reminder next to your cards: shows the next attack's damage bonus by streak (+0/10/20/30/40%), alongside the heal reminder. Defending resets the streak and hides the indicator.

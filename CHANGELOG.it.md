@@ -2,6 +2,7 @@
 
 ## 1.4.0
 
+- CURA a rendimenti decrescenti più rapida: cure consecutive ora rendono 100%, 50%, 25%, poi 0% (prima 100/75/50/25/0). Rende meno dominante la build tutta-cura: chi si trincera esaurisce prima la cura ed è più attaccabile. Il gradiente di difficoltà PvE resta invariato.
 - TURNI ALTERNATI: ora ogni round uno dei due dichiara Attacco o Difesa per primo e l altro vede e risponde; chi inizia si alterna a ogni round. La mossa dichiarata dall avversario appare al centro del tavolo (⚔ o 🛡). Non è più una prova opzionale: è la dinamica standard del gioco.
 - FURIA OFFENSIVA: attaccare più volte di fila dà un bonus danno crescente (+10/20/30/40%, conta il premere Attacco, non il danno). Premia le build schierate all attacco. Difendere azzera la furia.
 - Nuovo promemoria FURIA accanto alle tue carte: mostra il bonus danno del prossimo attacco secondo la striscia (+0/10/20/30/40%), affiancato al promemoria della cura. Difendere azzera la striscia e nasconde l indicatore.

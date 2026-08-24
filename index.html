@@ -3269,10 +3269,10 @@ const GameLogic = (() => {
   }
 
   // Cura a rendimenti decrescenti su CURE CONSECUTIVE:
-  // 1ª cura 100%, 2ª 75%, 3ª 50%, 4ª 25%, dalla 5ª in poi 0%.
+  // 1ª cura 100%, 2ª 50%, 3ª 25%, dalla 4ª in poi 0%.
   // Attaccare azzera il contatore. La PARATA non è influenzata (riduce sempre pieno).
   // Arrotondamento per ECCESSO: se il calcolo dà 0.1 curi comunque 1 (mai decimali).
-  const HEAL_STEPS=[1, 0.75, 0.5, 0.25, 0];
+  const HEAL_STEPS=[1, 0.5, 0.25, 0];
   function healFactor(streak){
     const i=Math.max(0, streak|0);
     return i<HEAL_STEPS.length ? HEAL_STEPS[i] : 0;
@@ -3328,7 +3328,7 @@ const GameLogic = (() => {
     }
     return dist;
   }
-  const _HEAL=[1,0.75,0.5,0.25,0];
+  const _HEAL=[1,0.5,0.25,0];
   function _effHeal(raw,streak){ const f=streak<_HEAL.length?_HEAL[Math.max(0,streak)]:0; return f<=0?0:Math.ceil(raw*f); }
 
   function _expected(action, myDist, foeEvs, ctx){
@@ -4591,6 +4591,7 @@ const I18N = {
 const APP_VERSION="1.4.0";
 const CHANGELOG=[
   {v:"1.4.0", it:[
+    "CURA a rendimenti decrescenti più rapida: cure consecutive ora rendono 100%, 50%, 25%, poi 0% (prima 100/75/50/25/0). Rende meno dominante la build tutta-cura: chi si trincera esaurisce prima la cura ed è più attaccabile. Il gradiente di difficoltà PvE resta invariato.",
     "TURNI ALTERNATI: ora ogni round uno dei due dichiara Attacco o Difesa per primo e l altro vede e risponde; chi inizia si alterna a ogni round. La mossa dichiarata dall avversario appare al centro del tavolo (⚔ o 🛡). Non è più una prova opzionale: è la dinamica standard del gioco.",
     "FURIA OFFENSIVA: attaccare più volte di fila dà un bonus danno crescente (+10/20/30/40%, conta il premere Attacco, non il danno). Premia le build schierate all attacco. Difendere azzera la furia.",
     "Nuovo promemoria FURIA accanto alle tue carte: mostra il bonus danno del prossimo attacco secondo la striscia (+0/10/20/30/40%), affiancato al promemoria della cura. Difendere azzera la striscia e nasconde l indicatore.",
@@ -4601,6 +4602,7 @@ const CHANGELOG=[
     "Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.",
     "Regole aggiornate con le nuove meccaniche."],
     en:[
+    "Faster diminishing HEALING: consecutive heals now give 100%, 50%, 25%, then 0% (was 100/75/50/25/0). Makes the all-heal build less dominant: turtling runs out of healing sooner and becomes more attackable. PvE difficulty gradient unchanged.",
     "ALTERNATING TURNS: each round one side now declares Attack or Defend first and the other sees it and responds; who starts alternates every round. The opponent's declared move appears at the centre of the table (⚔ or 🛡). No longer an optional test: it's the standard game dynamic.",
     "OFFENSIVE FURY: attacking several times in a row gives a growing damage bonus (+10/20/30/40%, pressing Attack counts, not the damage dealt). Rewards attack-oriented builds. Defending resets the fury.",
     "New FURY reminder next to your cards: shows the next attack's damage bonus by streak (+0/10/20/30/40%), alongside the heal reminder. Defending resets the streak and hides the indicator.",
@@ -5039,7 +5041,7 @@ const UI = (() => {
     const who=(state&&state[side])?state[side]:null;
     const streak=who?(who.healStreak||0):0;
     if(streak<=0){ el.style.display='none'; return; }
-    const pct=[100,75,50,25,0][Math.min(4,streak)];
+    const pct=[100,50,25,0][Math.min(3,streak)];
     el.style.display='';
     el.className='heal-meter'+(pct===0?' depleted':(pct<=50?' low':''));
     // solo icona + percentuale: compatto, non sfora su schermi stretti
@@ -5684,7 +5686,7 @@ const UI = (() => {
       Sfx.maskHeal();
       announceHeal(state[w].eval.maskId);
       const streakBefore=(state[w].healStreak||1)-1;
-      const pct=[100,75,50,25,0][Math.min(4,streakBefore)];
+      const pct=[100,50,25,0][Math.min(3,streakBefore)];
       const healedNow = gained[w];                 // PV realmente recuperati (0 se 0%)
       const showTip = (mode==='pvp_local');         // il consiglio "Attacca per azzerare"
                                                     // ha senso solo in PvP offline
@@ -6024,7 +6026,7 @@ const UI = (() => {
       Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
       <h3>Build</h3><p>Prima della partita puoi invertire Attacco/Difesa di ogni Maschera (tranne Meneghino e Capitan Spaventa).</p>
       <h3>Cura a rendimenti decrescenti</h3>
-      <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>75%</b>, 3ª <b>50%</b>, 4ª <b>25%</b>, poi <b>0%</b>.<br>
+      <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>50%</b>, 3ª <b>25%</b>, poi <b>0%</b>.<br>
       <b>Attaccare azzera il contatore</b> e la cura torna piena. La <b>parata non è influenzata</b>: riduce sempre il danno per intero. Un <b>promemoria</b> accanto alle tue carte ti ricorda a quanto rende la prossima cura.</p>
       <h3>⚔ Furia offensiva</h3>
       <p>Attaccare più volte di <b>fila</b> ti dà un <b>bonus danno</b> crescente (conta il premere Attacco, non il danno): +10%, +20%, +30%, fino a +40%. Il bonus si applica al danno <b>prima della parata</b>, quindi il danno extra <b>sfonda</b> lo scudo avversario. <b>Difendere azzera</b> la furia e il bonus riparte da zero. Un <b>promemoria</b> accanto alle tue carte mostra il bonus del prossimo attacco.</p>
@@ -6045,7 +6047,7 @@ const UI = (() => {
       Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.</p>
       <h3>Builds</h3><p>Before the match you can swap each Mask's Attack/Defense (except Meneghino and Capitan Spaventa).</p>
       <h3>Diminishing healing</h3>
-      <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>75%</b>, 3rd <b>50%</b>, 4th <b>25%</b>, then <b>0%</b>.<br>
+      <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>50%</b>, 3rd <b>25%</b>, then <b>0%</b>.<br>
       <b>Attacking resets the counter</b> and healing returns to full. The <b>parry is not affected</b>: it always reduces damage in full. A <b>reminder</b> next to your cards shows how much the next heal is worth.</p>
       <h3>⚔ Offensive fury</h3>
       <p>Attacking several times <b>in a row</b> gives a growing <b>damage bonus</b> (pressing Attack counts, not the damage dealt): +10%, +20%, +30%, up to +40%. The bonus applies to the damage <b>before the parry</b>, so the extra damage <b>breaks through</b> the opponent's shield. <b>Defending resets</b> the fury and the bonus starts over. A <b>reminder</b> next to your cards shows the next attack's bonus.</p>
