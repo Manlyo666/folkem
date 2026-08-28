@@ -258,6 +258,8 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 body[data-pvp="1"] .player-strip.foe .otre{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .who{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
+body[data-pvp="1"] .player-strip.foe .pre-choice{transform:rotate(180deg)}   /* badge scelta G2 capovolto */
+body[data-pvp="1"] #foeMaskSlot{transform:rotate(180deg)}   /* maschera evocata di G2 capovolta */
 
 /* 5a carta che scivola LENTAMENTE al centro sovrapponendosi alle altre */
 .card.deal-center{animation:dealCenter 1.3s cubic-bezier(.25,1,.4,1);z-index:5;
@@ -370,8 +372,8 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .choice-badge.cb-atk{color:#ff6a4d}
 .choice-badge.cb-def{color:#6ac6ff}
-.pre-choice{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 7px;border-radius:10px;
-  background:rgba(0,0,0,.4);border:1px solid rgba(180,120,60,.35);vertical-align:middle;font-family:var(--font-fairy);font-size:12px;
+.pre-choice{display:inline-flex;align-items:center;gap:3px;margin:0 6px;padding:1px 7px;border-radius:10px;flex-shrink:0;align-self:center;
+  background:rgba(0,0,0,.4);border:1px solid rgba(180,120,60,.35);font-family:var(--font-fairy);font-size:12px;
   animation:preChoicePop .3s ease}
 .pre-choice .pc-txt{color:var(--parch);font-weight:bold}
 @keyframes preChoicePop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
@@ -677,10 +679,11 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
         <button class="btn def" id="p2-defend" disabled data-i18n="defend">Difesa</button>
       </div>
       <div class="player-strip foe">
-        <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div><span class="pre-choice" id="preChoice-ai" style="display:none"></span>
+        <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div>
           <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-ai">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="foe-hand"></div>
+        <span class="pre-choice" id="preChoice-ai" style="display:none"></span>
         <div class="heal-meter" id="foeHealMeter" style="display:none"></div>
         <div class="atk-meter" id="foeAtkMeter" style="display:none"></div>
       </div>
@@ -702,10 +705,11 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
     <!-- giocatore in basso -->
     <div class="table-bottom">
       <div class="player-strip">
-        <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div><span class="pre-choice" id="preChoice-me" style="display:none"></span>
+        <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div>
           <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-me">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="my-hand"></div>
+        <span class="pre-choice" id="preChoice-me" style="display:none"></span>
         <div class="heal-meter" id="healMeter" style="display:none"></div>
         <div class="atk-meter" id="atkMeter" style="display:none"></div>
       </div>
@@ -5730,7 +5734,12 @@ const UI = (() => {
         log(`<span class="sys">${T().furyLog(out.atkBonusPct, out.rawDmg, out.grossDmg)}</span>`,'sys');
       }
       announceWeapon(state[w].eval.maskId);
-      winCard.classList.add(w==='me'?'lunge-up':'lunge-down');
+      // Affondo verso il centro. In pvp_local lo slot di G2 è ruotato 180°, quindi
+      // per l'avversario inverto la classe così l'affondo resta diretto verso il basso.
+      let lungeCls;
+      if(w==='me') lungeCls='lunge-up';
+      else lungeCls = (mode==='pvp_local') ? 'lunge-up' : 'lunge-down';
+      winCard.classList.add(lungeCls);
 
       // Fase 1: affondo, poi lancio arma. throwWeapon richiama il suo callback
       // quando l'arma ha colpito: da li' parte la catena parata/strappo.
