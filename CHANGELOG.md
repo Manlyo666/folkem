@@ -10,7 +10,14 @@
 - The fury bonus now applies to damage BEFORE the parry: the extra damage breaks through the opponent's shield (more effective against heavy parriers).
 - The clash recap now shows the applied percentage: offensive fury (+X% and resulting damage) and consecutive-heal yield (X%).
 - When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).
-- Heal reminder next to your cards: shows how much the next heal is worth (100/75/50/25/0%) while the streak is active.
+- STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.
+- Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).
+- Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.
+- PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.
+- Compact link code: the QR is now much more readable (only the essential connection fields are extracted).
+- End-of-game safety net: if the final animation freezes on some browsers, the game still ends correctly after a few seconds.
+- Online rematch: at the end of a game you can request a rematch from your opponent.
+- Heal reminder next to your cards: shows how much the next heal is worth (100/50/25/0%) while the streak is active.
 - Rules updated with the new mechanics.
 
 ## 1.3.7

@@ -370,6 +370,11 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .choice-badge.cb-atk{color:#ff6a4d}
 .choice-badge.cb-def{color:#6ac6ff}
+.pre-choice{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 7px;border-radius:10px;
+  background:rgba(0,0,0,.4);border:1px solid rgba(180,120,60,.35);vertical-align:middle;font-family:var(--font-fairy);font-size:12px;
+  animation:preChoicePop .3s ease}
+.pre-choice .pc-txt{color:var(--parch);font-weight:bold}
+@keyframes preChoicePop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 .heal-meter{display:flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;border-radius:12px;
   background:rgba(30,12,8,.72);border:1px solid rgba(180,120,60,.4);
   font-family:var(--font-fairy);font-size:12px;color:var(--parch);white-space:nowrap;align-self:center}
@@ -672,7 +677,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
         <button class="btn def" id="p2-defend" disabled data-i18n="defend">Difesa</button>
       </div>
       <div class="player-strip foe">
-        <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div>
+        <div class="otre-wrap"><div class="who" id="foe-name">Avversario</div><span class="pre-choice" id="preChoice-ai" style="display:none"></span>
           <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-ai">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="foe-hand"></div>
@@ -697,7 +702,7 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
     <!-- giocatore in basso -->
     <div class="table-bottom">
       <div class="player-strip">
-        <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div>
+        <div class="otre-wrap"><div class="who" data-i18n="you">Tu</div><span class="pre-choice" id="preChoice-me" style="display:none"></span>
           <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-me">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="my-hand"></div>
@@ -3092,7 +3097,7 @@ const GameLogic = (() => {
     return (h ^ (h >>> 16)) >>> 0;
   }
 
-  // 0 Carta Alta .. 8 Scala Reale
+  // 0 Carta Alta .. 8 Scala Reale (scala colore; l'asso alto vince come carta più alta)
   const HAND_TABLE = [
     {key:'high',    maskId:'meo'},
     {key:'pair',    maskId:'pantalone'},
@@ -3121,7 +3126,7 @@ const GameLogic = (() => {
   };
   const RANK_LABEL_EN = {
     high:'High Card',pair:'Pair',twopair:'Two Pair',trips:'Three of a Kind',
-    straight:'Straight',flush:'Flush',full:'Full House',quads:'Four of a Kind',royal:'Royal Flush'
+    straight:'Straight',flush:'Flush',full:'Full House',quads:'Four of a Kind',royal:'Straight Flush'
   };
 
   // valore comparabile di un rank (A alto = 11) per i kicker
@@ -3174,9 +3179,10 @@ const GameLogic = (() => {
 
     let key, tie=[];
     const g=groups;
-    if(royal){ key='royal'; tie=[sfHigh]; }
+    // Scala colore (5 consecutivi stesso seme) = Capitan Spaventa, come la reale.
+    // La reale (con asso alto, high>=11) resta la scala colore più forte a parità.
+    if(straightFlush){ key='royal'; tie=[sfHigh]; }
     else if(g[0].n>=4){ key='quads'; tie=[g[0].hi, ...topKickers([g[0].hi],1)]; }
-    else if(straightFlush){ key='flush'; tie=[sfHigh+1000]; } // scala-colore batte colore normale
     else if(g[0].n===3 && g[1] && g[1].n>=2){ key='full'; tie=[g[0].hi, g[1].hi]; }
     else if(flushSuit){
       key='flush';
@@ -4465,6 +4471,7 @@ const I18N = {
     foeDeclares:(c)=>`L'avversario dichiara: <b>${c}</b>. Ora tocca a te.`,
     foeChose:(c)=>`L'avversario risponde: <b>${c}</b>.`,
     p2Turn:"Giocatore 2: tocca a te scegliere.",
+    p1Turn:"Giocatore 1: tocca a te scegliere.",
     tableCardsAre:(list)=>`Carte a terra: ${list}.`,
     yourCardsAre:(list)=>`Le tue carte: ${list}.`,
     foeHas:(m,k)=>`L'avversario aveva ${m} — ${k}.`,
@@ -4549,6 +4556,7 @@ const I18N = {
     foeDeclares:(c)=>`The opponent declares: <b>${c}</b>. Your turn now.`,
     foeChose:(c)=>`The opponent responds: <b>${c}</b>.`,
     p2Turn:"Player 2: your turn to choose.",
+    p1Turn:"Player 1: your turn to choose.",
     tableCardsAre:(list)=>`Table cards: ${list}.`,
     yourCardsAre:(list)=>`Your cards: ${list}.`,
     foeHas:(m,k)=>`The opponent had ${m} — ${k}.`,
@@ -4599,7 +4607,14 @@ const CHANGELOG=[
     "Il bonus di furia ora si applica al danno PRIMA della parata: il danno extra sfonda lo scudo avversario (più efficace contro chi para molto).",
     "Nel riepilogo dello scontro ora è indicata la percentuale applicata: furia offensiva (+X% e danno risultante) e rendimento della cura consecutiva (X%).",
     "Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).",
-    "Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.",
+    "SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.",
+    "PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).",
+    "Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.",
+    "GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.",
+    "Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).",
+    "Rete di sicurezza di fine partita: se l animazione finale si blocca su alcuni browser, la partita si chiude comunque correttamente dopo pochi secondi.",
+    "Rivincita online: a fine partita puoi richiedere una rivincita all avversario.",
+    "Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/50/25/0%) quando la striscia è attiva.",
     "Regole aggiornate con le nuove meccaniche."],
     en:[
     "Faster diminishing HEALING: consecutive heals now give 100%, 50%, 25%, then 0% (was 100/75/50/25/0). Makes the all-heal build less dominant: turtling runs out of healing sooner and becomes more attackable. PvE difficulty gradient unchanged.",
@@ -4610,7 +4625,14 @@ const CHANGELOG=[
     "The fury bonus now applies to damage BEFORE the parry: the extra damage breaks through the opponent's shield (more effective against heavy parriers).",
     "The clash recap now shows the applied percentage: offensive fury (+X% and resulting damage) and consecutive-heal yield (X%).",
     "When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).",
-    "Heal reminder next to your cards: shows how much the next heal is worth (100/75/50/25/0%) while the streak is active.",
+    "STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.",
+    "Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).",
+    "Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.",
+    "PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.",
+    "Compact link code: the QR is now much more readable (only the essential connection fields are extracted).",
+    "End-of-game safety net: if the final animation freezes on some browsers, the game still ends correctly after a few seconds.",
+    "Online rematch: at the end of a game you can request a rematch from your opponent.",
+    "Heal reminder next to your cards: shows how much the next heal is worth (100/50/25/0%) while the streak is active.",
     "Rules updated with the new mechanics."]},
   {v:"1.3.7", it:[
     "PROVA: nuova opzione \"Turni alternati\" (nelle impostazioni, spenta di default). Se attiva, in partita contro il computer ogni round uno dei due dichiara la mossa PRIMA e l altro la vede e risponde; chi inizia si alterna a ogni round. Quando dichiara l avversario, la sua mossa appare sul tavolo (⚔ o 🛡) prima della tua scelta. Si puo disattivare quando vuoi dalle impostazioni."],
@@ -4882,6 +4904,7 @@ const UI = (() => {
   let state=null, lang='it', playerInv={}, swapArmed=false;
   let mode='ai', difficulty='medium';
   let pvpTurn='me';         // in pvp locale: chi sta agendo ('me'=P1 bottom, 'ai'=P2 top)
+  let pvpFirst='me';        // in pvp locale: chi DICHIARA per primo nel round corrente (si alterna)
   let onlineRole=null;      // 'host' | 'guest' quando mode==='online'
   let onlineView=null;      // (guest) stato specchiato ricevuto dall'host
   // PROVA: dinamica sequenziale in PvE. Se attiva, ogni round uno dei due dichiara
@@ -4892,7 +4915,12 @@ const UI = (() => {
   let seqMode = true;
   let aiChoiceShown=null;   // quando l'IA gioca PRIMA: la sua scelta rivelata
   const T=()=>I18N[lang];
-  const rankLabel=k=>lang==='it'?GameLogic.RANK_LABEL[k]:GameLogic.RANK_LABEL_EN[k];
+  const rankLabel=k=>{
+    // accetta una key (stringa) o l'oggetto ev. Una scala colore qualsiasi è "Scala
+    // Reale" (Straight Flush): l'asso alto vince solo perché è la carta più alta.
+    const key = (k && typeof k==='object') ? k.key : k;
+    return lang==='it'?GameLogic.RANK_LABEL[key]:GameLogic.RANK_LABEL_EN[key];
+  };
 
   // tonalità maschera in base a quante volte è stata evocata (0,1,2)
   const maskTone={};
@@ -4999,7 +5027,7 @@ const UI = (() => {
         <div class="bc-mask"><img src="${maskImg(h.maskId,0)}" alt=""></div>
         <div class="bc-info">
           <div class="bc-name">${m.name}</div>
-          <div class="rank-label">${rankLabel(h.key)}</div>
+          <div class="rank-label">${rankLabel(h)}</div>
           <div class="bc-stats">
             <div class="st atk"><span>${T().atkS}</span><b>${atk}</b></div>
             <div class="st def"><span>${T().defS}</span><b>${def}</b></div>
@@ -5032,7 +5060,7 @@ const UI = (() => {
   function renderOtri(){ renderOtre('me'); renderOtre('ai'); }
 
   // Promemoria del livello di cura corrente accanto alle carte: mostra a quanto
-  // rende la PROSSIMA cura secondo la striscia (100/75/50/25/0%). Compare solo se
+  // rende la PROSSIMA cura secondo la striscia (100/50/25/0%). Compare solo se
   // la striscia è già avviata (almeno una cura consecutiva fatta). Vale per
   // entrambi i lati: side='me' (giocatore, con etichetta) o 'ai' (avversario).
   function updateHealMeter(side){
@@ -5146,9 +5174,29 @@ const UI = (() => {
     const cls  = choice==='attack' ? 'cb-atk' : 'cb-def';
     return `<span class="choice-badge ${cls}">${icon}</span>`;
   }
+  // Palesa a schermo, PRIMA dell'evocazione, la scelta (attacco/difesa) di ciascun
+  // lato accanto al suo nome. Puramente visivo: non altera il sistema a turni, mostra
+  // solo ciò che è già stato deciso. Etichetta esplicita ⚔ Attacco / 🛡 Difesa.
+  function preChoiceLabel(choice){
+    if(!choice) return '';
+    const icon = choice==='attack' ? '⚔' : '🛡';
+    const cls  = choice==='attack' ? 'cb-atk' : 'cb-def';
+    const txt  = choice==='attack' ? T().attack : T().defend;
+    return `<span class="choice-badge ${cls}">${icon}</span><span class="pc-txt">${txt}</span>`;
+  }
+  function showPreEvokeChoices(){
+    const me=$('preChoice-me'), ai=$('preChoice-ai');
+    if(me){ if(state.me.choice){ me.innerHTML=preChoiceLabel(state.me.choice); me.style.display=''; } else me.style.display='none'; }
+    if(ai){ if(state.ai.choice){ ai.innerHTML=preChoiceLabel(state.ai.choice); ai.style.display=''; } else ai.style.display='none'; }
+  }
+  function hidePreEvokeChoices(){
+    const me=$('preChoice-me'), ai=$('preChoice-ai');
+    if(me) me.style.display='none';
+    if(ai) ai.style.display='none';
+  }
   function renderMyMaskSlot(){
     const ev=state.me.eval,m=GameLogic.MASKS[ev.maskId],tone=toneFor(ev.maskId);
-    $('myMaskSlot').innerHTML=`<div class="rank-tag">${choiceBadge(state.me.choice)}${rankLabel(ev.key)}</div>
+    $('myMaskSlot').innerHTML=`<div class="rank-tag">${choiceBadge(state.me.choice)}${rankLabel(ev)}</div>
       ${maskCardHTML(ev.maskId,state.inv.me,tone,'','myMaskCard')}`;
   }
   function renderFoeMaskHidden(){
@@ -5157,7 +5205,7 @@ const UI = (() => {
   function renderFoeMaskRevealed(){
     const ev=state.ai.eval,m=GameLogic.MASKS[ev.maskId],tone=toneFor(ev.maskId);
     // l'indicatore palesa se l'avversario ha ATTACCATO o DIFESO in questo scontro
-    $('foeMaskSlot').innerHTML=`<div class="rank-tag">${choiceBadge(state.ai.choice)}${rankLabel(ev.key)}</div>
+    $('foeMaskSlot').innerHTML=`<div class="rank-tag">${choiceBadge(state.ai.choice)}${rankLabel(ev)}</div>
       ${maskCardHTML(ev.maskId,state.inv.ai,tone,'foe','foeMaskCard')}`;
   }
   // annuncio dell'arma a centro schermo (stile anime: la maschera dichiara l'attacco)
@@ -5212,19 +5260,37 @@ const UI = (() => {
   }
 
   function newRound(){
-    swapArmed=false; pvpTurn='me';
+    swapArmed=false;
     const _sb=$('seqBadge'); if(_sb) _sb.style.display='none';   // reset badge seq
+    hidePreEvokeChoices();   // reset badge scelta pre-evocazione
     GameState.dealRound(state);
+    // TURNI ALTERNATI (pvp locale): round dispari G1 dichiara per primo, round pari G2.
+    // Chi inizia dichiara alla cieca; l'altro vede la scelta e risponde.
+    pvpFirst = (mode==='pvp_local' && state.round % 2 === 0) ? 'ai' : 'me';
+    pvpTurn = pvpFirst;
     $('maskOverlay').classList.remove('show');
     $('btn-summon').style.display='none';$('btn-summon').classList.remove('confirm-pulse');
     $('btn-reveal')&&($('btn-reveal').style.display='none');
-    // Cambia/Attacca/Difendi subito visibili
-    $('btn-swap').style.display='';$('btn-swap').disabled=false;$('btn-swap').classList.remove('primary');
-    $('btn-attack').style.display='';$('btn-attack').disabled=false;
-    $('btn-defend').style.display='';$('btn-defend').disabled=false;
-    // in PvP: G2 aspetta il suo turno; nascondi i suoi pulsanti finché non tocca a lui
-    if(mode==='pvp_local'){ $('foe-actions').style.display='none'; }
+    // Cambia/Attacca/Difendi visibili solo a chi tocca per primo
+    const g1First = !(mode==='pvp_local') || pvpFirst==='me';
+    $('btn-swap').style.display=g1First?'':'none';$('btn-swap').disabled=!g1First;$('btn-swap').classList.remove('primary');
+    $('btn-attack').style.display=g1First?'':'none';$('btn-attack').disabled=!g1First;
+    $('btn-defend').style.display=g1First?'':'none';$('btn-defend').disabled=!g1First;
+    // in PvP: chi non tocca per primo aspetta; mostra i pulsanti di G2 solo se G2 inizia
+    if(mode==='pvp_local'){
+      if(pvpFirst==='ai'){
+        $('foe-actions').style.display='flex';
+        $('p2-summon').style.display='none';
+        $('p2-swap').style.display='';$('p2-swap').disabled=false;$('p2-swap').classList.remove('primary');
+        $('p2-attack').style.display='';$('p2-defend').style.display='';
+        $('p2-attack').disabled=false;$('p2-defend').disabled=false;
+        log(`<span class="sys">${T().p2Turn}</span>`,'sys');
+      } else {
+        $('foe-actions').style.display='none';
+      }
+    }
     renderOtri();renderFoeHand(false);renderMyHand();
+    if(mode==='pvp_local' && pvpFirst==='ai') renderFoeHandSelectable();
     // le 4 carte a terra scendono una alla volta, ognuna col suo suono
     dealCommunityOneByOne();
     // ULTIMO GIRO: avviso quando parte e mostro le mani rimaste
@@ -5333,26 +5399,47 @@ const UI = (() => {
   // scelta atk/dif ALLA CIECA (sulle 4 carte). Cambia carta è opzionale, prima.
   function choose(side,c){
     if(mode==='pvp_local'){
-      // In PvP: turno alternato. G1 sceglie, poi G2, poi si procede.
+      // TURNI ALTERNATI: chi tocca per primo (pvpFirst) dichiara alla cieca,
+      // poi tocca al secondo, che vede e risponde; quindi si procede.
       state[side].choice=c;
       log(`<span class="${side==='me'?'me':'ai'}">${(side==='me'?T().p1:T().p2)}: ${c==='attack'?T().attack:T().defend}</span>`,side==='me'?'me':'ai');
-      if(side==='me'){
-        // G1 ha scelto: blocca i suoi pulsanti, passa a G2
-        $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
-        $('btn-attack').style.display='none';$('btn-defend').style.display='none';$('btn-swap').style.display='none';
-        pvpTurn='ai';
-        $('foe-actions').style.display='flex';
-        $('p2-summon').style.display='none';
-        $('p2-swap').style.display='';$('p2-swap').disabled=false;$('p2-swap').classList.remove('primary');
-        $('p2-attack').style.display='';$('p2-defend').style.display='';
-        $('p2-attack').disabled=false;$('p2-defend').disabled=false;
-        renderFoeHandSelectable();
-        log(`<span class="sys">${T().p2Turn}</span>`,'sys');
+      const second = pvpFirst==='me' ? 'ai' : 'me';
+      if(side===pvpFirst){
+        // il primo ha scelto: blocca i suoi pulsanti, passa al secondo
+        if(pvpFirst==='me'){
+          $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
+          $('btn-attack').style.display='none';$('btn-defend').style.display='none';$('btn-swap').style.display='none';
+        } else {
+          $('p2-swap').disabled=true;$('p2-attack').disabled=true;$('p2-defend').disabled=true;
+          $('p2-attack').style.display='none';$('p2-defend').style.display='none';$('p2-swap').style.display='none';
+        }
+        pvpTurn=second;
+        // abilita i pulsanti del secondo
+        if(second==='ai'){
+          $('foe-actions').style.display='flex';
+          $('p2-summon').style.display='none';
+          $('p2-swap').style.display='';$('p2-swap').disabled=false;$('p2-swap').classList.remove('primary');
+          $('p2-attack').style.display='';$('p2-defend').style.display='';
+          $('p2-attack').disabled=false;$('p2-defend').disabled=false;
+          renderFoeHandSelectable();
+          log(`<span class="sys">${T().p2Turn}</span>`,'sys');
+        } else {
+          $('btn-swap').style.display='';$('btn-swap').disabled=false;$('btn-swap').classList.remove('primary');
+          $('btn-attack').style.display='';$('btn-attack').disabled=false;
+          $('btn-defend').style.display='';$('btn-defend').disabled=false;
+          renderMyHand();
+          log(`<span class="sys">${T().p1Turn}</span>`,'sys');
+        }
         return;
       }else{
-        // G2 ha scelto: procedi
-        $('p2-swap').disabled=true;$('p2-attack').disabled=true;$('p2-defend').disabled=true;
-        $('p2-attack').style.display='none';$('p2-defend').style.display='none';$('p2-swap').style.display='none';
+        // il secondo ha scelto: procedi
+        if(side==='ai'){
+          $('p2-swap').disabled=true;$('p2-attack').disabled=true;$('p2-defend').disabled=true;
+          $('p2-attack').style.display='none';$('p2-defend').style.display='none';$('p2-swap').style.display='none';
+        } else {
+          $('btn-swap').disabled=true;$('btn-attack').disabled=true;$('btn-defend').disabled=true;
+          $('btn-attack').style.display='none';$('btn-defend').style.display='none';$('btn-swap').style.display='none';
+        }
         proceedToFifth();
         return;
       }
@@ -5406,6 +5493,7 @@ const UI = (() => {
       // mostra Evoca Maschera. In PvP servono DUE evocazioni (una per giocatore).
       evokeReady={me:false, ai:(mode!=='pvp_local')};  // in PvE l'IA "evoca" da sola
       $('btn-summon').style.display='';$('btn-summon').disabled=false;$('btn-summon').classList.add('confirm-pulse');
+      showPreEvokeChoices();   // palesa attacco/difesa di entrambi prima di evocare
       if(mode==='pvp_local'){
         $('foe-actions').style.display='flex';
         $('p2-attack').style.display='none';$('p2-defend').style.display='none';$('p2-swap').style.display='none';
@@ -5426,6 +5514,7 @@ const UI = (() => {
     else { $('p2-summon').style.display='none';$('p2-summon').classList.remove('confirm-pulse'); }
     if(!evokeReady.me || !evokeReady.ai) return;   // aspetta l'altro giocatore
     state.phase='summoning';   // evita doppie evocazioni
+    hidePreEvokeChoices();     // le scelte ora passano sugli slot maschera
     if(mode==='pvp_local') $('foe-actions').style.display='none';
     bumpTone(state.me.eval.maskId); bumpTone(state.ai.eval.maskId);
     playSummonAnimation(()=>{
@@ -5433,7 +5522,7 @@ const UI = (() => {
       // confronto diretto: si vede subito quale combinazione batte l'altra
       const evMe=state.me.eval, evAi=state.ai.eval;
       const cmp=GameLogic.compare(evMe,evAi);
-      const nMe=rankLabel(evMe.key), nAi=rankLabel(evAi.key);
+      const nMe=rankLabel(evMe), nAi=rankLabel(evAi);
       if(cmp===0) log(`<span class="sys">⚖ ${nMe} = ${nAi} — ${T().tie}</span>`,'sys');
       else if(cmp>0) log(`<span class="sys">⚖ <b>${nMe}</b> batte ${nAi}</span>`,'sys');
       else log(`<span class="sys">⚖ <b>${nAi}</b> batte ${nMe}</span>`,'sys');
@@ -5534,7 +5623,7 @@ const UI = (() => {
     const all=state[side].hand.concat(state.community);
     const who = side==='me' ? T().you : (mode==='pvp_local'?T().p2:T().foe);
     const cls = side==='me'?'me':'ai';
-    const combo = rankLabel(ev.key);
+    const combo = rankLabel(ev);
     // carte che compongono la combo
     const byR={}; all.forEach(c=>{(byR[c.r]=byR[c.r]||[]).push(c);});
     let comboCards=[];
@@ -6023,7 +6112,8 @@ const UI = (() => {
       <li><b>Attacco</b>: infliggi il tuo Attacco. <b>Difesa</b>: se vinci, curi il tuo valore Difesa; se perdi, la tua Difesa <b>riduce il danno subito</b> (parata). Anche a mani vuote la Difesa può convenire, per limitare il danno.</li></ul>
       <h3>⚠️ Gerarchia diversa dal poker</h3>
       <p>Con sole <b>40 carte</b> (niente 8-9-10), le probabilità cambiano: il <b>Colore è più raro del Full</b> (quindi Colore batte Full) e il <b>Tris è più raro della Scala</b> (quindi Tris batte Scala). Dal più forte al più debole:<br>
-      Scala Colore ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.</p>
+      <b>Scala Reale</b> ▸ Poker ▸ <b>Colore</b> ▸ <b>Full</b> ▸ <b>Tris</b> ▸ <b>Scala</b> ▸ Doppia Coppia ▸ Coppia ▸ Carta Alta.<br>
+      La <b>Scala Reale</b> (cinque carte consecutive dello stesso seme) evoca <b>Capitan Spaventa</b>. Fra due Scale Reali vince quella che arriva alla <b>carta più alta</b> (l'Asso batte il Re, ecc.).</p>
       <h3>Build</h3><p>Prima della partita puoi invertire Attacco/Difesa di ogni Maschera (tranne Meneghino e Capitan Spaventa).</p>
       <h3>Cura a rendimenti decrescenti</h3>
       <p>Curarsi di continuo rende sempre meno. Cure <b>consecutive</b>: 1ª <b>100%</b>, 2ª <b>50%</b>, 3ª <b>25%</b>, poi <b>0%</b>.<br>
@@ -6044,7 +6134,8 @@ const UI = (() => {
       <li><b>Attack</b>: deal your Attack. <b>Defend</b>: if you win, heal your Defense value; if you lose, your Defense <b>reduces incoming damage</b> (parry). Even empty-handed, Defend can be worth it to limit damage.</li></ul>
       <h3>⚠️ Hierarchy differs from poker</h3>
       <p>With only <b>40 cards</b> (no 8-9-10), the odds change: a <b>Flush is rarer than a Full House</b> (so Flush beats Full House) and <b>Three of a Kind is rarer than a Straight</b> (so Trips beats Straight). Strongest to weakest:<br>
-      Straight Flush ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.</p>
+      <b>Straight Flush</b> ▸ Four of a Kind ▸ <b>Flush</b> ▸ <b>Full House</b> ▸ <b>Three of a Kind</b> ▸ <b>Straight</b> ▸ Two Pair ▸ Pair ▸ High Card.<br>
+      A <b>Straight Flush</b> (five consecutive same-suit cards) summons <b>Capitan Spaventa</b>. Between two Straight Flushes, the one reaching the <b>highest card</b> wins (Ace beats King, etc.).</p>
       <h3>Builds</h3><p>Before the match you can swap each Mask's Attack/Defense (except Meneghino and Capitan Spaventa).</p>
       <h3>Diminishing healing</h3>
       <p>Healing over and over gives less each time. <b>Consecutive</b> heals: 1st <b>100%</b>, 2nd <b>50%</b>, 3rd <b>25%</b>, then <b>0%</b>.<br>
@@ -6442,6 +6533,7 @@ const UI = (() => {
       $('maskOverlay').classList.remove('show');
       $('btn-summon').style.display='none';
       $('foe-actions').style.display='none';
+      hidePreEvokeChoices();
       renderOtri(); renderFoeHand(false); renderMyHand();
       dealCommunityOneByOne();
       log(`— <b>Round ${state.round}</b> —`,'sys');

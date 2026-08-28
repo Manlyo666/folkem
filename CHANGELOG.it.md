@@ -1,4 +1,4 @@
-# Changelog — Folk Em
+# Diario di bordo — Folk Em
 
 ## 1.4.0
 
@@ -10,7 +10,14 @@
 - Il bonus di furia ora si applica al danno PRIMA della parata: il danno extra sfonda lo scudo avversario (più efficace contro chi para molto).
 - Nel riepilogo dello scontro ora è indicata la percentuale applicata: furia offensiva (+X% e danno risultante) e rendimento della cura consecutiva (X%).
 - Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).
-- Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/75/50/25/0%) quando la striscia è attiva.
+- SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.
+- PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).
+- Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.
+- GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.
+- Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).
+- Rete di sicurezza di fine partita: se l animazione finale si blocca su alcuni browser, la partita si chiude comunque correttamente dopo pochi secondi.
+- Rivincita online: a fine partita puoi richiedere una rivincita all avversario.
+- Promemoria della cura accanto alle carte: ricorda a quanto rende la prossima cura (100/50/25/0%) quando la striscia è attiva.
 - Regole aggiornate con le nuove meccaniche.
 
 ## 1.3.7

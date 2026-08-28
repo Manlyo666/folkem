@@ -57,7 +57,7 @@ Before the match, **swap Attack/Defense** on any Mask (Meneghino and Capitan Spa
 | Flush | Arlecchino | Wooden slapstick | 30 / 15 | 2.4% |
 | Full House | Colombina | Sharp fan | 25 / 13 | 5.6% |
 | Three of a Kind | Pulcinella | Club | 20 / 10 | 6.6% |
-| Straight | Dottor Balanzone | Heavy tome | 15 / 7 | 10.4% |
+| Straight | Dottor Balanzone | Heavy tome | 15 / 8 | 10.4% |
 | Two Pair | Brighella | Gnarled cudgel | 10 / 5 | 33.7% |
 | Pair | Pantalone | Coin purse | 6 / 3 | 34.7% |
 | High Card | Meo Patacca | Stiletto | 2 / 1 | — (no combo) |
@@ -65,7 +65,7 @@ Before the match, **swap Attack/Defense** on any Mask (Meneghino and Capitan Spa
 | Flush | Arlecchino | Wooden slapstick | 30 / 15 | 2.4% |
 | Full House | Colombina | Sharp fan | 25 / 13 | 5.6% |
 | Three of a Kind | Pulcinella | Club | 20 / 10 | 6.6% |
-| Straight | Dottor Balanzone | Heavy tome | 15 / 7 | 10.4% |
+| Straight | Dottor Balanzone | Heavy tome | 15 / 8 | 10.4% |
 | Two Pair | Brighella | Gnarled cudgel | 10 / 5 | 33.7% |
 | Pair | Pantalone | Coin purse | 6 / 3 | 34.7% |
 | High Card | Meo Patacca | Stiletto | 2 / 1 | — (no combo) |
