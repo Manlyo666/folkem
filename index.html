@@ -191,7 +191,7 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 .table-mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;position:relative;min-height:0}
 
 /* fila giocatore: otre a SX, carte a DX (avversario: otre a DX) */
-.player-strip{display:flex;align-items:center;gap:12px;justify-content:flex-start;width:100%;padding:0 6%}
+.player-strip{display:flex;align-items:center;gap:12px;justify-content:flex-start;width:100%;padding:0 6%;position:relative}
 .player-strip.foe{flex-direction:row-reverse}   /* avversario: damigiana a destra */
 .otre-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;width:78px}
 .otre-wrap .who{font-family:var(--font-fairy);font-size:13px;color:var(--brass);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
@@ -258,7 +258,7 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 body[data-pvp="1"] .player-strip.foe .otre{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .who{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
-body[data-pvp="1"] .player-strip.foe .pre-choice{transform:rotate(180deg)}   /* badge scelta G2 capovolto */
+body[data-pvp="1"] .player-strip.foe .pre-choice{transform:translateY(-50%) rotate(180deg)}   /* badge scelta G2 capovolto */
 body[data-pvp="1"] #foeMaskSlot{transform:rotate(180deg)}   /* maschera evocata di G2 capovolta */
 
 /* 5a carta che scivola LENTAMENTE al centro sovrapponendosi alle altre */
@@ -372,11 +372,15 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .choice-badge.cb-atk{color:#ff6a4d}
 .choice-badge.cb-def{color:#6ac6ff}
-.pre-choice{display:inline-flex;align-items:center;gap:3px;margin:0 6px;padding:1px 7px;border-radius:10px;flex-shrink:0;align-self:center;
-  background:rgba(0,0,0,.4);border:1px solid rgba(180,120,60,.35);font-family:var(--font-fairy);font-size:12px;
+.pre-choice{position:absolute;top:50%;transform:translateY(-50%);z-index:5;display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:10px;
+  background:rgba(0,0,0,.55);border:1px solid rgba(180,120,60,.35);font-family:var(--font-fairy);font-size:12px;pointer-events:none;
   animation:preChoicePop .3s ease}
+/* G1 (strip normale): a destra delle carte, verso il centro tavolo */
+.player-strip:not(.foe) .pre-choice{left:58%}
+/* G2 (strip foe, row-reverse): a sinistra delle sue carte, verso il centro tavolo */
+.player-strip.foe .pre-choice{right:58%}
 .pre-choice .pc-txt{color:var(--parch);font-weight:bold}
-@keyframes preChoicePop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes preChoicePop{from{transform:translateY(-50%) scale(.7);opacity:0}to{transform:translateY(-50%) scale(1);opacity:1}}
 .heal-meter{display:flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;border-radius:12px;
   background:rgba(30,12,8,.72);border:1px solid rgba(180,120,60,.4);
   font-family:var(--font-fairy);font-size:12px;color:var(--parch);white-space:nowrap;align-self:center}
@@ -4613,6 +4617,8 @@ const CHANGELOG=[
     "Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).",
     "SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.",
     "PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).",
+    "La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (vale per partite locali e contro il computer).",
+    "Correzione: gli indicatori di furia/cura non finiscono più fuori schermo quando appare la scelta pre-evocazione; niente più simbolo di mossa duplicato accanto all'avversario.",
     "Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.",
     "GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.",
     "Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).",
@@ -4631,6 +4637,8 @@ const CHANGELOG=[
     "When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).",
     "STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.",
     "Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).",
+    "The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (applies to local and vs-computer games).",
+    "Fix: the fury/heal reminders no longer slide off-screen when the pre-summon choice appears; no more duplicated move symbol next to the opponent.",
     "Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.",
     "PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.",
     "Compact link code: the QR is now much more readable (only the essential connection fields are extracted).",
@@ -5192,6 +5200,9 @@ const UI = (() => {
     const me=$('preChoice-me'), ai=$('preChoice-ai');
     if(me){ if(state.me.choice){ me.innerHTML=preChoiceLabel(state.me.choice); me.style.display=''; } else me.style.display='none'; }
     if(ai){ if(state.ai.choice){ ai.innerHTML=preChoiceLabel(state.ai.choice); ai.style.display=''; } else ai.style.display='none'; }
+    // Il pre-choice sul lato avversario rende ridondante il badge centrale (seqBadge)
+    // che in PvE dichiarava la mossa dell'IA: lo nascondo per non avere due simboli uguali.
+    const _sb=$('seqBadge'); if(_sb) _sb.style.display='none';
   }
   function hidePreEvokeChoices(){
     const me=$('preChoice-me'), ai=$('preChoice-ai');
@@ -6057,6 +6068,7 @@ const UI = (() => {
   // punteggio con lo zero reso come "0" in stile tabellare (niente ambiguità con la O)
   function fmtScore(n){ return `<span class="score-num">${n}</span>`; }
   function endGame(){
+    clearSavedGame();   // la partita è finita: niente da ripristinare
     // formatto il punteggio con lo zero barrato (Ø) per non confonderlo con la O
     // (usato sotto tramite fmtScore)
     const meWin=state.winner==='me';
@@ -6194,7 +6206,7 @@ const UI = (() => {
       if(e.target.id==='opt-restart'){ const c=confirmHTML(T().sureRestart); openModal(c.html);
         $('cf-yes').onclick=()=>{closeModal(); startGame();}; }
       if(e.target.id==='opt-menu'){ const c=confirmHTML(T().sureMenu); openModal(c.html);
-        $('cf-yes').onclick=()=>{closeModal(); showScreen('screen-menu');}; }
+        $('cf-yes').onclick=()=>{closeModal(); clearSavedGame(); showScreen('screen-menu');}; }
     });
   }
 
@@ -6259,7 +6271,7 @@ const UI = (() => {
       if(mode==='pvp_online'){ GameOnline.requestRematch(); return; }   // online: proponi rivincita all'avversario
       $('overlay').className='overlay'; playerInv={}; pvpP2Inv={}; setupTarget='me'; renderSetup(); showScreen('screen-setup');
     });
-    $('btn-menu').addEventListener('click',()=>{ if(mode==='pvp_online') Online.reset(); $('overlay').className='overlay'; showScreen('screen-menu'); });
+    $('btn-menu').addEventListener('click',()=>{ if(mode==='pvp_online') Online.reset(); clearSavedGame(); $('overlay').className='overlay'; showScreen('screen-menu'); });
     wireModal();
   }
 
@@ -6655,9 +6667,61 @@ const UI = (() => {
       }).catch(()=>{});
     }
     window.__dbg={getState:()=>state, setState:(s)=>{state=s;}, ev:(cs)=>GameLogic.evaluate(cs), endGame:()=>endGame(), renderOtri:()=>renderOtri(), lcBadge:()=>updateLastCallBadge(), lcStatus:()=>GameState.lastCallStatus(state)};
+
+    // Persistenza: salvo lo stato quando l'app va in background o si chiude, così
+    // il ciclo pausa/reload di Android (tasto Indietro, cambio app) non azzera la partita.
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') saveGameState(); });
+    window.addEventListener('pagehide', saveGameState);
+    window.addEventListener('beforeunload', saveGameState);
+    // Al riavvio: se c'era una partita locale in corso, la ripristino invece del menu.
+    loadGameState();
   }
   // localStorage sicuro (non rompe se disabilitato)
   function localStorageSafe(k,v){ try{ if(v!==undefined){localStorage.setItem(k,v);return v;} return localStorage.getItem(k);}catch(e){return null;} }
+
+  // ============ PERSISTENZA PARTITA (sopravvive a pausa/reload di Android) ============
+  // Android può scaricare la WebView quando l'app va in background (es. apri un'altra
+  // app o premi Indietro): senza questo, tornando si perdeva la partita. Salvo lo stato
+  // su sessionStorage quando la pagina si nasconde e lo ripristino all'avvio.
+  // NB: solo per PvE e pvp_local. In pvp_online la connessione P2P muore al reload,
+  // quindi non ha senso ripristinare (l'altro giocatore non c'è più).
+  const SAVE_KEY='folkem_game';
+  function saveGameState(){
+    try{
+      if(!state || mode==='pvp_online') return;
+      if(!state.phase || state.winner || state.round<=0) return;  // nessuna partita viva
+      // clono senza la funzione rng (non serializzabile); il resto è dato puro
+      const snap={};
+      for(const k in state){ if(k==='rng') continue; snap[k]=state[k]; }
+      const payload={ state:snap, mode, difficulty, pvpTurn, pvpFirst, swapArmed,
+        playerInv, pvpP2Inv, ts:Date.now() };
+      sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+    }catch(e){}
+  }
+  function loadGameState(){
+    try{
+      const raw=sessionStorage.getItem(SAVE_KEY);
+      if(!raw) return false;
+      const p=JSON.parse(raw);
+      if(!p || !p.state || p.mode==='pvp_online') return false;
+      if(!p.state.phase || p.state.winner || p.state.round<=0) return false;
+      // ripristino le variabili UI
+      mode=p.mode; difficulty=p.difficulty;
+      pvpTurn=p.pvpTurn||'me'; pvpFirst=p.pvpFirst||'me'; swapArmed=!!p.swapArmed;
+      playerInv=p.playerInv||{}; pvpP2Inv=p.pvpP2Inv||{};
+      state=p.state;
+      // in PvE/pvp_local l'rng è Math.random: non serve ricostruire nulla
+      document.body.dataset.pvp = (mode==='pvp_local')?'1':'0';
+      if(mode==='pvp_local'){ $('foe-name').textContent=T().p2; }
+      else { $('foe-name').textContent=T().foe; }
+      // ridisegno il tavolo com'era
+      showScreen('screen-table');
+      renderOtri(); renderFoeHand(state.fifthRevealed); renderMyHand(); renderCommunity();
+      updateMeters(); updateLastCallBadge();
+      return true;
+    }catch(e){ return false; }
+  }
+  function clearSavedGame(){ try{ sessionStorage.removeItem(SAVE_KEY); }catch(e){} }
 
   return {init};
 })();

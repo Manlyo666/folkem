@@ -12,6 +12,8 @@
 - Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).
 - SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.
 - PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).
+- La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (vale per partite locali e contro il computer).
+- Correzione: gli indicatori di furia/cura non finiscono più fuori schermo quando appare la scelta pre-evocazione; niente più simbolo di mossa duplicato accanto all'avversario.
 - Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.
 - GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.
 - Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).
