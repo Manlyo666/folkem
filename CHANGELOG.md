@@ -13,7 +13,7 @@
 - STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.
 - Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).
 - The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (applies to local and vs-computer games).
-- Fix: the offensive-fury reminder now uses a flame icon (🔥) distinct from the attack-choice sword, so they no longer look like a duplicated symbol; the pre-summon choice reminder was repositioned so it doesn't cover the fury/heal indicators.
+- Fix: the pre-summon choice reminder showed a doubled symbol (e.g. ⚔ ⚔ Attack) because the icon was added twice; it now shows once, repositioned to the right of Player 1's cards and to the left of Player 2's.
 - Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.
 - PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.
 - Compact link code: the QR is now much more readable (only the essential connection fields are extracted).

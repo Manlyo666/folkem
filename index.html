@@ -258,7 +258,7 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 body[data-pvp="1"] .player-strip.foe .otre{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .who{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
-body[data-pvp="1"] .player-strip.foe .pre-choice{transform:translateX(-50%) rotate(180deg)}   /* badge scelta G2 capovolto */
+body[data-pvp="1"] .player-strip.foe .pre-choice{transform:translateY(-50%) rotate(180deg)}   /* badge scelta G2 capovolto */
 body[data-pvp="1"] #foeMaskSlot{transform:rotate(180deg)}   /* maschera evocata di G2 capovolta */
 
 /* 5a carta che scivola LENTAMENTE al centro sovrapponendosi alle altre */
@@ -372,14 +372,17 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .choice-badge.cb-atk{color:#ff6a4d}
 .choice-badge.cb-def{color:#6ac6ff}
-.pre-choice{position:absolute;z-index:6;display:inline-flex;align-items:center;gap:3px;padding:1px 8px;border-radius:10px;
-  background:rgba(0,0,0,.7);border:1px solid rgba(180,120,60,.45);font-family:var(--font-fairy);font-size:12px;pointer-events:none;
+.pre-choice{position:absolute;z-index:6;display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:10px;
+  background:rgba(0,0,0,.7);border:1px solid rgba(180,120,60,.45);font-family:var(--font-fairy);font-size:13px;pointer-events:none;white-space:nowrap;
   animation:preChoicePop .3s ease}
-/* posizionato SOPRA le carte del giocatore, così non si sovrappone alle meter furia/cura */
-.player-strip:not(.foe) .pre-choice{left:50%;bottom:calc(100% - 4px);transform:translateX(-50%)}
-.player-strip.foe .pre-choice{left:50%;top:calc(100% - 4px);transform:translateX(-50%)}
+/* G1: a DESTRA delle carte (verso il centro tavolo), in alto per non coprire le meter */
+.player-strip:not(.foe) .pre-choice{left:64%;top:22%;transform:translateY(-50%)}
+/* G2 (row-reverse): a SINISTRA delle sue carte */
+.player-strip.foe .pre-choice{right:64%;top:78%;transform:translateY(-50%)}
 .pre-choice .pc-txt{color:var(--parch);font-weight:bold}
-@keyframes preChoicePop{from{transform:translateX(-50%) scale(.7);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.pre-choice .pc-txt.cb-atk{color:#ff8a6a}
+.pre-choice .pc-txt.cb-def{color:#8ecbff}
+@keyframes preChoicePop{from{transform:translateY(-50%) scale(.7);opacity:0}to{transform:translateY(-50%) scale(1);opacity:1}}
 .heal-meter{display:flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;border-radius:12px;
   background:rgba(30,12,8,.72);border:1px solid rgba(180,120,60,.4);
   font-family:var(--font-fairy);font-size:12px;color:var(--parch);white-space:nowrap;align-self:center}
@@ -4617,7 +4620,7 @@ const CHANGELOG=[
     "SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.",
     "PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).",
     "La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (vale per partite locali e contro il computer).",
-    "Correzione: l'indicatore di furia offensiva ora usa un'icona fiamma (🔥) distinta dalla spada della scelta d'attacco, così non sembrano un simbolo doppio; il promemoria della scelta pre-evocazione è stato riposizionato per non coprire gli indicatori di furia/cura.",
+    "Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. ⚔ ⚔ Attacco) perché l'icona era aggiunta due volte; ora appare una sola volta, riposizionato a destra delle carte del Giocatore 1 e a sinistra di quelle del Giocatore 2.",
     "Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.",
     "GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.",
     "Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).",
@@ -4637,7 +4640,7 @@ const CHANGELOG=[
     "STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.",
     "Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).",
     "The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (applies to local and vs-computer games).",
-    "Fix: the offensive-fury reminder now uses a flame icon (🔥) distinct from the attack-choice sword, so they no longer look like a duplicated symbol; the pre-summon choice reminder was repositioned so it doesn't cover the fury/heal indicators.",
+    "Fix: the pre-summon choice reminder showed a doubled symbol (e.g. ⚔ ⚔ Attack) because the icon was added twice; it now shows once, repositioned to the right of Player 1's cards and to the left of Player 2's.",
     "Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.",
     "PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.",
     "Compact link code: the QR is now much more readable (only the essential connection fields are extracted).",
@@ -5190,10 +5193,10 @@ const UI = (() => {
   // solo ciò che è già stato deciso. Etichetta esplicita ⚔ Attacco / 🛡 Difesa.
   function preChoiceLabel(choice){
     if(!choice) return '';
-    const icon = choice==='attack' ? '⚔' : '🛡';
+    // T().attack / T().defend contengono GIÀ l'emoji (⚔/🛡): niente icona extra o si sdoppia.
     const cls  = choice==='attack' ? 'cb-atk' : 'cb-def';
     const txt  = choice==='attack' ? T().attack : T().defend;
-    return `<span class="choice-badge ${cls}">${icon}</span><span class="pc-txt">${txt}</span>`;
+    return `<span class="pc-txt ${cls}">${txt}</span>`;
   }
   function showPreEvokeChoices(){
     const me=$('preChoice-me'), ai=$('preChoice-ai');
