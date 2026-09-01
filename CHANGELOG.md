@@ -1,5 +1,14 @@
 # Changelog — Folk Em
 
+## 1.4.1
+
+- Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).
+- The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (local and vs-computer games).
+- Fix: the pre-summon choice reminder showed a doubled symbol (e.g. Attack with two swords); it now shows once.
+- The pre-summon choice reminder is now stacked above the fury and heal indicators, in the same column.
+- The opponent's declared-move indicator now has a border and sits between the opponent's cards and the board, without shifting or covering them.
+- In offline PvP, Player 2's choice reminder and summoned Mask are also flipped; the attack lunge is correctly oriented.
+
 ## 1.4.0
 
 - Faster diminishing HEALING: consecutive heals now give 100%, 50%, 25%, then 0% (was 100/75/50/25/0). Makes the all-heal build less dominant: turtling runs out of healing sooner and becomes more attackable. PvE difficulty gradient unchanged.
@@ -11,9 +20,6 @@
 - The clash recap now shows the applied percentage: offensive fury (+X% and resulting damage) and consecutive-heal yield (X%).
 - When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).
 - STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.
-- Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).
-- The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (applies to local and vs-computer games).
-- Fix: the pre-summon choice reminder showed a doubled symbol (e.g. ⚔ ⚔ Attack) because the icon was added twice; it now shows once, repositioned to the right of Player 1's cards and to the left of Player 2's.
 - Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.
 - PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.
 - Compact link code: the QR is now much more readable (only the essential connection fields are extracted).

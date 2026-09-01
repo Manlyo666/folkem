@@ -1,5 +1,14 @@
 # Diario di bordo — Folk Em
 
+## 1.4.1
+
+- PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).
+- La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (partite locali e contro il computer).
+- Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. Attacco con due spade); ora appare una sola volta.
+- Il promemoria della scelta pre-evocazione è ora impilato sopra gli indicatori di furia e cura, nella stessa colonna.
+- L'indicatore della mossa dichiarata dall'avversario ha ora un bordo ed è posizionato tra le carte avversarie e le carte a terra, senza spostarle né coprirle.
+- In PvP offline, per il Giocatore 2 sono capovolti anche il promemoria della scelta e la Maschera evocata; l'affondo d'attacco è orientato correttamente.
+
 ## 1.4.0
 
 - CURA a rendimenti decrescenti più rapida: cure consecutive ora rendono 100%, 50%, 25%, poi 0% (prima 100/75/50/25/0). Rende meno dominante la build tutta-cura: chi si trincera esaurisce prima la cura ed è più attaccabile. Il gradiente di difficoltà PvE resta invariato.
@@ -11,9 +20,6 @@
 - Nel riepilogo dello scontro ora è indicata la percentuale applicata: furia offensiva (+X% e danno risultante) e rendimento della cura consecutiva (X%).
 - Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).
 - SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.
-- PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).
-- La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (vale per partite locali e contro il computer).
-- Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. ⚔ ⚔ Attacco) perché l'icona era aggiunta due volte; ora appare una sola volta, riposizionato a destra delle carte del Giocatore 1 e a sinistra di quelle del Giocatore 2.
 - Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.
 - GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.
 - Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).

@@ -258,7 +258,7 @@ body[data-portrait="1"] .icon-btn{width:11vw;height:11vw;font-size:5.5vw}
 body[data-pvp="1"] .player-strip.foe .otre{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .who{transform:rotate(180deg)}
 body[data-pvp="1"] .player-strip.foe .hp-num{transform:rotate(180deg)}
-body[data-pvp="1"] .player-strip.foe .pre-choice{transform:translateY(-50%) rotate(180deg)}   /* badge scelta G2 capovolto */
+body[data-pvp="1"] .player-strip.foe .pre-choice{transform:rotate(180deg)}   /* badge scelta G2 capovolto */
 body[data-pvp="1"] #foeMaskSlot{transform:rotate(180deg)}   /* maschera evocata di G2 capovolta */
 
 /* 5a carta che scivola LENTAMENTE al centro sovrapponendosi alle altre */
@@ -332,8 +332,11 @@ body[data-pvp="1"] #foeMaskSlot{transform:rotate(180deg)}   /* maschera evocata 
   font-size:13px;font-family:var(--px);font-weight:bold;color:#dceaff;text-shadow:0 1px 2px #000}
 
 .board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center;min-height:16px}
-.seq-badge{position:absolute;top:-30px;left:50%;transform:translateX(-50%);z-index:4;font-size:26px;text-align:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));animation:seqPulse 1.2s ease-in-out infinite;pointer-events:none}
-@keyframes seqPulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.9}50%{transform:translateX(-50%) scale(1.15);opacity:1}}
+.seq-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:4;
+  font-size:22px;line-height:1;text-align:center;padding:4px 14px;border-radius:14px;
+  background:rgba(0,0,0,.7);border:1px solid rgba(180,120,60,.55);
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));animation:seqPulse 1.2s ease-in-out infinite;pointer-events:none}
+@keyframes seqPulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.9}50%{transform:translateX(-50%) scale(1.1);opacity:1}}
 /* ULTIMO GIRO al posto della scritta "Carte a terra": inciso nel tavolo.
    Font Scar in maiuscolo, beige chiaro con contorno nero → si legge ovunque. */
 .board-label.lastcall-inline{font-family:"Scar",var(--font-title);letter-spacing:.1em;
@@ -372,17 +375,15 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .choice-badge.cb-atk{color:#ff6a4d}
 .choice-badge.cb-def{color:#6ac6ff}
-.pre-choice{position:absolute;z-index:6;display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:10px;
+.side-stack{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.side-stack .heal-meter,.side-stack .atk-meter{margin-top:0}
+.pre-choice{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:10px;
   background:rgba(0,0,0,.7);border:1px solid rgba(180,120,60,.45);font-family:var(--font-fairy);font-size:13px;pointer-events:none;white-space:nowrap;
   animation:preChoicePop .3s ease}
-/* G1: a DESTRA delle carte (verso il centro tavolo), in alto per non coprire le meter */
-.player-strip:not(.foe) .pre-choice{left:64%;top:22%;transform:translateY(-50%)}
-/* G2 (row-reverse): a SINISTRA delle sue carte */
-.player-strip.foe .pre-choice{right:64%;top:78%;transform:translateY(-50%)}
 .pre-choice .pc-txt{color:var(--parch);font-weight:bold}
 .pre-choice .pc-txt.cb-atk{color:#ff8a6a}
 .pre-choice .pc-txt.cb-def{color:#8ecbff}
-@keyframes preChoicePop{from{transform:translateY(-50%) scale(.7);opacity:0}to{transform:translateY(-50%) scale(1);opacity:1}}
+@keyframes preChoicePop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 .heal-meter{display:flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;border-radius:12px;
   background:rgba(30,12,8,.72);border:1px solid rgba(180,120,60,.4);
   font-family:var(--font-fairy);font-size:12px;color:var(--parch);white-space:nowrap;align-self:center}
@@ -689,9 +690,11 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
           <div class="otre" id="otre-ai"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-ai">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="foe-hand"></div>
-        <span class="pre-choice" id="preChoice-ai" style="display:none"></span>
-        <div class="heal-meter" id="foeHealMeter" style="display:none"></div>
-        <div class="atk-meter" id="foeAtkMeter" style="display:none"></div>
+        <div class="side-stack">
+          <span class="pre-choice" id="preChoice-ai" style="display:none"></span>
+          <div class="heal-meter" id="foeHealMeter" style="display:none"></div>
+          <div class="atk-meter" id="foeAtkMeter" style="display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -715,9 +718,11 @@ body[data-portrait="1"] .lastcall-badge .lcb-n{font-size:5vw}
           <div class="otre" id="otre-me"><div class="fill-clip"><div class="fill"></div></div><img src="assets/otri/otre.svg" alt=""></div>
           <div class="hp-num" id="hp-me">100<span class="hp-unit" data-i18n="hpUnit">PV</span></div></div>
         <div class="hand-cards" id="my-hand"></div>
-        <span class="pre-choice" id="preChoice-me" style="display:none"></span>
-        <div class="heal-meter" id="healMeter" style="display:none"></div>
-        <div class="atk-meter" id="atkMeter" style="display:none"></div>
+        <div class="side-stack">
+          <span class="pre-choice" id="preChoice-me" style="display:none"></span>
+          <div class="heal-meter" id="healMeter" style="display:none"></div>
+          <div class="atk-meter" id="atkMeter" style="display:none"></div>
+        </div>
       </div>
       <div class="action-bar" id="my-actions">
         <button class="btn ghost compact" id="btn-swap" data-i18n="swap">Cambia carta (−10 PV)</button>
@@ -4606,8 +4611,22 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.0";
+const APP_VERSION="1.4.1";
 const CHANGELOG=[
+  {v:"1.4.1", it:[
+    "PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).",
+    "La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (partite locali e contro il computer).",
+    "Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. Attacco con due spade); ora appare una sola volta.",
+    "Il promemoria della scelta pre-evocazione è ora impilato sopra gli indicatori di furia e cura, nella stessa colonna.",
+    "L'indicatore della mossa dichiarata dall'avversario ha ora un bordo ed è posizionato tra le carte avversarie e le carte a terra, senza spostarle né coprirle.",
+    "In PvP offline, per il Giocatore 2 sono capovolti anche il promemoria della scelta e la Maschera evocata; l'affondo d'attacco è orientato correttamente."],
+   en:[
+    "Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).",
+    "The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (local and vs-computer games).",
+    "Fix: the pre-summon choice reminder showed a doubled symbol (e.g. Attack with two swords); it now shows once.",
+    "The pre-summon choice reminder is now stacked above the fury and heal indicators, in the same column.",
+    "The opponent's declared-move indicator now has a border and sits between the opponent's cards and the board, without shifting or covering them.",
+    "In offline PvP, Player 2's choice reminder and summoned Mask are also flipped; the attack lunge is correctly oriented."]},
   {v:"1.4.0", it:[
     "CURA a rendimenti decrescenti più rapida: cure consecutive ora rendono 100%, 50%, 25%, poi 0% (prima 100/75/50/25/0). Rende meno dominante la build tutta-cura: chi si trincera esaurisce prima la cura ed è più attaccabile. Il gradiente di difficoltà PvE resta invariato.",
     "TURNI ALTERNATI: ora ogni round uno dei due dichiara Attacco o Difesa per primo e l altro vede e risponde; chi inizia si alterna a ogni round. La mossa dichiarata dall avversario appare al centro del tavolo (⚔ o 🛡). Non è più una prova opzionale: è la dinamica standard del gioco.",
@@ -4618,9 +4637,6 @@ const CHANGELOG=[
     "Nel riepilogo dello scontro ora è indicata la percentuale applicata: furia offensiva (+X% e danno risultante) e rendimento della cura consecutiva (X%).",
     "Quando si schierano le Maschere, un indicatore palesa se l avversario ha attaccato (⚔) o difeso (🛡).",
     "SCALA REALE (cinque carte consecutive dello stesso seme, es. 4-5-6-7-Fante di bastoni) ora è riconosciuta come mano a sé ed evoca Capitan Spaventa, non più un semplice Colore. Fra due Scale Reali vince quella che arriva alla carta più alta (l'Asso batte il Re). NB: rende Capitan più frequente per chi punta sul colore.",
-    "PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).",
-    "La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (vale per partite locali e contro il computer).",
-    "Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. ⚔ ⚔ Attacco) perché l'icona era aggiunta due volte; ora appare una sola volta, riposizionato a destra delle carte del Giocatore 1 e a sinistra di quelle del Giocatore 2.",
     "Prima di evocare le Maschere, quando le carte sono scoperte, un indicatore palesa la scelta (⚔ Attacco / 🛡 Difesa) di ENTRAMBI i giocatori accanto al nome: vedi cosa sta per succedere prima della conferma.",
     "GIOCA ONLINE (PvP): sfida un altro giocatore in rete tramite connessione diretta (WebRTC). Scambio del codice di collegamento via QR o testo; le carte sono identiche e sincronizzate per entrambi tramite seme condiviso.",
     "Codice di collegamento compatto: il QR ora è molto più leggibile (estrazione dei soli campi essenziali della connessione).",
@@ -4638,9 +4654,6 @@ const CHANGELOG=[
     "The clash recap now shows the applied percentage: offensive fury (+X% and resulting damage) and consecutive-heal yield (X%).",
     "When the Masks are summoned, an indicator reveals whether the opponent attacked (⚔) or defended (🛡).",
     "STRAIGHT FLUSH (five consecutive same-suit cards, e.g. 4-5-6-7-Jack of clubs) is now recognised as its own hand and summons Capitan Spaventa, no longer a plain Flush. Between two straight flushes, the one reaching the highest card wins (Ace beats King). Note: makes Capitan more frequent for flush-oriented builds.",
-    "Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).",
-    "The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (applies to local and vs-computer games).",
-    "Fix: the pre-summon choice reminder showed a doubled symbol (e.g. ⚔ ⚔ Attack) because the icon was added twice; it now shows once, repositioned to the right of Player 1's cards and to the left of Player 2's.",
     "Before summoning the Masks, once the cards are revealed, an indicator shows BOTH players' choice (⚔ Attack / 🛡 Defend) next to their name: you see what's coming before confirming.",
     "PLAY ONLINE (PvP): challenge another player over the network via a direct connection (WebRTC). Exchange the link code via QR or text; cards are identical and synced for both via a shared seed.",
     "Compact link code: the QR is now much more readable (only the essential connection fields are extracted).",
