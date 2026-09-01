@@ -332,8 +332,8 @@ body[data-pvp="1"] #foeMaskSlot{transform:rotate(180deg)}   /* maschera evocata 
   font-size:13px;font-family:var(--px);font-weight:bold;color:#dceaff;text-shadow:0 1px 2px #000}
 
 .board-label{font-family:var(--font-fairy);font-size:12px;color:var(--brass);letter-spacing:.06em;text-align:center;min-height:16px}
-.seq-badge{font-size:26px;text-align:center;min-height:30px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));animation:seqPulse 1.2s ease-in-out infinite}
-@keyframes seqPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.15);opacity:1}}
+.seq-badge{position:absolute;top:-30px;left:50%;transform:translateX(-50%);z-index:4;font-size:26px;text-align:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));animation:seqPulse 1.2s ease-in-out infinite;pointer-events:none}
+@keyframes seqPulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.9}50%{transform:translateX(-50%) scale(1.15);opacity:1}}
 /* ULTIMO GIRO al posto della scritta "Carte a terra": inciso nel tavolo.
    Font Scar in maiuscolo, beige chiaro con contorno nero → si legge ovunque. */
 .board-label.lastcall-inline{font-family:"Scar",var(--font-title);letter-spacing:.1em;
