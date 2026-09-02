@@ -1,5 +1,9 @@
 # Changelog — Folk Em
 
+## 1.4.4
+
+- AI: fixed a flaw where it chased streaks (fury/heal) ignoring its own build. A healing build no longer tries to keep a useless fury by attacking into nothing, and an aggressive build no longer wastes turns: attack/defense choices now match the Masks it has in play. Fixes the seemingly senseless moves and the over-aggression.
+
 ## 1.4.3
 
 - AI: the three playstyles (aggressive, defensive, counter) now come up with equal probability (previously the defensive one — the weakest — appeared most often). Simulations show the three are similar in strength, so a uniform random pick makes the AI less predictable.

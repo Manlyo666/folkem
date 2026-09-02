@@ -1,5 +1,9 @@
 # Diario di bordo — Folk Em
 
+## 1.4.4
+
+- IA: corretto un difetto per cui inseguiva le strisce (furia/cura) ignorando la propria build. Ora una build da cura non prova più a mantenere una furia inutile attaccando a vuoto, e una build aggressiva non spreca turni: le scelte di attacco/difesa sono coerenti con le Maschere che ha in campo. Risolve le mosse apparentemente insensate e l eccesso di aggressività.
+
 ## 1.4.3
 
 - IA: i tre stili di gioco (aggressivo, difensivo, di rimessa) ora escono con pari probabilità (prima quello difensivo, il più debole, usciva più spesso). Le simulazioni mostrano che i tre sono di forza simile, quindi la scelta casuale li rende più imprevedibili.

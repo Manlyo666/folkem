@@ -3429,24 +3429,28 @@ const GameLogic = (() => {
       if(bestAtk < foe.hp && survives) vd += 800;
     }
 
-    // GESTIONE STRISCE: l'IA gioca gli streak in modo strategico, non solo round per round.
-    // Vale per tutte le difficoltà (stesso cervello); la differenza la fanno PV e rumore.
+    // GESTIONE STRISCE: modula la scelta in base alle strisce, MA in proporzione al valore
+    // reale dell'azione per la build corrente. I bias non sono costanti assolute (che su una
+    // build full-cura falserebbero tutto spingendo ad attaccare a vuoto): sono percentuali del
+    // valore già calcolato, così una build che attacca poco non viene spinta ad attaccare.
     {
       const healStk = ai.healStreak||0;
       const atkStk  = ai.atkStreak||0;
-      // (a) CURA ESAURITA: se ho curato tanto di fila, la prossima cura rende poco o nulla
-      // (curva 100/50/25/0). Difendere per curare è spreco: conviene attaccare per RESETTARE
-      // la striscia, così il round dopo la cura torna piena. Spinta crescente con lo streak.
-      if(healStk>=2){
-        const nextHealFrac = healStk<_HEAL.length ? _HEAL[healStk] : 0;   // rendimento prossima cura
-        if(nextHealFrac<=0.25) va += 40*(1-nextHealFrac);   // cura scarsa -> premia l'attacco
+      // (a) CURA ESAURITA: se ho curato tanto di fila la prossima cura rende poco. Riduco il
+      // valore di difendere IN PROPORZIONE a quanto la cura è degradata (non premio l'attacco
+      // in assoluto): se difendere valeva poco perché la cura è a 0, il suo valore cala da sé.
+      if(healStk>=2 && vd>0){
+        const nextHealFrac = healStk<_HEAL.length ? _HEAL[healStk] : 0;   // 0.25 o 0
+        // penalità proporzionale: cura al 25% -> -30% al valore difesa; a 0% -> -60%.
+        vd *= (0.4 + 0.6*nextHealFrac);
       }
-      // (b) FURIA ALTA: se sono in striscia d'attacco forte, difendere azzererebbe il bonus
-      // (+10/20/30/40%). Penalizzo il reset della furia quando è alta e sto vincendo lo scontro,
-      // così mantengo il 40% invece di buttarlo via. Non vale se rischio la morte (sopra).
-      if(atkStk>=2 && !lethalRisk){
+      // (b) FURIA ALTA: mantenere la furia conviene SOLO se attaccare è già competitivo per
+      // questa build (va>0 e vicino/sopra vd). Su una build da cura, attaccare vale poco: qui
+      // va è basso e il bias non scatta, quindi l'IA NON insegue una furia inutile.
+      // Applico un piccolo premio proporzionale al valore d'attacco già stimato.
+      if(atkStk>=2 && !lethalRisk && va>0 && va >= vd*0.7){
         const furyFrac = ATK_BONUS[Math.min(atkStk, ATK_BONUS.length-1)];   // 0.20..0.40
-        vd -= 50*furyFrac;   // difendere costa: rinuncio al bonus accumulato
+        va *= (1 + 0.5*furyFrac);   // rinforza l'attacco solo quando è già una mossa sensata
       }
     }
 
@@ -4647,8 +4651,12 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.3";
+const APP_VERSION="1.4.4";
 const CHANGELOG=[
+  {v:"1.4.4", it:[
+    "IA: corretto un difetto per cui inseguiva le strisce (furia/cura) ignorando la propria build. Ora una build da cura non prova più a mantenere una furia inutile attaccando a vuoto, e una build aggressiva non spreca turni: le scelte di attacco/difesa sono coerenti con le Maschere che ha in campo. Risolve le mosse apparentemente insensate e l eccesso di aggressività."],
+   en:[
+    "AI: fixed a flaw where it chased streaks (fury/heal) ignoring its own build. A healing build no longer tries to keep a useless fury by attacking into nothing, and an aggressive build no longer wastes turns: attack/defense choices now match the Masks it has in play. Fixes the seemingly senseless moves and the over-aggression."]},
   {v:"1.4.3", it:[
     "IA: i tre stili di gioco (aggressivo, difensivo, di rimessa) ora escono con pari probabilità (prima quello difensivo, il più debole, usciva più spesso). Le simulazioni mostrano che i tre sono di forza simile, quindi la scelta casuale li rende più imprevedibili."],
    en:[
