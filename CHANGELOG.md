@@ -1,5 +1,9 @@
 # Changelog — Folk Em
 
+## 1.4.3
+
+- AI: the three playstyles (aggressive, defensive, counter) now come up with equal probability (previously the defensive one — the weakest — appeared most often). Simulations show the three are similar in strength, so a uniform random pick makes the AI less predictable.
+
 ## 1.4.2
 
 - AI: all three difficulties now share the SAME brain (same logic: expected value, fury, survival, streak management, move reading, smart card swap). The gap between Easy, Medium and Hard is only the starting HP (60 / 100 / 140) and a decreasing sprinkle of noise: Easy misses a move now and then, Medium rarely, Hard never.

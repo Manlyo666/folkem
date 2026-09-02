@@ -1,5 +1,9 @@
 # Diario di bordo — Folk Em
 
+## 1.4.3
+
+- IA: i tre stili di gioco (aggressivo, difensivo, di rimessa) ora escono con pari probabilità (prima quello difensivo, il più debole, usciva più spesso). Le simulazioni mostrano che i tre sono di forza simile, quindi la scelta casuale li rende più imprevedibili.
+
 ## 1.4.2
 
 - IA: le tre difficoltà ora ragionano con lo STESSO cervello (stessa logica: valore atteso, furia, sopravvivenza, gestione delle strisce, lettura della mossa, scambio carta intelligente). La differenza tra Facile, Medio e Difficile sta solo nei PV iniziali (60 / 100 / 140) e in un filo di rumore decrescente: Facile sbaglia qualche mossa ogni tanto, Medio raramente, Difficile mai.

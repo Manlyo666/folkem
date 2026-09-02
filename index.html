@@ -3524,24 +3524,22 @@ const GameState = (() => {
     return s;
   }
   function buildAiBuild(difficulty){
-    // Stesso cervello per tutte le difficoltà: la build è scelta con gli stessi 3
-    // archetipi a prescindere dal livello (la difficoltà la fanno PV e rumore, non
-    // una build più stupida). Il motore a valore atteso si adatta da solo a ciascuno.
+    // Stesso cervello per tutte le difficoltà: la build è scelta a caso in modo uniforme
+    // tra i 3 archetipi (33/33/33). Le simulazioni mostrano che valgono in modo simile
+    // (aggressiva la più forte, cura-difensiva la più debole, ma tutte 67-78% a difficile),
+    // quindi il random puro è onesto e imprevedibile. La difficoltà la fanno PV e rumore.
     // META: coppia (34.7%) e doppia coppia (33.6%) sono ~68% delle mani.
-    // Le maschere fisse (Meneghino/Capitan) non si invertono.
     const roll=Math.random();
-    if(roll<0.45){
-      // (1) CURA-DIFENSIVA — "prime tre invertite": le Maschere piu deboli diventano
-      // curatrici. Difende/cura bene sulle mani frequenti e attacca con le mani alte.
+    if(roll<1/3){
+      // (1) CURA-DIFENSIVA: le Maschere deboli curano, le forti attaccano.
       return { pantalone:true, brighella:true, balanzone:true,
                pulcinella:false, arlecchino:false, colombina:false };
-    } else if(roll<0.80){
-      // (2) AGGRESSIVA PURA — nessuna inversione: ogni Maschera colpisce col suo ATK pieno.
+    } else if(roll<2/3){
+      // (2) AGGRESSIVA PURA: nessuna inversione, ogni Maschera col suo ATK pieno.
       return { pantalone:false, brighella:false, balanzone:false,
                pulcinella:false, arlecchino:false, colombina:false };
     } else {
-      // (3) FULL-CURA — inverte TUTTE le Maschere non fisse: ogni mano cura invece di
-      // colpire. Gioca di pura rimessa, logora e vince ai punti o con cure enormi.
+      // (3) FULL-CURA: tutte le Maschere non fisse invertite, ogni mano cura.
       return { meo:true, pantalone:true, brighella:true, balanzone:true,
                pulcinella:true, arlecchino:true, colombina:true };
     }
@@ -4649,8 +4647,12 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.2";
+const APP_VERSION="1.4.3";
 const CHANGELOG=[
+  {v:"1.4.3", it:[
+    "IA: i tre stili di gioco (aggressivo, difensivo, di rimessa) ora escono con pari probabilità (prima quello difensivo, il più debole, usciva più spesso). Le simulazioni mostrano che i tre sono di forza simile, quindi la scelta casuale li rende più imprevedibili."],
+   en:[
+    "AI: the three playstyles (aggressive, defensive, counter) now come up with equal probability (previously the defensive one — the weakest — appeared most often). Simulations show the three are similar in strength, so a uniform random pick makes the AI less predictable."]},
   {v:"1.4.2", it:[
     "IA: le tre difficoltà ora ragionano con lo STESSO cervello (stessa logica: valore atteso, furia, sopravvivenza, gestione delle strisce, lettura della mossa, scambio carta intelligente). La differenza tra Facile, Medio e Difficile sta solo nei PV iniziali (60 / 100 / 140) e in un filo di rumore decrescente: Facile sbaglia qualche mossa ogni tanto, Medio raramente, Difficile mai."],
    en:[
