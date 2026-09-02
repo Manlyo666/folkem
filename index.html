@@ -375,7 +375,11 @@ body[data-portrait="1"] .board-label.lastcall-inline .lcb-n{font-size:4.4vw}
 .choice-badge{display:inline-block;margin-right:5px;font-size:15px;vertical-align:middle;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .choice-badge.cb-atk{color:#ff6a4d}
 .choice-badge.cb-def{color:#6ac6ff}
-.side-stack{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.side-stack{position:absolute;bottom:28%;display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;z-index:5;pointer-events:none}
+/* G1: colonna segnalini a destra delle carte */
+.player-strip:not(.foe) .side-stack{left:62%}
+/* G2 (row-reverse): a sinistra delle sue carte */
+.player-strip.foe .side-stack{right:62%}
 .side-stack .heal-meter,.side-stack .atk-meter{margin-top:0}
 .pre-choice{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:10px;
   background:rgba(0,0,0,.7);border:1px solid rgba(180,120,60,.45);font-family:var(--font-fairy);font-size:13px;pointer-events:none;white-space:nowrap;
@@ -3319,10 +3323,14 @@ const GameLogic = (() => {
   //  - readProb: probabilità che (in difficile) l'IA "legga" la scelta reale
   //  L'IA NON ha moltiplicatori su danni/cure: rispetta le regole esatte come il
   //  giocatore. Le difficoltà cambiano solo la QUALITÀ delle sue scelte.
+  // Le 3 difficoltà condividono lo STESSO cervello (stessa logica: EV, sopravvivenza,
+  // gestione strisce, lettura mossa, swap intelligente). Si differenziano SOLO per i PV
+  // iniziali (60/100/140) e per un filo di rumore decrescente: easy sbaglia ogni tanto,
+  // hard mai. Tutto il resto è identico.
   const AI_PARAMS={
-    easy:   {noise:12, randAct:0.50, foeSample:5,  readProb:0.0,  swapSmart:false},
-    medium: {noise:5,  randAct:0.16, foeSample:14, readProb:0.0,  swapSmart:false},
-    hard:   {noise:0,  randAct:0.0,  foeSample:30, readProb:0.65, swapSmart:true},
+    easy:   {noise:6, randAct:0.15, foeSample:30, readProb:0.65, swapSmart:true},
+    medium: {noise:2, randAct:0.05, foeSample:30, readProb:0.65, swapSmart:true},
+    hard:   {noise:0, randAct:0.0,  foeSample:30, readProb:0.65, swapSmart:true},
   };
 
   function _unseen(known){
@@ -3353,14 +3361,18 @@ const GameLogic = (() => {
   function _effHeal(raw,streak){ const f=streak<_HEAL.length?_HEAL[Math.max(0,streak)]:0; return f<=0?0:Math.ceil(raw*f); }
 
   function _expected(action, myDist, foeEvs, ctx){
+    // La furia offensiva potenzia il danno LORDO (come in resolveShowdown): l'IA deve
+    // valutare l'attacco col bonus della sua striscia, altrimenti sottostima i colpi in furia.
+    const furyMult = _streakMult(ATK_BONUS, ctx.myAtkStreak||0);
     let total=0,n=0;
     for(const mine of myDist){ for(const fe of foeEvs){
       const cmp=compare(mine.ev, fe); const foeSt=maskStats(fe.maskId, ctx.foeInv); const iWin=cmp>0;
+      const myGross=Math.round(mine.st.atk*furyMult);   // danno d'attacco potenziato dalla furia
       for(const foeAtt of [true,false]){
         const w=foeAtt?ctx.foeAttackProb:(1-ctx.foeAttackProb); if(w<=0) continue;
         let v=0;
         if(action==='attack'){
-          if(iWin){ const blocked=foeAtt?0:Math.min(foeSt.cur, mine.st.atk); v+=Math.max(0,mine.st.atk-blocked); }
+          if(iWin){ const blocked=foeAtt?0:Math.min(foeSt.cur, myGross); v+=Math.max(0,myGross-blocked); }
           else { if(foeAtt) v-=foeSt.atk; else v-=_effHeal(foeSt.cur,0)*0.6; }
         } else {
           if(iWin){ v+=_effHeal(mine.st.cur, ctx.myStreak)*0.9; }
@@ -3384,11 +3396,14 @@ const GameLogic = (() => {
     let foeAttackProb=tot>=3?hist.atk/tot:0.55;
     if(P.readProb>0 && foeChoice && rng()<P.readProb) foeAttackProb = foeChoice==='attack'?0.95:0.05;
     foeAttackProb=Math.max(0.05,Math.min(0.95,foeAttackProb));
-    const ctx={myStreak:ai.healStreak||0, foeInv:state.inv.me, foeAttackProb};
+    const ctx={myStreak:ai.healStreak||0, foeInv:state.inv.me, foeAttackProb, myAtkStreak:ai.atkStreak||0};
     if(rng()<P.randAct) return rng()<0.5?'attack':'defend';
     let va=_expected('attack',myDist,foeEvs,ctx);
     let vd=_expected('defend',myDist,foeEvs,ctx);
-    const bestAtk=Math.max.apply(null, myDist.map(m=>m.st.atk));
+    // Il KO va valutato sul danno POTENZIATO dalla furia (come in gioco): con una
+    // striscia d'attacco il colpo sfonda e può chiudere anche quando il grezzo non basta.
+    const furyMult = _streakMult(ATK_BONUS, ai.atkStreak||0);
+    const bestAtk=Math.max.apply(null, myDist.map(m=>Math.round(m.st.atk*furyMult)));
     // CHIUSURA PER KO: se posso ridurre a 0 i PV avversario attaccando, lo faccio.
     if(bestAtk>=foe.hp) va+=1000;
     // CHIUSURA AI PUNTI: se curando arrivo a 200 PV (WIN_HP) vinco all'istante. La
@@ -3397,6 +3412,44 @@ const GameLogic = (() => {
     const WIN_HP=200;
     const bestCur=Math.max.apply(null, myDist.map(m=>effectiveHeal(ai.hp, m.st.cur, ai.healStreak||0)));
     if(bestAtk<foe.hp && ai.hp + bestCur >= WIN_HP) vd+=1000;
+
+    // SOPRAVVIVENZA: stima del peggior colpo che l'avversario può infliggere questo round.
+    // Uso le sue mani probabili (foeEvs) con la sua build reale; considero la vulnerabilità
+    // da furia dell'IA (se in streak d'attacco subisce di più) coerente con resolveShowdown.
+    const foeVulnMult = _streakMult(ATK_VULN, ai.atkStreak||0);
+    const foeBestAtk = Math.max.apply(null, foeEvs.map(fe=>Math.round(maskStats(fe.maskId, state.inv.me).atk * foeVulnMult)));
+    // Se l'avversario di solito attacca ed è probabile che il suo colpo mi uccida...
+    const lethalRisk = foeAttackProb >= 0.5 && foeBestAtk >= ai.hp;
+    if(lethalRisk){
+      // ...difendere para il colpo: se la miglior difesa riduce il danno abbastanza da
+      // sopravvivere, curarsi/parare diventa prioritario. Ma solo se attaccare non chiude
+      // già il KO (in tal caso conviene comunque finire l'avversario prima che colpisca).
+      const bestDef = Math.max.apply(null, myDist.map(m=>m.st.cur));
+      const survives = (ai.hp + bestCur - Math.max(0, foeBestAtk - bestDef)) > 0;
+      if(bestAtk < foe.hp && survives) vd += 800;
+    }
+
+    // GESTIONE STRISCE: l'IA gioca gli streak in modo strategico, non solo round per round.
+    // Vale per tutte le difficoltà (stesso cervello); la differenza la fanno PV e rumore.
+    {
+      const healStk = ai.healStreak||0;
+      const atkStk  = ai.atkStreak||0;
+      // (a) CURA ESAURITA: se ho curato tanto di fila, la prossima cura rende poco o nulla
+      // (curva 100/50/25/0). Difendere per curare è spreco: conviene attaccare per RESETTARE
+      // la striscia, così il round dopo la cura torna piena. Spinta crescente con lo streak.
+      if(healStk>=2){
+        const nextHealFrac = healStk<_HEAL.length ? _HEAL[healStk] : 0;   // rendimento prossima cura
+        if(nextHealFrac<=0.25) va += 40*(1-nextHealFrac);   // cura scarsa -> premia l'attacco
+      }
+      // (b) FURIA ALTA: se sono in striscia d'attacco forte, difendere azzererebbe il bonus
+      // (+10/20/30/40%). Penalizzo il reset della furia quando è alta e sto vincendo lo scontro,
+      // così mantengo il 40% invece di buttarlo via. Non vale se rischio la morte (sopra).
+      if(atkStk>=2 && !lethalRisk){
+        const furyFrac = ATK_BONUS[Math.min(atkStk, ATK_BONUS.length-1)];   // 0.20..0.40
+        vd -= 50*furyFrac;   // difendere costa: rinuncio al bonus accumulato
+      }
+    }
+
     if(P.noise>0){ va+=(Math.random()-0.5)*2*P.noise; vd+=(Math.random()-0.5)*2*P.noise; }
     return va>=vd?'attack':'defend';
   }
@@ -3407,9 +3460,9 @@ const GameLogic = (() => {
     const ai=state.ai, foe=state.me, community4=state.community.slice(0,4);
     const ev4=evaluate(ai.hand.concat(community4));
     if(P.swapSmart){
-      // HARD: cambia SOLO con carta alta pura (nessuna coppia) e con buon margine
-      // di PV — lo swap costa 10 PV, sprecarlo su mani gia' decenti logora. Non
-      // insegue la doppia coppia a ogni mano.
+      // Cambia SOLO con carta alta pura (nessuna coppia) e con buon margine di PV — lo
+      // swap costa 10 PV, sprecarlo su mani già decenti logora. Vale per tutte le
+      // difficoltà (stesso cervello); il rumore su attacco/difesa fa il resto.
       if(ev4.rankIndex<=0 && ai.hp>55 && ai.hp<foe.hp+60){
         return ai.hand[0].r<=ai.hand[1].r?0:1;
       }
@@ -3471,42 +3524,27 @@ const GameState = (() => {
     return s;
   }
   function buildAiBuild(difficulty){
-    const diff=difficulty||'medium';
+    // Stesso cervello per tutte le difficoltà: la build è scelta con gli stessi 3
+    // archetipi a prescindere dal livello (la difficoltà la fanno PV e rumore, non
+    // una build più stupida). Il motore a valore atteso si adatta da solo a ciascuno.
     // META: coppia (34.7%) e doppia coppia (33.6%) sono ~68% delle mani.
     // Le maschere fisse (Meneghino/Capitan) non si invertono.
-    // Con l'inversione una maschera scambia ATK<->DEF: es. Brighella 10/5 -> 5/10.
-    if(diff==='hard'){
-      // HARD varia strategia: sceglie a caso, a inizio partita, uno di TRE
-      // archetipi di build strutturalmente diversi. Il motore a valore atteso si
-      // adatta da solo a ciascuno (calcola danni/cure attese sulle stat reali).
-      const roll=Math.random();
-      if(roll<0.45){
-        // (1) CURA-DIFENSIVA — "prime tre invertite": le tre Maschere piu deboli
-        // diventano curatrici. Difende/cura bene sulle mani frequenti (coppia,
-        // doppia coppia, tris) e attacca con le mani alte. E' la piu solida.
-        return { pantalone:true, brighella:true, balanzone:true,
-                 pulcinella:false, arlecchino:false, colombina:false };
-      } else if(roll<0.80){
-        // (2) AGGRESSIVA PURA — nessuna inversione: ogni Maschera colpisce col suo
-        // ATK pieno. Punta a chiudere in fretta, usa la cura solo come rimbalzo.
-        return { pantalone:false, brighella:false, balanzone:false,
-                 pulcinella:false, arlecchino:false, colombina:false };
-      } else {
-        // (3) FULL-CURA — inverte le Maschere ad alto danno (Pulcinella, Arlecchino,
-        // Colombina): sulle mani forti cura tantissimo invece di colpire. Gioca di
-        // rimessa, logora e vince ai punti o con cure enormi. Piu rara e insidiosa.
-        return { pantalone:false, brighella:false, balanzone:false,
-                 pulcinella:true, arlecchino:true, colombina:true };
-      }
+    const roll=Math.random();
+    if(roll<0.45){
+      // (1) CURA-DIFENSIVA — "prime tre invertite": le Maschere piu deboli diventano
+      // curatrici. Difende/cura bene sulle mani frequenti e attacca con le mani alte.
+      return { pantalone:true, brighella:true, balanzone:true,
+               pulcinella:false, arlecchino:false, colombina:false };
+    } else if(roll<0.80){
+      // (2) AGGRESSIVA PURA — nessuna inversione: ogni Maschera colpisce col suo ATK pieno.
+      return { pantalone:false, brighella:false, balanzone:false,
+               pulcinella:false, arlecchino:false, colombina:false };
+    } else {
+      // (3) FULL-CURA — inverte TUTTE le Maschere non fisse: ogni mano cura invece di
+      // colpire. Gioca di pura rimessa, logora e vince ai punti o con cure enormi.
+      return { meo:true, pantalone:true, brighella:true, balanzone:true,
+               pulcinella:true, arlecchino:true, colombina:true };
     }
-    if(diff==='medium'){
-      return { pantalone:false, brighella:false, balanzone:true,
-               pulcinella:false, arlecchino:true, colombina:false };
-    }
-    // easy: casuale (debole)
-    const inv={};
-    for(const id in GameLogic.MASKS) if(!GameLogic.MASKS[id].fixed) inv[id]=Math.random()<0.4;
-    return inv;
   }
   // Hold'em: 2 in mano a testa + 5 comunitarie, ma la 5a è nascosta finché non si evoca.
   function dealRound(s){
@@ -4611,9 +4649,17 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.1";
+const APP_VERSION="1.4.2";
 const CHANGELOG=[
+  {v:"1.4.2", it:[
+    "IA: le tre difficoltà ora ragionano con lo STESSO cervello (stessa logica: valore atteso, furia, sopravvivenza, gestione delle strisce, lettura della mossa, scambio carta intelligente). La differenza tra Facile, Medio e Difficile sta solo nei PV iniziali (60 / 100 / 140) e in un filo di rumore decrescente: Facile sbaglia qualche mossa ogni tanto, Medio raramente, Difficile mai."],
+   en:[
+    "AI: all three difficulties now share the SAME brain (same logic: expected value, fury, survival, streak management, move reading, smart card swap). The gap between Easy, Medium and Hard is only the starting HP (60 / 100 / 140) and a decreasing sprinkle of noise: Easy misses a move now and then, Medium rarely, Hard never."]},
   {v:"1.4.1", it:[
+    "IA (difficile): ora gestisce le strisce in modo strategico. Se la cura consecutiva è quasi esaurita (rende poco o nulla) attacca per resettarla, invece di sprecare turni curando a vuoto; se è in furia offensiva alta evita di difendere per non azzerare il bonus (+40%), a meno che non rischi la morte.",
+    "IA (difficile): ora valuta la sopravvivenza — se rischia di morire e l avversario tende ad attaccare, si difende/cura per restare in vita invece di attaccare a vuoto; se non c è pericolo resta aggressiva.",
+    "IA (difficile): l archetipo full-cura ora inverte TUTTE le Maschere (tutto cura), coerente con la partenza a 140 PV, invece di curare solo con le mani forti e attaccare con quelle deboli (setup poco efficace).",
+    "IA (difficile): ora tiene conto della propria furia offensiva quando sceglie se attaccare. Prima sottovalutava i colpi in striscia e a volte difendeva sprecando il bonus; ora sfrutta la furia per sfondare le parate e chiudere.",
     "PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).",
     "La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (partite locali e contro il computer).",
     "Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. Attacco con due spade); ora appare una sola volta.",
@@ -4621,6 +4667,10 @@ const CHANGELOG=[
     "L'indicatore della mossa dichiarata dall'avversario ha ora un bordo ed è posizionato tra le carte avversarie e le carte a terra, senza spostarle né coprirle.",
     "In PvP offline, per il Giocatore 2 sono capovolti anche il promemoria della scelta e la Maschera evocata; l'affondo d'attacco è orientato correttamente."],
    en:[
+    "AI (hard): now manages streaks strategically. If consecutive healing is nearly spent (yields little or nothing) it attacks to reset it, instead of wasting turns healing for nothing; when on a strong offensive-fury streak it avoids defending so it doesn t reset the bonus (+40%), unless it risks dying.",
+    "AI (hard): now weighs survival — if it risks dying and the opponent tends to attack, it defends/heals to stay alive instead of attacking into death; when there is no danger it stays aggressive.",
+    "AI (hard): the full-heal archetype now inverts ALL Masks (all healing), consistent with the 140 HP start, instead of healing only on strong hands and attacking with weak ones (an ineffective setup).",
+    "AI (hard): now factors in its own offensive fury when choosing whether to attack. It used to undervalue streak hits and sometimes defended, wasting the bonus; now it uses fury to break through parries and close out.",
     "Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).",
     "The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (local and vs-computer games).",
     "Fix: the pre-summon choice reminder showed a doubled symbol (e.g. Attack with two swords); it now shows once.",

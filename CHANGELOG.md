@@ -1,7 +1,15 @@
 # Changelog — Folk Em
 
+## 1.4.2
+
+- AI: all three difficulties now share the SAME brain (same logic: expected value, fury, survival, streak management, move reading, smart card swap). The gap between Easy, Medium and Hard is only the starting HP (60 / 100 / 140) and a decreasing sprinkle of noise: Easy misses a move now and then, Medium rarely, Hard never.
+
 ## 1.4.1
 
+- AI (hard): now manages streaks strategically. If consecutive healing is nearly spent (yields little or nothing) it attacks to reset it, instead of wasting turns healing for nothing; when on a strong offensive-fury streak it avoids defending so it doesn t reset the bonus (+40%), unless it risks dying.
+- AI (hard): now weighs survival — if it risks dying and the opponent tends to attack, it defends/heals to stay alive instead of attacking into death; when there is no danger it stays aggressive.
+- AI (hard): the full-heal archetype now inverts ALL Masks (all healing), consistent with the 140 HP start, instead of healing only on strong hands and attacking with weak ones (an ineffective setup).
+- AI (hard): now factors in its own offensive fury when choosing whether to attack. It used to undervalue streak hits and sometimes defended, wasting the bonus; now it uses fury to break through parries and close out.
 - Offline PvP: turns now truly alternate — on odd rounds Player 1 declares first, on even rounds Player 2 (previously Player 1 always went first, giving Player 2 a constant information advantage).
 - The current game now survives the app being paused: if you background Folk 'Em, open another app or press Back on Android, you return to the game where it was instead of the menu (local and vs-computer games).
 - Fix: the pre-summon choice reminder showed a doubled symbol (e.g. Attack with two swords); it now shows once.

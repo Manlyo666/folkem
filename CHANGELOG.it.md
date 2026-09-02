@@ -1,7 +1,15 @@
 # Diario di bordo — Folk Em
 
+## 1.4.2
+
+- IA: le tre difficoltà ora ragionano con lo STESSO cervello (stessa logica: valore atteso, furia, sopravvivenza, gestione delle strisce, lettura della mossa, scambio carta intelligente). La differenza tra Facile, Medio e Difficile sta solo nei PV iniziali (60 / 100 / 140) e in un filo di rumore decrescente: Facile sbaglia qualche mossa ogni tanto, Medio raramente, Difficile mai.
+
 ## 1.4.1
 
+- IA (difficile): ora gestisce le strisce in modo strategico. Se la cura consecutiva è quasi esaurita (rende poco o nulla) attacca per resettarla, invece di sprecare turni curando a vuoto; se è in furia offensiva alta evita di difendere per non azzerare il bonus (+40%), a meno che non rischi la morte.
+- IA (difficile): ora valuta la sopravvivenza — se rischia di morire e l avversario tende ad attaccare, si difende/cura per restare in vita invece di attaccare a vuoto; se non c è pericolo resta aggressiva.
+- IA (difficile): l archetipo full-cura ora inverte TUTTE le Maschere (tutto cura), coerente con la partenza a 140 PV, invece di curare solo con le mani forti e attaccare con quelle deboli (setup poco efficace).
+- IA (difficile): ora tiene conto della propria furia offensiva quando sceglie se attaccare. Prima sottovalutava i colpi in striscia e a volte difendeva sprecando il bonus; ora sfrutta la furia per sfondare le parate e chiudere.
 - PvP offline: i turni ora si alternano davvero — nei round dispari dichiara per primo il Giocatore 1, nei round pari il Giocatore 2 (prima toccava sempre a G1 per primo, dando a G2 un vantaggio informativo costante).
 - La partita in corso ora sopravvive alla pausa dell'app: se metti Folk 'Em in background, apri un'altra app o premi Indietro su Android, tornando ritrovi la partita dov'era invece del menu (partite locali e contro il computer).
 - Correzione: il promemoria della scelta pre-evocazione mostrava il simbolo doppio (es. Attacco con due spade); ora appare una sola volta.
