@@ -1,5 +1,17 @@
 # Changelog — Folk Em
 
+## 1.4.7
+
+- Polish: when healing is zeroed out by consecutive heals (0%) and you choose Defense, the healing animation (glow, sound, carafe) no longer plays: the hand still wins the showdown, but no healing effect is shown when none actually happened. Only the on-screen note that healing had no effect remains.
+
+## 1.4.6
+
+- Important fix: the game is no longer lost when the app goes to the background on Android (e.g. open the rules, minimise, reopen). Saving now uses storage that survives even when Android fully unloads the WebView, and the state is saved every round instead of only when the app is backgrounded. Local and vs-computer games restore if you reopen within 12 hours.
+
+## 1.4.5
+
+- AI: now swaps cards far less often and with judgment. It used to swap on almost any pair-less hand, even while building something; now it keeps its cards if it has a flush draw (4 of a suit) or a straight draw, and only swaps when the two cards are truly useless. When it does swap, it discards the least useful one instead of the lowest at random.
+
 ## 1.4.4
 
 - AI: fixed a flaw where it chased streaks (fury/heal) ignoring its own build. A healing build no longer tries to keep a useless fury by attacking into nothing, and an aggressive build no longer wastes turns: attack/defense choices now match the Masks it has in play. Fixes the seemingly senseless moves and the over-aggression.

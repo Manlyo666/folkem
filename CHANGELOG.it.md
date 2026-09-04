@@ -1,5 +1,17 @@
 # Diario di bordo — Folk Em
 
+## 1.4.7
+
+- Rifinitura: quando la cura è azzerata dalle cure consecutive (0%) e si sceglie Difesa, non parte più l animazione di guarigione (bagliore, suono, caraffa): la mano vince comunque il confronto, ma non viene mostrato alcun effetto curativo che in realtà non c è stato. Resta solo la scritta che avvisa che la cura non ha avuto effetto.
+
+## 1.4.6
+
+- Correzione importante: la partita non si perde più mettendo l app in secondo piano su Android (es. apri le regole, minimizzi e riapri). Il salvataggio ora usa una memoria che sopravvive anche quando Android chiude del tutto la WebView, e lo stato viene salvato a ogni round invece che solo quando l app va in background. Le partite locali e contro il computer si ripristinano se riapri entro 12 ore.
+
+## 1.4.5
+
+- IA: ora cambia carta molto più di rado e con criterio. Prima la cambiava su quasi ogni mano senza coppia, anche quando stava costruendo qualcosa; ora la tiene se ha un progetto di colore (4 carte dello stesso seme) o di scala, e la cambia solo quando le due carte non servono davvero a nulla. Quando cambia, scarta quella meno utile invece della più bassa a caso.
+
 ## 1.4.4
 
 - IA: corretto un difetto per cui inseguiva le strisce (furia/cura) ignorando la propria build. Ora una build da cura non prova più a mantenere una furia inutile attaccando a vuoto, e una build aggressiva non spreca turni: le scelte di attacco/difesa sono coerenti con le Maschere che ha in campo. Risolve le mosse apparentemente insensate e l eccesso di aggressività.

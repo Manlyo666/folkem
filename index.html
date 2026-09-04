@@ -3458,21 +3458,42 @@ const GameLogic = (() => {
     return va>=vd?'attack':'defend';
   }
 
-  // scelta scambio carta (a inizio round). Coerente con le difficoltà.
+  // scelta scambio carta (a inizio round). L'IA cambia carta SOLO se le sue due carte
+  // non stanno costruendo nulla: né una combinazione fatta (coppia+), né un progetto di
+  // colore (4+ dello stesso seme) o di scala (4 consecutive). Lo swap costa 10 PV, quindi
+  // buttarlo via su una mano che ha già un progetto sarebbe uno spreco.
+  function _hasDraw(cards){
+    // progetto colore: 4+ carte dello stesso seme
+    const bySuit={}; for(const c of cards){ bySuit[c.suit]=(bySuit[c.suit]||0)+1; }
+    for(const s in bySuit) if(bySuit[s]>=4) return true;
+    // progetto scala: 4 valori distinti consecutivi (con asso alto e basso)
+    const rset=new Set(cards.map(c=>c.r)); if(rset.has(1)) rset.add(11);
+    const rs=[...rset].sort((a,b)=>a-b);
+    let run=1; for(let i=1;i<rs.length;i++){ run = rs[i]===rs[i-1]+1 ? run+1 : 1; if(run>=4) return true; }
+    return false;
+  }
   function aiSwapPlan(state, difficulty){
     const P=AI_PARAMS[difficulty]||AI_PARAMS.medium;
     const ai=state.ai, foe=state.me, community4=state.community.slice(0,4);
-    const ev4=evaluate(ai.hand.concat(community4));
+    const six=ai.hand.concat(community4);
+    const ev4=evaluate(six);
+    // se ho già almeno una coppia, o un progetto di colore/scala, NON cambio: sto costruendo.
+    if(ev4.rankIndex>0 || _hasDraw(six)) return -1;
     if(P.swapSmart){
-      // Cambia SOLO con carta alta pura (nessuna coppia) e con buon margine di PV — lo
-      // swap costa 10 PV, sprecarlo su mani già decenti logora. Vale per tutte le
-      // difficoltà (stesso cervello); il rumore su attacco/difesa fa il resto.
-      if(ev4.rankIndex<=0 && ai.hp>55 && ai.hp<foe.hp+60){
+      // solo carta alta pura e senza progetti: cambio la carta più bassa della mano che
+      // non aiuta alcun progetto, con buon margine di PV (lo swap costa 10).
+      if(ai.hp>55 && ai.hp<foe.hp+60){
+        // se una delle due carte di mano è dello stesso seme di 3+ comuni, tienila (mezzo
+        // progetto colore); altrimenti scarta la più bassa.
+        const suitCount={}; for(const c of community4){ suitCount[c.suit]=(suitCount[c.suit]||0)+1; }
+        const keepBySuit = i => (suitCount[ai.hand[i].suit]||0)>=3;
+        if(keepBySuit(0)&&!keepBySuit(1)) return 1;
+        if(keepBySuit(1)&&!keepBySuit(0)) return 0;
         return ai.hand[0].r<=ai.hand[1].r?0:1;
       }
       return -1;
     }
-    if(ev4.rankIndex<=0 && ai.hp>40 && ai.hp<foe.hp+40 && Math.random()<(difficulty==='easy'?0.25:0.6)) return ai.hand[0].r<=ai.hand[1].r?0:1;
+    if(ai.hp>40 && ai.hp<foe.hp+40 && Math.random()<(difficulty==='easy'?0.25:0.6)) return ai.hand[0].r<=ai.hand[1].r?0:1;
     return -1;
   }
 
@@ -4651,8 +4672,20 @@ const I18N = {
   }
 };
 
-const APP_VERSION="1.4.4";
+const APP_VERSION="1.4.7";
 const CHANGELOG=[
+  {v:"1.4.7", it:[
+    "Rifinitura: quando la cura è azzerata dalle cure consecutive (0%) e si sceglie Difesa, non parte più l animazione di guarigione (bagliore, suono, caraffa): la mano vince comunque il confronto, ma non viene mostrato alcun effetto curativo che in realtà non c è stato. Resta solo la scritta che avvisa che la cura non ha avuto effetto."],
+   en:[
+    "Polish: when healing is zeroed out by consecutive heals (0%) and you choose Defense, the healing animation (glow, sound, carafe) no longer plays: the hand still wins the showdown, but no healing effect is shown when none actually happened. Only the on-screen note that healing had no effect remains."]},
+  {v:"1.4.6", it:[
+    "Correzione importante: la partita non si perde più mettendo l app in secondo piano su Android (es. apri le regole, minimizzi e riapri). Il salvataggio ora usa una memoria che sopravvive anche quando Android chiude del tutto la WebView, e lo stato viene salvato a ogni round invece che solo quando l app va in background. Le partite locali e contro il computer si ripristinano se riapri entro 12 ore."],
+   en:[
+    "Important fix: the game is no longer lost when the app goes to the background on Android (e.g. open the rules, minimise, reopen). Saving now uses storage that survives even when Android fully unloads the WebView, and the state is saved every round instead of only when the app is backgrounded. Local and vs-computer games restore if you reopen within 12 hours."]},
+  {v:"1.4.5", it:[
+    "IA: ora cambia carta molto più di rado e con criterio. Prima la cambiava su quasi ogni mano senza coppia, anche quando stava costruendo qualcosa; ora la tiene se ha un progetto di colore (4 carte dello stesso seme) o di scala, e la cambia solo quando le due carte non servono davvero a nulla. Quando cambia, scarta quella meno utile invece della più bassa a caso."],
+   en:[
+    "AI: now swaps cards far less often and with judgment. It used to swap on almost any pair-less hand, even while building something; now it keeps its cards if it has a flush draw (4 of a suit) or a straight draw, and only swaps when the two cards are truly useless. When it does swap, it discards the least useful one instead of the lowest at random."]},
   {v:"1.4.4", it:[
     "IA: corretto un difetto per cui inseguiva le strisce (furia/cura) ignorando la propria build. Ora una build da cura non prova più a mantenere una furia inutile attaccando a vuoto, e una build aggressiva non spreca turni: le scelte di attacco/difesa sono coerenti con le Maschere che ha in campo. Risolve le mosse apparentemente insensate e l eccesso di aggressività."],
    en:[
@@ -5354,6 +5387,8 @@ const UI = (() => {
     const _sb=$('seqBadge'); if(_sb) _sb.style.display='none';   // reset badge seq
     hidePreEvokeChoices();   // reset badge scelta pre-evocazione
     GameState.dealRound(state);
+    saveGameState();   // salvataggio continuo: lo stato su disco è sempre aggiornato,
+                       // così la partita si ripristina anche se l'evento di background non scatta
     // TURNI ALTERNATI (pvp locale): round dispari G1 dichiara per primo, round pari G2.
     // Chi inizia dichiara alla cieca; l'altro vede la scelta e risponde.
     pvpFirst = (mode==='pvp_local' && state.round % 2 === 0) ? 'ai' : 'me';
@@ -5866,14 +5901,18 @@ const UI = (() => {
       }, T_LUNGE);
     } else {
       // RAMO CURA
-      winCard.classList.add('glow-heal');
-      Sfx.maskHeal();
-      announceHeal(state[w].eval.maskId);
+      const healedNow = gained[w];                 // PV realmente recuperati (0 se 0%)
       const streakBefore=(state[w].healStreak||1)-1;
       const pct=[100,50,25,0][Math.min(3,streakBefore)];
-      const healedNow = gained[w];                 // PV realmente recuperati (0 se 0%)
       const showTip = (mode==='pvp_local');         // il consiglio "Attacca per azzerare"
                                                     // ha senso solo in PvP offline
+      // Se la cura è azzerata dalla striscia (0%), NON far partire l'animazione di
+      // guarigione: niente bagliore, suono o annuncio: non è successo nulla di curativo.
+      if(healedNow>0){
+        winCard.classList.add('glow-heal');
+        Sfx.maskHeal();
+        announceHeal(state[w].eval.maskId);
+      }
       const phases=[
         [700, ()=>{
           if(healedNow<=0){
@@ -6761,6 +6800,7 @@ const UI = (() => {
   // NB: solo per PvE e pvp_local. In pvp_online la connessione P2P muore al reload,
   // quindi non ha senso ripristinare (l'altro giocatore non c'è più).
   const SAVE_KEY='folkem_game';
+  const SAVE_TTL=12*60*60*1000;   // 12 ore: oltre, non ripristino (partita dimenticata)
   function saveGameState(){
     try{
       if(!state || mode==='pvp_online') return;
@@ -6770,16 +6810,19 @@ const UI = (() => {
       for(const k in state){ if(k==='rng') continue; snap[k]=state[k]; }
       const payload={ state:snap, mode, difficulty, pvpTurn, pvpFirst, swapArmed,
         playerInv, pvpP2Inv, ts:Date.now() };
-      sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      // localStorage (non sessionStorage): sopravvive quando Android scarica la WebView
+      // in background, che è il caso in cui prima si perdeva la partita.
+      localStorageSafe(SAVE_KEY, JSON.stringify(payload));
     }catch(e){}
   }
   function loadGameState(){
     try{
-      const raw=sessionStorage.getItem(SAVE_KEY);
+      const raw=localStorageSafe(SAVE_KEY);
       if(!raw) return false;
       const p=JSON.parse(raw);
       if(!p || !p.state || p.mode==='pvp_online') return false;
       if(!p.state.phase || p.state.winner || p.state.round<=0) return false;
+      if(!p.ts || (Date.now()-p.ts) > SAVE_TTL){ clearSavedGame(); return false; }  // scaduta
       // ripristino le variabili UI
       mode=p.mode; difficulty=p.difficulty;
       pvpTurn=p.pvpTurn||'me'; pvpFirst=p.pvpFirst||'me'; swapArmed=!!p.swapArmed;
@@ -6796,7 +6839,7 @@ const UI = (() => {
       return true;
     }catch(e){ return false; }
   }
-  function clearSavedGame(){ try{ sessionStorage.removeItem(SAVE_KEY); }catch(e){} }
+  function clearSavedGame(){ try{ localStorageSafe(SAVE_KEY, ''); localStorage.removeItem(SAVE_KEY); }catch(e){} }
 
   return {init};
 })();
